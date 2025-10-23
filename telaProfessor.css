@@ -1,0 +1,722 @@
+body {
+    font-family: Roboto, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f4f4;
+}
+
+/* Cabeçalho padrão etec */
+.cabecalho-inicial {
+    display: flex;
+    /* Coloca os cards em uma linha*/
+    justify-content: space-between;
+    /* Espaço entre eles */
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 1rem 2rem;
+    /* Vertical, horizontal */
+    border-bottom: 1px solid #dee2e6;
+}
+
+.container-logo,
+.container-usuario {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    /* Espaço entre os cards */
+}
+
+.container-logo img {
+    height: 60px;
+    object-fit: contain;
+    /* Para a imagem não quebrar */
+}
+
+.etec-info,
+.usuario-info {
+    text-align: center;
+}
+
+.botao-sair {
+    background-color: #a40000;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    /* Um pouco arredondado nos cantos */
+    text-decoration: none;
+    /* Tira o sublinhado padrão dos botões */
+    font-weight: bold;
+    cursor: pointer;
+    /* Quando colocar o mouse sobre o botão */
+}
+
+/* Barra de navegação */
+.barra-navegacao-principal {
+    background-color: #a40000;
+    width: 100%;
+}
+
+.barra-navegacao-principal ul {
+    list-style: none;
+    /* Para tirar as bolinhas - estilo padrão de lista */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+}
+
+.barra-navegacao-principal ul li a {
+    color: white;
+    text-decoration: none;
+    padding: 20px;
+    display: block;
+    transition: background-color 0.3s;
+}
+
+.barra-navegacao-principal ul li a:hover {
+    background-color: #8c0000;
+}
+
+/* Estilos para navegação entre abas */
+.conteudo-secao {
+    display: none;
+}
+
+.conteudo-secao.ativo {
+    display: block;
+}
+
+.barra-navegacao-principal .nav-link.active {
+    background-color: #8c0000;
+    color: white;
+    border-bottom: 3px solid #a40000;
+}
+
+/* Dashboard - Cards */
+.dashboard-cards {
+    display: flex;
+    justify-content: space-around;
+    /* Distribui os cards com espaço igual ao redor */
+    padding: 2rem 0;
+    gap: 20px;
+}
+
+.container-cards {
+    background-color: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    /* Somba sutil*/
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-grow: 1;
+    /* Faz com que os cards 'cresçam' para ocupar o espaço disponível */
+    max-width: 250px;
+}
+
+.cards-imagem {
+    padding: 12px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-blue {
+    background-color: #e6eefe;
+}
+
+.bg-green {
+    background-color: #e5f7ee;
+}
+
+.bg-yellow {
+    background-color: #fff8e1;
+}
+
+.bg-purple {
+    background-color: #f3e5f5;
+}
+
+.cards-imagem img {
+    width: 24px;
+    height: 24px;
+}
+
+.cards-info {
+    display: flex;
+    flex-direction: column;
+    /* Coloca um item sobre o outro */
+}
+
+.info-texto {
+    font-size: 0.9em;
+    color: #555;
+}
+
+.info-numero {
+    font-size: 2em;
+    font-weight: bold;
+    color: #222;
+}
+
+/* Dashboard - Ações Rápidas */
+.dashboard-acoes-rapidas {
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 2rem;
+    /* Para separar da outra section */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.dashboard-acoes-rapidas .titulo-principal {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+    /* Espaço entre o título e os cards */
+}
+
+.cards-acoes-rapidas {
+    display: flex;
+    gap: 20px;
+}
+
+.card-acao-rapida {
+    flex: 1;
+    /* Os 3 cards ocuparão o mesmo espaço */
+    padding: 20px;
+    border-radius: 12px;
+    text-decoration: none;
+    display: flex;
+    color: white;
+    /* Para contrastar com a cor de fundo dos cards */
+    flex-direction: column;
+    /* Empilha o ícone e texto */
+    align-items: center;
+    text-align: center;
+}
+
+.bg-red {
+    background-color: #a40000;
+}
+
+.bg-dark-blue {
+    background-color: #0b4a8b;
+}
+
+.bg-solid-green {
+    background-color: #28a745;
+}
+
+.card-acao-rapida-icone {
+    font-size: 2em;
+    margin-bottom: 12px;
+}
+
+.card-acao-rapida-texto {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-acao-rapida-texto .titulo {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.card-acao-rapida-texto .subtitulo {
+    font-size: 0.9em;
+    opacity: 0.9;
+    margin-top: 4px;
+}
+
+/* Dashboard - Próximas Aulas Agendadas */
+.dashboard-proximas-aulas-agendadas {
+    background-color: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    margin-top: 2rem;
+    box-shadow: 0px, 4px, 12px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-proximas-aulas-agendadas .titulo-principal {
+    font-size: 1.25rem;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.lista-aulas {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.card-aulas {
+    border-left: 5px solid;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.card-aulas .aula-cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.aula-cabecalho .titulo {
+    font-size: 1.25em;
+    font-weight: bold;
+    margin: 4px 0 0 0;
+}
+
+.aula-cabecalho .data-horario {
+    text-align: right;
+    font-weight: bold;
+    color: #0056b3;
+}
+
+.aula-cabecalho .data-horario small {
+    color: #555;
+    font-weight: normal;
+}
+
+.aula-main {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    /* Grid responsivo */
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-left: 20px;
+    border-left: 2px solid #eee;
+}
+
+.aula-info span {
+    font-weight: bold;
+    color: #665;
+    display: block;
+    font-size: 0.8em;
+}
+
+.aula-detalhes {
+    display: flex;
+    justify-content: flex-end;
+    gap: 20px;
+    font-weight: bold;
+}
+
+.aula-detalhes a {
+    text-decoration: none;
+    color: 007bff;
+}
+
+.status {
+    font-size: 0.8em;
+    font-weight: bold;
+    padding: 4px 8px;
+    border-radius: 4px;
+    color: white;
+}
+
+.status-preparado {
+    border-left-color: #28a745;
+}
+
+.status-pendente {
+    border-left-color: #ffc107;
+}
+
+.status-problema {
+    border-left-color: #dc3445;
+}
+
+/* Novo Agendamento */
+.novo-agendamento-container {
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    /* Centraliza o container */
+}
+
+.novo-agendamento-titulo {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 2rem;
+}
+
+.agendamento-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.agendamento-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.duas-colunas {
+    grid-template-columns: 1fr 1fr;
+}
+
+.grupo-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.tres-colunas {
+    grid-template-columns: 1.5fr 1fr 1fr;
+}
+
+.label-form,
+.grupo-form>label {
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #555;
+}
+
+.grupo-form input[type="text"],
+.grupo-form input[type="number"],
+.grupo-form select,
+.grupo-form textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+.selecao-laboratorio {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.selecao-laboratorio legend {
+    float: left;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.laboratorios-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.laboratorios-card {
+    position: relative;
+}
+
+.laboratorios-card-input {
+    appearance: none;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    margin: 0;
+}
+
+.laboratorios-card-conteudo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem;
+    background: #fff;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.laboratorios-card-conteudo strong {
+    font-size: 1.1em;
+}
+
+.laboratorios-card-conteudo small {
+    color: #6c757d;
+}
+
+.laboratorios-card-input:checked+.laboratorios-card-conteudo {
+    border-color: #007bff;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+}
+
+.laboratorios-status {
+    font-size: 0.85rem;
+    font-weight: bold;
+    margin-top: 0.5rem;
+}
+
+.status-disponivel {
+    color: #28a745;
+}
+
+.status-ocupado {
+    color: #fd7e14;
+}
+
+.opcoes-kits {
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+.opcoes-kits legend {
+    float: left;
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.opcoes-kits .item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.acoes-form {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+    margin-top: 1rem;
+}
+
+.botao-salvar-rascunho {
+    background-color: #6c757d;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.botao-salvar-rascunho:hover {
+    background-color: #5a6268;
+}
+
+.botao-confirmar-agendamento {
+    background-color: #a40000;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.grupo-form textarea {
+    resize: vertical;
+}
+
+/* Meus Kits */
+.container-meus-kits {
+    padding: 2rem;
+}
+
+.container-meus-kits .cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    /* Espaço entre cabeçalho e cards */
+}
+
+.container-meus-kits .cabecalho .titulo {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+}
+
+.botao-novo-kit {
+    background-color: #a40000;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+.botao-novo-kit:hover {
+    background-color: #b02a37;
+}
+
+.container-kits {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300, 1fr));
+    /* Não cria colunas menores que 300px */
+    gap: 24px;
+    /* Espaço entre grids */
+}
+
+.cards-kits {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.cards-kits:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.cards-kits .cabecalho {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+.cards-kits .cabecalho .titulo {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 0;
+}
+
+.cards-kits .cabecalho .quantidade {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.cards-kits .descricao {
+    color: #495057;
+    flex-grow: 1;
+    /* Faz a descrição usar o espaço disponível, empurrando o rodapé para baixo */
+    margin-bottom: 16px;
+}
+
+.cards-kits .data-utilizado {
+    font-size: 0.9em;
+    color: #6c757d;
+    margin-bottom: 16px;
+}
+
+.cards-kits .data-utilizado span {
+    display: block;
+    /* Coloca cada descrição em uma nova linha */
+}
+
+.cards-kits .acoes {
+    display: flex;
+    gap: 20px;
+}
+
+.cards-kits .acoes a {
+    text-decoration: none;
+    font-weight: bold;
+    color: #007bff;
+}
+
+.container-historico {
+    padding: 2rem;
+}
+
+.titulo-historico {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 2rem;
+}
+
+.filtro-historico {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.filtro-busca {
+    flex-grow: 1;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1em;
+}
+
+.filtro-select {
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 8px;
+    font-size: 1em;
+    background-color: #fff;
+    min-width: 200px;
+}
+
+.lista-historico {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.item-historico {
+    display: grid;
+    /* Título(2fr) Turma(1.5fr) Kit (1.5fr) Status(1fr) Data(1fr) */
+    grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1fr;
+    align-items: center;
+    gap: 1.5rem;
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 1.5rem;
+}
+
+.item-historico:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.item-historico-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.item-historico-info .titulo {
+    font-size: 1.15em;
+    font-weight: bold;
+    color: #333;
+    margin: 0;
+}
+
+.item-historico-info .subtitulo {
+    font-size: 0.9em;
+    color: #6c757d;
+}
+
+.item-historico-detalhes {
+    font-size: 0.95em;
+    color: #495057;
+}
+
+.status-historico {
+    font-weight: bold;
+    font-size: 0.95em;
+}
+
+.status-realizado {
+    color: #28a745;
+}
+
+.status-cancelado {
+    color: #dc3545;
+}
+
+.item-historico-data {
+    font-size: 0.95em;
+    color: #6c757d;
+    text-align: right;
+}
