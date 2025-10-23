@@ -34,11 +34,8 @@ h1, h2, h3, h4, h5, h6,
 .cabecalho-inicial {
     background-color: #fff;
     border-bottom: 1px solid #dee2e6;
-}
-
-/* Regras de layout removidas, 'd-flex' etc. estão no HTML */
-.container-logo {
-    /* Estilos específicos do logo se necessário */
+    position: relative; /* Adicionado para posicionamento absoluto do filho */
+    justify-content: flex-start !important; /* Sobrescreve o justify-content-between do HTML */
 }
 
 .container-logo a {
@@ -65,10 +62,26 @@ h1, h2, h3, h4, h5, h6,
 /* REGRA MAIS IMPORTANTE: Removido 'position: absolute' que quebrava o layout */
 .etec-info{
     text-align: center;
+    /* CORREÇÃO: Posicionamento absoluto para centralizar na página */
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    flex-grow: 0 !important; /* Sobrescreve o flex-grow-1 do HTML */
+
+    /* Novo: Inverte a ordem dos filhos (p e strong) */
+    display: flex;
+    flex-direction: column-reverse;
 }
 
 .usuario-info {
     text-align: center;
+}
+
+/* CORREÇÃO: Força a margem e o display para corrigir alinhamento */
+.etec-info strong {
+    display: block; /* Garante que o strong seja um bloco */
+    margin-bottom: 0;
 }
 
 .etec-info p, .usuario-info p {
@@ -97,6 +110,11 @@ h1, h2, h3, h4, h5, h6,
     position: relative;
     z-index: 10;
     pointer-events: auto;
+}
+
+/* NOVO: Garante que o container do usuário seja empurrado para a direita */
+.container-usuario {
+    margin-left: auto;
 }
 
 .botao-sair:hover {
@@ -332,7 +350,7 @@ h1, h2, h3, h4, h5, h6,
 .btn-outline-primary { color: #0d6efd; border-color: #0d6efd; }
 .btn-outline-primary:hover { background-color: #0d6efd; color: white;}
 .btn-outline-danger { color: #dc3545; border-color: #dc3545; }
-.btn-outline-danger:hover { background-color: #dc3545; color: white;}
+.btn-outline-danger:hover { background-color: #dc3L.c; color: white;}
 
 
 /* --- MODAL DE CADASTRO --- */
