@@ -554,7 +554,7 @@ body {
 
 .container-kits {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     /* Não cria colunas menores que 300px */
     gap: 24px;
     /* Espaço entre grids */
@@ -719,4 +719,181 @@ body {
     font-size: 0.95em;
     color: #6c757d;
     text-align: right;
+}
+
+
+/* RESPONSIVIDADE */
+/* Breakpoint 1: Telas médias (992px ou menos) */
+@media (max-width: 992px) {
+
+    .cabecalho-inicial {
+        padding: 1rem;      /* Reduz o espaçamento lateral*/
+    }
+
+    .dashboard-cards {
+        flex-wrap: wrap;
+        /* Cards quebram linha */
+        justify-content: center;
+    }
+
+    .container-cards {
+        flex-grow: 0;
+        /* Impede que os cards tentem crescer automaticamente */
+        flex-basis: 48%;
+        /* Cada card com 48% da largura (2 cards por linha) */
+        max-width: 350px;
+    }
+
+    .cards-acoes-rapidas {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .card-acao-rapida {
+        flex-basis: 48%;
+    }
+
+    .agendamento-grid.tres-colunas {
+        grid-template-columns: 1fr;
+        /* Faz o grid de 3 colunas virar 1 */
+    }
+
+    .laboratorios-grid {
+        grid-template-columns: 1fr 1fr;
+        /* 3 cards do laboratório ficam em 2 colunas */
+    }
+
+    .container-kits {
+        grid-template-columns: 1fr 1fr;
+        /* Grid de kits tem 2 colunas */
+    }
+
+    .item-historico {
+        grid-template-columns: 2fr 1.5fr;
+        /* Grid de 5 colunas vira 2*/
+        gap: 1rem;
+    }
+
+    .item-historico-info {
+        grid-column: 1 / 3;
+        /* Título ocupa a linha inteira */
+    }
+
+
+    .status-historico {
+        grid-column: 1 / 2;
+        /* Status na coluna 1 */
+    }
+
+    .item-historico-data {
+        grid-column: 2 / 3;
+        /* Data na coluna 2 */
+        text-align: right;
+    }
+}
+
+/* Breakpoint 2: Telas Pequenas (768px ou menos) */
+@media (max-width: 768px) {
+
+    .cabecalho-inicial {
+        flex-direction: column;
+        /* Empilha tudo */
+        align-items: flex-start;
+        /* Alinha tudo à esquerda */
+        gap: 1rem;
+    }
+
+    .container-usuario, .etec-info {
+        width: 100%;
+        /* Ocupa a largura toda */
+        justify-content: space-between;
+        /* Espaça o nome e o botão */
+    }
+
+    .barra-navegacao-principal ul li a {
+        padding: 15px 10px;
+        font-size: 0.9em;
+    }
+
+    .dashboard-cards {
+        flex-direction: column;
+        /* Empilha */
+        align-items: center;
+    }
+
+    .container-cards {
+        flex-basis: 90%;
+        /* Ocupa 90% da largura */
+        max-width: 400px;
+    }
+
+    .card-acao-rapida {
+        flex-basis: 100%;
+        /* Empilha os 3 cards em 1 coluna só */
+    }
+
+    .card-aulas .aula-cabecalho {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+
+    .aula-cabecalho .data-horario {
+        text-align: left;
+    }
+
+    .novo-agendamento-container,
+    .container-meus-kits,
+    .container-historico {
+        padding: 1rem;
+        /* Reduz o padding dos containers */
+    }
+
+    .agendamento-grid.duas-colunas,
+    .agendamento-grid.tres-colunas,
+    .laboratorios-grid {
+        grid-template-columns: 1fr;
+        /* Todos os grids ficam com 1 coluna */
+    }
+
+    .acoes-form {
+        flex-direction: column;
+        /* Empilha os botões */
+    }
+
+    .acoes-form .botao-salvar-rascunho,
+    .acoes-form .botao-confirmar-agendamento {
+        width: 100%;
+        /* Botões ocupam tudo */
+        text-align: center;
+    }
+
+    .container-kits {
+        grid-template-columns: 1fr;
+        /* Grid Kits com 1 coluna */
+    }
+
+    .filtro-historico {
+        flex-direction: column;
+    }
+
+    .filtro-select {
+        min-width: 100%;
+        /* Ocupa a tela toda */
+    }
+
+    .item-historico {
+        grid-template-columns: 1fr;
+        /* 1 coluna */
+        gap: 0.75rem;
+    }
+
+    .item-historico-info,
+    .item-historico-detalhes,
+    .item-historico-data,
+    .status-historico {
+        grid-column: auto;
+        /* Grid fluido */
+        text-align: left;
+    }
 }
