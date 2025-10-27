@@ -11,6 +11,7 @@
 
 <body>
 
+    <!-- Cabeçalho -->
     <header class="cabecalho-inicial">
         <div class="container-logo">
             <a href="https://etecjuliodemesquita.cps.sp.gov.br/">
@@ -45,7 +46,19 @@
 
     </header>
 
+    <!-- VLibras -->
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+        new window.VLibras.Widget('https://vlibras.gov.br/app')
+    </script>
 
+    <!-- Barra de navegação -->
     <nav class="barra-navegacao-principal">
         <ul>
             <li><a href="#" class="nav-link active" data-target="dashboard">Dashboard</a></li>
@@ -535,7 +548,7 @@
 
     </main>
 
-    <script src="telaProfessor.js"></script>
+    <script src="javascript.js"></script>
 
 </body>
 
