@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Administração - ETEC</title>
+    
+    <!-- Bootstrap CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Google Fonts (Roboto e Roboto Slab) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- Link para o arquivo CSS externo -->
+    <link rel="stylesheet" href="telaAdmin.css">
+</head>
+<body>
+    <!-- VLibras Widget -->
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+
+    <!-- HEADER (Atualizado com classes responsivas do Bootstrap) -->
+    <header class="cabecalho-inicial p-3 d-flex flex-wrap justify-content-between align-items-center">
+        <!-- Coluna da Esquerda: Logo -->
+        <div class="container-logo d-flex align-items-center">
+            <a id="logoLink" href="https://etecjuliodemesquita.cps.sp.gov.br/" title="Visitar site da ETEC Júlio de Mesquita" aria-label="Abrir site da ETEC Júlio de Mesquita">
+                <img src="https://bkpsitecpsnew.blob.core.windows.net/uploadsitecps/sites/143/2024/04/etec_santo_andre.png"
+                    alt="Etec Júlio de Mesquita" class="me-2">
+            </a>
+            <!-- Link para o logo do CPS (removido para simplicidade em telas menores, pode ser re-adicionado) -->
+            <!-- <a href="https://www.cps.sp.gov.br/" title="Visitar site do Centro Paula Souza" aria-label="Abrir site do Centro Paula Souza">
+                <img src="https://etecjuliodemesquita.cps.sp.gov.br/wp-content/themes/tema-etec-2022/assets/images/centro-paula-souza-logo.png" 
+                     alt="Centro Paula Souza" style="height: 45px; width: auto;">
+            </a> -->
+        </div>
+
+        <!-- Coluna do Meio: Informações da ETEC (flex-grow-1 para ocupar espaço) -->
+        <div class="etec-info flex-grow-1 text-center mx-3 my-2 my-md-0">
+            <strong>ETEC Júlio de Mesquita</strong>
+            <p class="mb-0">Sistema de Laboratórios de Química</p>
+        </div>
+
+        <!-- Coluna da Direita: Usuário e Ações -->
+        <div class="container-usuario d-flex align-items-center flex-wrap justify-content-center justify-content-md-end">
+             <!-- Acessibilidade Dropdown -->
+            <div class="dropdown-acessibilidade me-2">
+                <button class="botao-acessibilidade" id="accessibilityBtn">
+                    Acessibilidade
+                </button>
+                <div class="dropdown-content" id="accessibilityDropdown">
+                    <a href="#" id="toggle-dark-mode"><i class="bi bi-moon-stars-fill"></i>Modo Escuro</a>
+                    <div class="divider"></div>
+                    <span class="dropdown-header">Tamanho da Fonte</span>
+                    <a href="#" id="increase-font"><i class="bi bi-zoom-in"></i>Aumentar Fonte (A+)</a>
+                    <a href="#" id="decrease-font"><i class="bi bi-zoom-out"></i>Diminuir Fonte (A-)</a>
+                    <div class="divider"></div>
+                    <span class="dropdown-header">Daltonismo</span>
+                    <a href="#" data-mode="normal">Padrão</a>
+                    <a href="#" data-mode="protanopia">Protanopia</a>
+                    <a href="#" data-mode="deuteranopia">Deuteranopia</a>
+                    <a href="#" data-mode="tritanopia">Tritanopia</a>
+                </div>
+            </div>
+            <div class="usuario-info me-3 text-md-end text-center">
+                <strong>João Silva</strong>
+                <p class="mb-0">Administrador</p>
+            </div>
+            <button class="botao-sair" id="botaoSair">
+                Sair</button>
+        </div>
+    </header>
+
+    <!-- BARRA DE NAVEGAÇÃO (Atualizada com classes responsivas do Bootstrap) -->
+    <nav class="barra-navegacao-principal navbar navbar-expand-lg">
+        <div class="container-fluid justify-content-center">
+            <!-- Botão "Sanduíche" para telas pequenas -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Links de navegação -->
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <div class="navbar-nav">
+                    <a href="#" class="nav-link active" data-target="dashboard">Dashboard</a>
+                    <a href="#" class="nav-link" data-target="usuarios">Usuários</a>
+                    <a href="#" class="nav-link" data-target="estoque">Estoque</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="container py-4">
+        <!-- SEÇÃO 1: DASHBOARD (ANTIGO AGENDAMENTOS) -->
+        <section id="dashboard" class="conteudo-secao ativo">
+            <!-- Cards de Resumo (Atualizado com Grid Bootstrap) -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4 col-md-6 col-12">
+                    <div class="info-card">
+                        <i class="bi bi-calendar-check"></i>
+                        <div>
+                            <p>Agendamentos Confirmados</p>
+                            <span>2</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-md-6 col-12">
+                    <div class="info-card">
+                        <i class="bi bi-people-fill"></i>
+                        <div>
+                            <p>Usuários Ativos</p>
+                            <span>2</span>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-lg-4 col-md-6 col-12">
+                    <div class="info-card">
+                        <i class="bi bi-box-seam"></i>
+                        <div>
+                            <p>Itens no Estoque</p>
+                            <span>6</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabela de Agendamentos -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="h4 mb-0">Próximos Agendamentos</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Laboratório</th>
+                                    <th>Professor(a)</th>
+                                    <th>Data</th>
+                                    <th>Horário</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Lab. de Química 01</td>
+                                    <td>Ana Silva</td>
+                                    <td>18/10/2025</td>
+                                    <td>14:00 - 16:00</td>
+                                    <td class="text-center"><button class="btn btn-sm btn-outline-danger">Remover</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Lab. de Química 02</td>
+                                    <td>Carlos Pereira</td>
+                                    <td>19/10/2025</td>
+                                    <td>09:00 - 11:00</td>
+                                    <td class="text-center"><button class="btn btn-sm btn-outline-danger">Remover</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO 2: USUÁRIOS -->
+        <section id="usuarios" class="conteudo-secao">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0">Gestão de Usuários</h2>
+                    <button class="btn btn-custom" id="abrirModalBtn"><i class="bi bi-person-plus-fill me-2"></i>Cadastrar Usuário</button>
+                </div>
+                 <div class="card-body">
+                    <div class="table-responsive">
+                         <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Email</th>
+                                    <th>Cargo</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>João da Silva</td>
+                                    <td>joao.silva@etec.com</td>
+                                    <td>Professor</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-primary mx-1">Editar</button>
+                                        <button class="btn btn-sm btn-outline-danger mx-1">Remover</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>Maria Oliveira</td>
+                                    <td>maria.oliveira@etec.com</td>
+                                    <td>Técnico de Lab.</td>
+                                    <td class="text-center">
+                                        <button class="btn btn-sm btn-outline-primary mx-1">Editar</button>
+                                        <button class="btn btn-sm btn-outline-danger mx-1">Remover</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO 3: ESTOQUE -->
+        <section id="estoque" class="conteudo-secao">
+            <div class="card">
+                <!-- CABEÇALHO ATUALIZADO COM BOTÃO -->
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0">Controle de Estoque</h2>
+                    <button class="btn btn-custom" id="abrirModalEstoqueBtn"><i class="bi bi-plus-circle-fill me-2"></i>Adicionar Item</button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Descrição</th>
+                                    <th class="text-center">Quantidade</th>
+                                    <th>Localização</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Béquer de Vidro</td>
+                                    <td>Capacidade 500ml</td>
+                                    <td class="text-center">25 UN</td>
+                                    <td>Lab. de Química 01</td>
+                                </tr>
+                                <tr>
+                                    <td>Ácido Clorídrico</td>
+                                    <td>Frasco de 1L, 37%</td>
+                                    <td class="text-center">5 L</td>
+                                    <td>Lab. de Química 01</td>
+                                </tr>
+                                <tr>
+                                    <td>Pipeta Graduada</td>
+                                    <td>Capacidade 10ml</td>
+                                    <td class="text-center">40 UN</td>
+                                    <td>Lab. de Química 02</td>
+                                </tr>
+                                <tr>
+                                    <td>Hidróxido de Sódio</td>
+                                    <td>Pote de 500g, em escamas</td>
+                                    <td class="text-center">8 UN</td>
+                                    <td>Lab. de Química 02</td>
+                                </tr>
+                                 <tr>
+                                    <td>Balança de Precisão</td>
+                                    <td>Digital, 0.01g</td>
+                                    <td class="text-center">3 UN</td>
+                                    <td>Almoxarifado Central</td>
+                                </tr>
+                                <tr>
+                                    <td>Microscópio Óptico</td>
+                                    <td>Binocular, 1000x</td>
+                                    <td class="text-center">10 UN</td>
+                                    <td>Lab. de Química 03</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modal de Cadastro de Usuário -->
+    <div class="modal-container" id="userModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h5 class="modal-title">Cadastrar Novo Usuário</h5>
+                <button type="button" class="btn-close" id="fecharModalBtn"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formUsuario">
+                    <div class="form-group">
+                        <label for="nome" class="form-label">Nome Completo</label>
+                        <input type="text" class="form-control" id="nome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email" class="form-label">E-mail Institucional</label>
+                        <input type="email" class="form-control" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="cargo" class="form-label">Cargo</label>
+                        <select class="form-select" id="cargo" required>
+                            <option value="" selected disabled>Selecione um cargo...</option>
+                            <option value="Professor">Professor</option>
+                            <option value="Técnico de Laboratório">Técnico de Laboratório</option>
+                            <option value="Coordenador">Coordenador</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="senha" class="form-label">Senha Provisória</label>
+                        <input type="password" class="form-control" id="senha" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelarModalBtn">Cancelar</button>
+                <button type="submit" form="formUsuario" class="btn btn-success">Salvar Usuário</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOVO: Modal de Cadastro de Item de Estoque -->
+    <div class="modal-container" id="estoqueModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Novo Item ao Estoque</h5>
+                <button type="button" class="btn-close" id="fecharModalEstoqueBtn"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formEstoque">
+                    <div class="form-group">
+                        <label for="itemNome" class="form-label">Nome do Item</label>
+                        <input type="text" class="form-control" id="itemNome" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="itemDesc" class="form-label">Descrição</label>
+                        <input type="text" class="form-control" id="itemDesc">
+                    </div>
+                    <div class="form-group">
+                        <label for="itemLocal" class="form-label">Localização</label>
+                        <select class="form-select" id="itemLocal" required>
+                            <option value="" selected disabled>Selecione um local...</option>
+                            <option value="Lab. de Química 01">Lab. de Química 01</option>
+                            <option value="Lab. de Química 02">Lab. de Química 02</option>
+                            <option value="Lab. de Química 03">Lab. de Química 03</option>
+                            <option value="Almoxarifado Central">Almoxarifado Central</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Campos condicionais (Unidade/Peso) -->
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="itemTipoUnidade" class="form-label">Tipo de Medida</label>
+                                <select class="form-select" id="itemTipoUnidade">
+                                    <option value="unidade" selected>Unidade (UN)</option>
+                                    <option value="peso">Peso (g/kg)</option>
+                                    <option value="litros">Litros (L/ml)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- O Label e o Input aqui serão alterados pelo JS -->
+                            <div class="form-group" id="containerValorEstoque">
+                                <label for="itemValor" class="form-label">Quantidade (UN)</label>
+                                <input type="number" class="form-control" id="itemValor" step="1" min="1" required placeholder="Ex: 10">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelarModalEstoqueBtn">Cancelar</button>
+                <button type="submit" form="formEstoque" class="btn btn-success">Salvar Item</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- VLibras JS -->
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+
+    <!-- Bootstrap JS Bundle (Necessário para o menu sanduíche funcionar) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
+    <!-- Link para o arquivo JavaScript externo -->
+    <script src="telaAdmin.js"></script>
+</body>
+</html>
