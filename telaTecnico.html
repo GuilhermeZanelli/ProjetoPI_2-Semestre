@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Tecnico - ETEC</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="telaTecnico.css">
+    <script src="telaTecnico.js" defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+</head>
+
+<script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+<script>
+    new window.VLibras.Widget('https://vlibras.gov.br/app');
+</script>
+
+<div vw class="enabled">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper>
+        <div class="vw-plugin-top-wrapper"></div>
+    </div>
+</div>
+
+<body>
+
+    <header class="cabecalho-inicial">
+        <div class="container-logo">
+            <a href="https://etecjuliodemesquita.cps.sp.gov.br/">
+                <img src="https://bkpsitecpsnew.blob.core.windows.net/uploadsitecps/sites/143/2024/04/etec_santo_andre.png"
+                    alt="Etec Júlio de Mesquita">
+            </a>
+        </div>
+        <div class="etec-info">
+                <strong>
+                    ETEC Júlio de Mesquita
+                </strong>
+                <br>
+                <span>
+                    Sistema de Laboratórios de Química
+                </span>
+        </div>
+
+        <div class="container-usuario">
+            <!-- Movido o dropdown de acessibilidade para aqui -->
+            <div class="dropdown-acessibilidade">
+                <button class="botao-acessibilidade" id="accessibilityBtn">
+                    Acessibilidade
+                </button>
+                <div class="dropdown-content" id="accessibilityDropdown">
+                    <a href="#" id="toggle-dark-mode"><i class="bi bi-moon-stars-fill"></i>Modo Escuro</a>
+                    <div class="divider"></div>
+                    <span class="dropdown-header">Tamanho da Fonte</span>
+                    <a href="#" id="increase-font"><i class="bi bi-zoom-in"></i>Aumentar Fonte (A+)</a>
+                    <a href="#" id="decrease-font"><i class="bi bi-zoom-out"></i>Diminuir Fonte (A-)</a>
+                    <div class="divider"></div>
+                    <span class="dropdown-header">Daltonismo</span>
+                    <a href="#" data-mode="normal">Padrão</a>
+                    <a href="#" data-mode="protanopia">Protanopia</a>
+                    <a href="#" data-mode="deuteranopia">Deuteranopia</a>
+                    <a href="#" data-mode="tritanopia">Tritanopia</a>
+                </div>
+            </div>
+            <div class="usuario-info">
+                <span>
+                    Ernesto Silva
+                </span>
+                <br>
+                <small>
+                    Técnico
+                </small>
+            </div>
+            <button class="botao-sair" id="botaoSair">
+                Sair
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- BARRA DE NAVEGAÇÃO -->
+    <nav class="barra-navegacao-principal">
+        <ul>
+            <li><a href="#" class="nav-link" data-target="item-1">Agendamentos Pendentes</a></li>
+            <li><a href="#" class="nav-link" data-target="item-2">Controle de Estoque</a></li>
+            <li><a href="#" class="nav-link" data-target="item-3">Histórico</a></li>
+        </ul>
+    </nav>
+
+    <section id="item-1">
+        <h2>Agendamentos Pendentes</h2>
+        <div class="agendamentos-lista">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr class="table-agendamentos-text">
+                        <th>Professor</th>
+                        <th>Experimento</th>
+                        <th>Data</th>
+                        <th>Horário</th>
+                        <th>Laboratório</th>
+                        <th>Status</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mariana Lopes</td>
+                        <td>Titulação Ácido-Base</td>
+                        <td>23/10/2025</td>
+                        <td>10:00 - 11:30</td>
+                        <td>Química Orgânica</td>
+                        <td>Pendente</td>
+                        <td>
+                            <button class="botao-acao botao-confirmar">Confirmar</button>
+                            <button class="botao-acao botao-cancelar">Cancelar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Rodrigo Martins</td>
+                        <td>Cromatografia em Papel</td>
+                        <td>25/10/2025</td>
+                        <td>14:00 - 15:30</td>
+                        <td>Química Analítica</td>
+                        <td>Pendente</td>
+                        <td>
+                            <button class="botao-acao botao-confirmar">Confirmar</button>
+                            <button class="botao-acao botao-cancelar">Cancelar</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Fernanda Souza</td>
+                        <td>Reações de Precipitação</td>
+                        <td>28/10/2025</td>
+                        <td>08:00 - 09:30</td>
+                        <td>Química Geral</td>
+                        <td>Pendente</td>
+                        <td>
+                            <button class="botao-acao botao-confirmar">Confirmar</button>
+                            <button class="botao-acao botao-cancelar">Cancelar</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="item-2">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="h4 mb-0">Controle de Estoque</h2>
+                <button class="button-adicionar" id="adicionarItemBtn">Adicionar</button>
+                <button class="button-reportar">Reportar Falta</button>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr class="text-center">
+                                <th>Item</th>
+                                <th>Descrição</th>
+                                <th>Quantidade</th>
+                                <th>Localização</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="text-center">
+                                <td>Béquer de Vidro</td>
+                                <td>Capacidade 500ml</td>
+                                <td>25</td>
+                                <td>Lab. de Química 01</td>
+                            </tr>
+                            <tr class="text-center">
+                                <td>Ácido Clorídrico</td>
+                                <td>Frasco de 1L, 37%</td>
+                                <td>5</td>
+                                <td>Lab. de Química 01</td>
+                            </tr>
+                            <tr class="text-center">
+                                <td>Pipeta Graduada</td>
+                                <td>Capacidade 10ml</td>
+                                <td>40</td>
+                                <td>Lab. de Química 02</td>
+                            </tr>
+                            <tr class="text-center">
+                                <td>Hidróxido de Sódio</td>
+                                <td>Pote de 500g, em escamas</td>
+                                <td>8</td>
+                                <td>Lab. de Química 02</td>
+                            </tr>
+                            <tr class="text-center">
+                                <td>Balança de Precisão</td>
+                                <td>Digital, 0.01g</td>
+                                <td>3</td>
+                                <td>Almoxarifado Central</td>
+                            </tr>
+                            <tr class="text-center">
+                                <td>Microscópio Óptico</td>
+                                <td>Binocular, 1000x</td>
+                                <td>10</td>
+                                <td>Lab. de Química 03</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+    <section id="item-3">
+        <h2>Histórico de Agendamentos</h2>
+        <div class="historico-tabela">
+            <table class="table table-bordered table-hover">
+                <thead class="table-secondary">
+                    <tr>
+                        <th>Professor</th>
+                        <th>Experimento</th>
+                        <th>Data</th>
+                        <th>Horário</th>
+                        <th>Laboratório</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Mariana Lopes</td>
+                        <td>pH de Soluções</td>
+                        <td>10/09/2025</td>
+                        <td>09:00 - 10:30</td>
+                        <td>Química Geral</td>
+                        <td>Concluído</td>
+                    </tr>
+                    <tr>
+                        <td>Rodrigo Martins</td>
+                        <td>Separação de Misturas</td>
+                        <td>15/09/2025</td>
+                        <td>13:00 - 14:30</td>
+                        <td>Química Analítica</td>
+                        <td>Cancelado</td>
+                    </tr>
+                    <tr>
+                        <td>Fernanda Souza</td>
+                        <td>Identificação de Íons</td>
+                        <td>20/09/2025</td>
+                        <td>08:00 - 09:30</td>
+                        <td>Química Orgânica</td>
+                        <td>Concluído</td>
+                    </tr>
+                    <tr>
+                        <td>João Pereira</td>
+                        <td>Destilação Simples</td>
+                        <td>28/09/2025</td>
+                        <td>10:00 - 11:30</td>
+                        <td>Química Experimental</td>
+                        <td>Concluído</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- Modal Adicionar Item -->
+    <div class="modal-container" id="itemModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar Novo Item</h5>
+                <button type="button" class="btn-close" id="fecharModalBtn"></button>
+            </div>
+            <div class="modal-body">
+                <form id="formItem">
+                    <div class="form-group">
+                        <label for="item">Item</label>
+                        <input type="text" class="form-control" id="item" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="descricao">Descrição</label>
+                        <input type="text" class="form-control" id="descricao" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="quantidade">Quantidade</label>
+                        <input type="number" class="form-control" id="quantidade" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="localizacao">Localização</label>
+                        <select class="form-control" id="localizacao" required>
+                            <option value="Lab. de Química 01">Lab. de Química 01</option>
+                            <option value="Lab. de Química 02">Lab. de Química 02</option>
+                            <option value="Lab. de Química 03">Lab. de Química 03</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelarModalBtn">Cancelar</button>
+                <button type="submit" form="formItem" class="btn btn-success">Adicionar</button>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
