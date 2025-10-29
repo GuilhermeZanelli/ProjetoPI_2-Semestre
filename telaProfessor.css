@@ -721,6 +721,140 @@ body {
     text-align: right;
 }
 
+/* --- Estilos do Modal --- */
+.modal-backdrop {
+    display: none; /* Escondido por padrão */
+    position: fixed; /* Fica fixo na tela */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6); /* Fundo preto semi-transparente */
+    z-index: 1040; /* Fica acima de tudo, exceto o modal */
+}
+
+.modal {
+    display: none; 
+    position: fixed; 
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); /* Centraliza */
+    width: 90%;
+    max-width: 600px; 
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    z-index: 1050; /* Fica acima de tudo */
+    display: none;
+    flex-direction: column;
+}
+
+.modal-backdrop.show,
+.modal.show {
+    display: flex; /* Muda de 'none' para 'flex' com o JS */
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.modal-titulo {
+    font-family: 'Roboto Slab', serif;
+    font-size: 1.25rem;
+    font-weight: bold;
+    margin: 0;
+}
+
+.modal-fechar {
+    background: transparent;
+    border: none;
+    font-size: 2rem;
+    font-weight: bold;
+    color: #6c757d;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+}
+.modal-fechar:hover {
+    color: #333;
+}
+
+.modal-body {
+    padding: 1.5rem;
+    overflow-y: auto; /* Adiciona scroll se o conteúdo for muito grande */
+}
+
+.modal-body .grupo-form {
+    margin-bottom: 1rem;
+}
+.modal-body .grupo-form:last-child {
+    margin-bottom: 0;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.modal-footer .btn-secondary {
+    background-color: #6c757d;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.modal-footer .btn-primary {
+    background-color: #a40000;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+}
+
+/* Modal - Ver Detalhes */
+.detalhes-aula-grupo {
+    margin-bottom: 1rem;
+}
+.detalhes-label {
+    display: block;
+    font-size: 0.9em;
+    font-weight: bold;
+    color: #6c757d; 
+}
+.detalhes-valor {
+    font-size: 1.1em;
+    color: #333;
+}
+.detalhes-aula-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 colunas */
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Modal "Ver detalhes" - kits */
+.detalhes-kit-itens-lista {
+    background-color: #f8f9fa; 
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 1rem;
+    font-size: 1em;
+    color: #333;
+    white-space: pre-wrap; /* Respeita as quebras de linha (\n) */
+    min-height: 150px;
+}
 
 /* RESPONSIVIDADE */
 /* Breakpoint 1: Telas médias (992px ou menos) */

@@ -5,8 +5,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Professor - Sistema de Laboratórios ETEC</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
     <link rel="stylesheet" href="telaProfessor.css">
+    <link rel="stylesheet" href="acessibilidade.css">
 </head>
 
 <body>
@@ -14,7 +22,7 @@
     <!-- Cabeçalho -->
     <header class="cabecalho-inicial">
         <div class="container-logo">
-            <a href="https://etecjuliodemesquita.cps.sp.gov.br/">
+            <a id="logoLink" href="https://etecjuliodemesquita.cps.sp.gov.br/">
                 <img src="https://bkpsitecpsnew.blob.core.windows.net/uploadsitecps/sites/143/2024/04/etec_santo_andre.png"
                     alt="Etec Júlio de Mesquita">
             </a>
@@ -29,6 +37,26 @@
             </span>
         </div>
         <div class="container-usuario">
+
+            <div class="dropdown-acessibilidade me-2">
+                <button class="botao-acessibilidade" id="accessibilityBtn">
+                    Acessibilidade
+                </button>
+                <div class="dropdown-content" id="accessibilityDropdown">
+                    <a href="#" id="toggle-dark-mode"><i class="bi bi-moon-stars-fill"></i>Modo Escuro</a>
+                    <div class="divider"></div>
+                    <span class="dropdown-header">Tamanho da Fonte</span>
+                    <a href="#" id="increase-font"><i class="bi bi-zoom-in"></i>Aumentar Fonte (A+)</a>
+                    <a href="#" id="decrease-font"><i class="bi bi-zoom-out"></i>Diminuir Fonte (A-)</a>
+                    <div class="divider"></div>
+                    <span class="dropdown-header">Daltonismo</span>
+                    <a href="#" data-mode="normal">Padrão</a>
+                    <a href="#" data-mode="protanopia">Protanopia</a>
+                    <a href="#" data-mode="deuteranopia">Deuteranopia</a>
+                    <a href="#" data-mode="tritanopia">Tritanopia</a>
+                </div>
+            </div>
+
             <div class="usuario-info">
                 <span>
                     João Silva
@@ -38,7 +66,7 @@
                     Professor
                 </small>
             </div>
-            <button onclick="window.location.href='telaLogin.html'" class="botao-sair">
+            <button id="botaoSair" class="botao-sair">
                 Sair
             </button>
 
@@ -145,7 +173,7 @@
                     <!-- COMPLETAR OS HREFs -->
 
                     <!-- Novo Agendamento -->
-                    <a href="#" class="card-acao-rapida bg-red">
+                    <a href="#" class="card-acao-rapida bg-red" id="acao-novo-agendamento">
                         <div class="card-acao-rapida-icone">
                             <span>
                                 📅
@@ -157,7 +185,7 @@
                         </div>
                     </a>
                     <!-- Criar kit -->
-                    <a href="#" class="card-acao-rapida bg-dark-blue">
+                    <a href="#" class="card-acao-rapida bg-dark-blue" id="acao-criar-kit">
                         <div class="card-acao-rapida-icone">
                             <span>
                                 🧪
@@ -238,8 +266,8 @@
                             </div>
                         </div>
                         <div class="aula-detalhes">
-                            <a href="#">Ver detalhes</a>
-                            <a href="#">Editar</a>
+                            <a href="#" class="btn-ver-detalhes">Ver detalhes</a>
+                            <a href="#" class="btn-editar-aula">Editar</a>
                         </div>
 
                     </article>
@@ -293,8 +321,8 @@
                             </div>
                         </div>
                         <div class="aula-detalhes">
-                            <a href="#">Ver detalhes</a>
-                            <a href="#">Editar</a>
+                            <a href="#" class="btn-ver-detalhes">Ver detalhes</a>
+                            <a href="#" class="btn-editar-aula">Editar</a>
                         </div>
                     </article>
                 </div>
@@ -438,8 +466,8 @@
                             <span>Última vez: 03/01/2025</span>
                         </div>
                         <footer class="acoes">
-                            <a href="#">Ver</a>
-                            <a href="#">Editar</a>
+                            <a href="#" class="btn-ver-kit">Ver</a>
+                            <a href="#" class="btn-editar-kit">Editar</a>
                         </footer>
                     </article>
 
@@ -454,8 +482,8 @@
                             <span>Última vez: 01/01/2025</span>
                         </div>
                         <footer class="acoes">
-                            <a href="#">Ver</a>
-                            <a href="#">Editar</a>
+                            <a href="#" class="btn-ver-kit">Ver</a>
+                            <a href="#" class="btn-editar-kit">Editar</a>
                         </footer>
                     </article>
 
@@ -470,8 +498,8 @@
                             <span>Última vez: 01/01/2025</span>
                         </div>
                         <footer class="acoes">
-                            <a href="#">Ver</a>
-                            <a href="#">Editar</a>
+                            <a href="#" class="btn-ver-kit">Ver</a>
+                            <a href="#" class="btn-editar-kit">Editar</a>
                         </footer>
                     </article>
 
@@ -486,8 +514,8 @@
                             <span>Última vez: 01/01/2025</span>
                         </div>
                         <footer class="acoes">
-                            <a href="#">Ver</a>
-                            <a href="#">Editar</a>
+                            <a href="#" class="btn-ver-kit">Ver</a>
+                            <a href="#" class="btn-editar-kit">Editar</a>
                         </footer>
                     </article>
 
@@ -548,7 +576,188 @@
 
     </main>
 
-    <script src="javascript.js"></script>
+    <script src="telaProfessor.js"></script>
+
+    <!-- Modais -->
+    <!-- Modal do botão "Novo kit" -->
+    <!-- Div backdrop (lógica de clicar fora do pop-up) -->
+    <div class="modal-backdrop" id="modalNovoKitBackdrop"></div>
+    <div class="modal" id="modalNovoKit">
+        <header class="modal-header">
+            <h2 class="modal-titulo">Criar Novo Kit de Materiais</h2>
+            <button class="modal-fechar" id="fecharModalKitBtn">&times;</button>
+        </header>
+        <div class="modal-body">
+            <form id="formNovoKit">
+                <div class="grupo-form">
+                    <label for="kit-nome">Nome do Kit</label>
+                    <input type="text" id="kit-nome" placeholder="Ex: Titulação Ácido-Base">
+                </div>
+                <div class="grupo-form">
+                    <label for="kit-descricao">Itens e Descrição</label>
+                    <textarea id="kit-descricao" rows="6"
+                        placeholder="Liste os materiais e quantidades. Ex:&#10;- 1 Béquer 100ml&#10;- 1 Pipeta 25ml&#10;- 1 Frasco de Fenolftaleína"></textarea>
+                </div>
+            </form>
+        </div>
+        <footer class="modal-footer">
+            <button type="button" class="btn-secondary" id="cancelarModalKitBtn">Cancelar</button>
+            <button type="submit" form="formNovoKit" class="btn-primary">Salvar Kit</button>
+        </footer>
+    </div>
+
+    <!-- Modal do botão "Ver Detalhes" -->
+    <div class="modal-backdrop" id="modalVerDetalhesBackdrop"></div>
+    <div class="modal" id="modalVerDetalhes">
+        <header class="modal-header">
+            <h2 class="modal-titulo">Detalhes da Aula</h2>
+            <button class="modal-fechar" id="fecharModalVerDetalhesBtn">&times;</button>
+        </header>
+        <div class="modal-body">
+            <div class="detalhes-aula-grupo">
+                <span class="detalhes-label">Título da Aula:</span>
+                <span class="detalhes-valor" id="detalhe-titulo">Titulação Simples</span>
+            </div>
+            <div class="detalhes-aula-grupo">
+                <span class="detalhes-label">Status:</span>
+                <span class="detalhes-valor" id="detalhe-status">✅ Preparado</span>
+            </div>
+            <div class="detalhes-aula-grid">
+                <div class="detalhes-aula-grupo">
+                    <span class="detalhes-label">Turma:</span>
+                    <span class="detalhes-valor" id="detalhe-turma">2° Química</span>
+                </div>
+                <div class="detalhes-aula-grupo">
+                    <span class="detalhes-label">Nº de Alunos:</span>
+                    <span class="detalhes-valor" id="detalhe-alunos">30</span>
+                </div>
+                <div class="detalhes-aula-grupo">
+                    <span class="detalhes-label">Laboratório:</span>
+                    <span class="detalhes-valor" id="detalhe-lab">Lab 1 - Química Geral</span>
+                </div>
+                <div class="detalhes-aula-grupo">
+                    <span class="detalhes-label">Data/Horário:</span>
+                    <span class="detalhes-valor" id="detalhe-data">15/01/2025 - 14:00-16:00</span>
+                </div>
+            </div>
+            <div class="detalhes-aula-grupo">
+                <span class="detalhes-label">Kit de Materiais:</span>
+                <span class="detalhes-valor" id="detalhe-kit">Titulação Básica</span>
+            </div>
+        </div>
+        <footer class="modal-footer">
+            <button type="button" class="btn-secondary" id="fecharModalVerDetalhesBtn_footer">Fechar</button>
+        </footer>
+    </div>
+
+    <!-- Modal do botão "Editar" (aula agendada) -->
+    <div class="modal-backdrop" id="modalEditarAulaBackdrop"></div>
+    <div class="modal" id="modalEditarAula">
+        <header class="modal-header">
+            <h2 class="modal-titulo">Editar Agendamento</h2>
+            <button class="modal-fechar" id="fecharModalEditarAulaBtn">&times;</button>
+        </header>
+        <div class="modal-body">
+            <form id="formEditarAula" class="agendamento-form">
+
+                <div class="grupo-form">
+                    <label for="edit-titulo-aula">Título da Aula</label>
+                    <input type="text" id="edit-titulo-aula" name="titulo-aula">
+                </div>
+
+                <div class="agendamento-grid duas-colunas">
+                    <div class="grupo-form">
+                        <label for="edit-disciplina">Disciplina</label>
+                        <select id="edit-disciplina" name="disciplina">
+                        </select>
+                    </div>
+                    <div class="grupo-form">
+                        <label for="edit-turma">Turma</label>
+                        <select id="edit-turma" name="turma">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="agendamento-grid tres-colunas">
+                    <div class="grupo-form">
+                        <label for="edit-data">Data</label>
+                        <input type="text" id="edit-data" name="data" placeholder="dd/mm/aaaa">
+                    </div>
+                    <div class="grupo-form">
+                        <label for="edit-horario-inicio">Horário Início</label>
+                        <select id="edit-horario-inicio" name="horario-inicio">
+                        </select>
+                    </div>
+                    <div class="grupo-form">
+                        <label for="edit-horario-fim">Horário Fim</label>
+                        <select id="edit-horario-fim" name="horario-fim">
+                        </select>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+        <footer class="modal-footer">
+            <button type="button" class="btn-secondary" id="cancelarModalEditarAulaBtn">Cancelar</button>
+            <button type="submit" form="formEditarAula" class="btn-primary">Salvar Alterações</button>
+        </footer>
+    </div>
+
+    <!-- Modal "Ver Detalhes" (kit) -->
+    <div class="modal-backdrop" id="modalVerKitBackdrop"></div>
+    <div class="modal" id="modalVerKit">
+        <header class="modal-header">
+            <h2 class="modal-titulo" id="detalhe-kit-titulo">Titulação Básica</h2>
+            <button class="modal-fechar" id="fecharModalVerKitBtn">&times;</button>
+        </header>
+        <div class="modal-body">
+
+            <div class="detalhes-aula-grupo"> <span class="detalhes-label">Itens e Descrição:</span>
+                <div class="detalhes-kit-itens-lista" id="detalhe-kit-itens">
+                    Kit para aulas de titulação ácido-base com indicadores
+                    - 1 Béquer 100ml
+                    - 1 Pipeta 25ml
+                    - 1 Frasco de Fenolftaleína
+                </div>
+            </div>
+
+            <div class="detalhes-aula-grupo"> <span class="detalhes-label">Dados de Uso:</span>
+                <span class="detalhes-valor" id="detalhe-kit-uso">
+                    Usado em: 8 aulas<br>
+                    Última vez: 10/01/2024
+                </span>
+            </div>
+
+        </div>
+        <footer class="modal-footer">
+            <button type="button" class="btn-secondary" id="fecharModalVerKitBtn_footer">Fechar</button>
+        </footer>
+    </div>
+
+    <!-- Modal "Editar Kit" -->
+    <div class="modal-backdrop" id="modalEditarKitBackdrop"></div>
+    <div class="modal" id="modalEditarKit">
+        <header class="modal-header">
+            <h2 class="modal-titulo">Editar Kit de Materiais</h2>
+            <button class="modal-fechar" id="fecharModalEditarKitBtn">&times;</button>
+        </header>
+        <div class="modal-body">
+            <form id="formEditarKit">
+                <div class="grupo-form">
+                    <label for="edit-kit-nome">Nome do Kit</label>
+                    <input type="text" id="edit-kit-nome" name="kit-nome">
+                </div>
+                <div class="grupo-form">
+                    <label for="edit-kit-descricao">Itens e Descrição</label>
+                    <textarea id="edit-kit-descricao" name="kit-descricao" rows="6"></textarea>
+                </div>
+            </form>
+        </div>
+        <footer class="modal-footer">
+            <button type="button" class="btn-secondary" id="cancelarModalEditarKitBtn">Cancelar</button>
+            <button type="submit" form="formEditarKit" class="btn-primary">Salvar Alterações</button>
+        </footer>
+    </div>
 
 </body>
 

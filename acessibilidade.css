@@ -1,0 +1,197 @@
+:root {
+    --font-size-base: 1rem;  /* 16px */
+}
+
+html {
+    font-size: var(--font-size-base); 
+}
+
+h1, h2, h3, h4, h5, h6,
+.titulo-principal,
+.novo-agendamento-titulo,
+.titulo-historico,
+.container-meus-kits .cabecalho .titulo,
+.etec-info strong,
+.usuario-info span,
+.info-numero,
+.cards-kits .cabecalho .titulo,
+.item-historico-info .titulo {
+    font-family: 'Roboto Slab', serif; 
+}
+
+
+/* Dropdown */
+.dropdown-acessibilidade {
+    position: relative;
+    display: inline-block; 
+}
+
+.dropdown-acessibilidade.me-2 {
+    margin-right: 0.5rem;
+}
+
+.botao-acessibilidade {
+    background-color: transparent;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 0.9rem; 
+    font-weight: 500; 
+    color: #6c757d;
+    transition: background-color 0.3s;
+}
+
+.botao-acessibilidade:hover {
+    background-color: #f4f4f4; 
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 50px;
+    background-color: #ffffff;
+    min-width: 240px; 
+    box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); 
+    z-index: 100;
+    border-radius: 8px;
+    padding: 0.5rem 0;
+    border: 1px solid #dee2e6; 
+}
+
+.dropdown-content.show {
+    display: block;
+}
+
+.dropdown-content a {
+    color: black;
+    padding: 10px 16px;
+    text-decoration: none;
+    display: flex; 
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.dropdown-content a:hover {
+    background-color: #f1f1f1; 
+}
+
+.dropdown-content .divider {
+    height: 1px;
+    margin: .5rem 0;
+    overflow: hidden;
+    background-color: #e9ecef; 
+}
+
+.dropdown-content .dropdown-header {
+    display: block;
+    padding: .5rem 1rem;
+    margin-bottom: 0;
+    font-size: .875rem;
+    color: #6c757d;
+    white-space: nowrap; 
+}
+
+.dropdown-content i {
+    margin-right: 0.75rem;
+    width: 16px; 
+}
+
+/* Tema escuro */
+body.dark-mode {
+    background-color: #212529;
+    color: #dee2e6; 
+}
+
+/* Fundos de containers */
+.dark-mode .cabecalho-inicial,
+.dark-mode .container-cards,
+.dark-mode .dashboard-acoes-rapidas,
+.dark-mode .dashboard-proximas-aulas-agendadas,
+.dark-mode .card-aulas,
+.dark-mode .novo-agendamento-container,
+.dark-mode .laboratorios-card-conteudo,
+.dark-mode .container-meus-kits,
+.dark-mode .cards-kits,
+.dark-mode .container-historico,
+.dark-mode .item-historico,
+.dark-mode .dropdown-content {
+    background-color: #343a40; 
+    color: #dee2e6;
+    border-color: #495057 !important; /* !important para sobrescrever bordas */
+}
+
+/* Textos e Cores */
+.dark-mode .etec-info span,
+.dark-mode .usuario-info small,
+.dark-mode .info-texto,
+.dark-mode .card-acao-rapida-texto .subtitulo,
+.dark-mode .aula-info span,
+.dark-mode .cards-kits .cabecalho .quantidade,
+.dark-mode .cards-kits .descricao,
+.dark-mode .cards-kits .data-utilizado span,
+.dark-mode .item-historico-info .subtitulo,
+.dark-mode .item-historico-detalhes,
+.dark-mode .item-historico-data,
+.dark-mode .botao-acessibilidade,
+.dark-mode .label-form,
+.dark-mode .grupo-form > label {
+    color: #adb5bd; 
+}
+
+.dark-mode .info-numero,
+.dark-mode .titulo-principal,
+.dark-mode .aula-cabecalho .titulo,
+.dark-mode .novo-agendamento-titulo,
+.dark-mode .laboratorios-card-conteudo strong,
+.dark-mode .container-meus-kits .cabecalho .titulo,
+.dark-mode .cards-kits .cabecalho .titulo,
+.dark-mode .titulo-historico,
+.dark-mode .item-historico-info .titulo,
+.dark-mode .dropdown-content a {
+    color: #f8f9fa; 
+}
+
+/* Inversão do Logo */
+.dark-mode .container-logo img {
+    filter: invert(1) brightness(1.5); 
+}
+
+/* Formulários */
+.dark-mode .grupo-form input[type="text"],
+.dark-mode .grupo-form input[type="number"],
+.dark-mode .grupo-form select,
+.dark-mode .grupo-form textarea,
+.dark-mode .filtro-busca,
+.dark-mode .filtro-select {
+    background-color: #495057; 
+    color: #fff; 
+    border-color: #6c757d; 
+}
+.dark-mode .dropdown-content a:hover {
+    background-color: #495057; 
+}
+.dark-mode .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%); 
+}
+
+/* Barra de navegação */
+.dark-mode .barra-navegacao-principal .nav-link.active {
+    border-bottom-color: #ffffff; 
+}
+
+/* Daltonismo */
+body.protanopia { filter: grayscale(0.5) sepia(0.2) hue-rotate(-15deg); } 
+body.deuteranopia { filter: grayscale(0.4) sepia(0.3) hue-rotate(10deg); } 
+body.tritanopia { filter: grayscale(0.3) sepia(0.1) hue-rotate(20deg); } 
+
+/* Ajustes de alto contraste para daltonismo */
+body.protanopia .barra-navegacao-principal .nav-link.active,
+body.deuteranopia .barra-navegacao-principal .nav-link.active,
+body.tritanopia .barra-navegacao-principal .nav-link.active,
+body.dark-mode.protanopia .barra-navegacao-principal .nav-link.active,
+body.dark-mode.deuteranopia .barra-navegacao-principal .nav-link.active,
+body.dark-mode.tritanopia .barra-navegacao-principal .nav-link.active {
+    border-bottom-color: #ffffff; 
+}
