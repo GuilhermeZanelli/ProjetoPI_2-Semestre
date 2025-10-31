@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratórios - Login</title>
+    <!-- Google Fonts (Roboto e Roboto Slab) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="telaLogin.css">
+</head>
+<body>
+    <div class="container">
+        <div class="brand-images-top">
+            <!-- Imagem ETEC (Correta) -->
+            <img src="https://bkpsitecpsnew.blob.core.windows.net/uploadsitecps/sites/143/2024/04/etec_santo_andre.png" alt="Etec Júlio de Mesquita - Santo André" class="brand-image top">
+            
+            <!-- CORRIGIDO: URL do logo do CPS substituída por um link SVG oficial -->
+            <img src="https://www.cps.sp.gov.br/wp-content/themes/cps/assets/images/logo-cps.svg" alt="Centro Paula Souza" class="brand-image top" style="max-width: 150px; height: 50px; object-fit: contain;">
+        </div>
+        <div class="page-titles">
+            <h1 class="title-main">Sistema de Laboratórios</h1>
+            <h2 class="title-medium">ETEC Júlio de Mesquita</h2>
+            <p class="title-sub">Agendamento e Gerenciamento de Aulas Práticas</p>
+        </div>
+        <div class="login-card">
+            <div class="login-header">
+                <h1>Entrar</h1>
+                <p>Bem-vindo de volta!</p>
+            </div>
+            
+            <form class="login-form" id="login-form">
+                <div class="input-group">
+                    <label for="email">E-mail</label>
+                    <input type="email" id="email" name="email" placeholder="Digite seu e-mail" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">Senha</label>
+                    <input type="password" id="password" name="password" placeholder="Digite sua senha" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="account-type">Usuário</label>
+                    <select id="account-type" name="account-type" class="account-type-select" required>
+                        <option value="">Selecione o tipo de usuário</option>
+                        <option value="admin">Administrador</option>
+                        <option value="tecnico">Técnico</option>
+                        <option value="professor">Professor</option>
+                    </select>
+                </div>
+
+                <div id="login-error" class="error-message" style="display: none;">
+                    <p>As senhas não coincidem. Tente novamente.</p>
+                </div>
+                
+                <div class="remember-forgot">
+                    <label class="remember-me">
+                        <input type="checkbox" name="remember">
+                        <span class="checkmark"></span>
+                        Lembrar de mim
+                    </label>
+                    <a href="esqueceuSenha.html" class="forgot-password">Esqueceu a senha?</a>
+                </div>
+                
+                <button type="submit" class="login-button" id="login-button">Entrar</button>
+            </form>
+        </div>
+        <!-- Imagem Governo (Placeholder) -->
+        <img src="https://placehold.co/180x50/ffffff/000000?text=GOVERNO+SP" alt="Governo do Estado de São Paulo" class="brand-image bottom" style="max-width: 180px;">
+    </div>
+
+    <script src="telaLogin.js" defer></script>
+</body>
+</html>
+
