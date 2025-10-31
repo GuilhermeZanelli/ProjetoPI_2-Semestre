@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Painel do Técnico - ETEC</title>
+
+  <!-- Bootstrap CSS via CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+    xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+  <!-- Google Fonts (Roboto e Roboto Slab) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <!-- CSS Personalizado -->
+  <link rel="stylesheet" href="telaTecnico.css" />
+</head>
+
+<body>
+  <!-- VLibras Widget -->
+  <div vw class="enabled">
+    <div vw-access-button class="active"></div>
+    <div vw-plugin-wrapper>
+      <div class="vw-plugin-top-wrapper"></div>
+    </div>
+  </div>
+
+  <!-- Cabeçalho (Estrutura do Admin) -->
+  <header class="cabecalho-inicial p-3 d-flex flex-wrap justify-content-between align-items-center">
+    <!-- Coluna da Esquerda: Logo -->
+    <div class="container-logo d-flex align-items-center">
+      <a id="logoLink" href="https://etecjuliodemesquita.cps.sp.gov.br/" title="Visitar site da ETEC Júlio de Mesquita"
+        aria-label="Abrir site da ETEC Júlio de Mesquita">
+        <img
+          src="https://bkpsitecpsnew.blob.core.windows.net/uploadsitecps/sites/143/2024/04/etec_santo_andre.png"
+          alt="Etec Júlio de Mesquita" class="me-2">
+      </a>
+    </div>
+
+    <!-- Coluna do Meio: Informações da ETEC -->
+    <div class="etec-info flex-grow-1 text-center mx-3 my-2 my-md-0">
+      <strong>ETEC Júlio de Mesquita</strong>
+      <p class="mb-0">Sistema de Laboratórios de Química</p>
+    </div>
+
+    <!-- Coluna da Direita: Usuário e Ações -->
+    <div class="container-usuario d-flex align-items-center flex-wrap justify-content-center justify-content-md-end">
+      <!-- Acessibilidade Dropdown -->
+      <div class="dropdown-acessibilidade me-2">
+        <button class="botao-acessibilidade" id="accessibilityBtn">
+          Acessibilidade
+        </button>
+        <div class="dropdown-content" id="accessibilityDropdown">
+          <a href="#" id="toggle-dark-mode"><i class="bi bi-moon-stars-fill"></i>Modo Escuro</a>
+          <div class="divider"></div>
+          <span class="dropdown-header">Tamanho da Fonte</span>
+          <a href="#" id="increase-font"><i class="bi bi-zoom-in"></i>Aumentar Fonte (A+)</a>
+          <a href="#" id="decrease-font"><i class="bi bi-zoom-out"></i>Diminuir Fonte (A-)</a>
+          <div class="divider"></div>
+          <span class="dropdown-header">Daltonismo</span>
+          <a href="#" data-mode="normal">Padrão</a>
+          <a href="#" data-mode="protanopia">Protanopia</a>
+          <a href="#" data-mode="deuteranopia">Deuteranopia</a>
+          <a href="#" data-mode="tritanopia">Tritanopia</a>
+        </div>
+      </div>
+      <!-- Info do Usuário -->
+      <div class="usuario-info me-3 text-md-end text-center">
+        <strong>Ernesto Silva</strong>
+        <p class="mb-0">Técnico</p>
+      </div>
+      <!-- Botão Sair -->
+      <button class="botao-sair" id="botaoSair">
+        Sair
+      </button>
+    </div>
+  </header>
+  
+  <!-- Barra de navegação (Estrutura do Admin) -->
+  <nav class="barra-navegacao-principal navbar navbar-expand-lg">
+    <div class="container-fluid justify-content-center">
+      <!-- Botão "Sanduíche" para telas pequenas -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <!-- Links de navegação -->
+      <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+        <div class="navbar-nav">
+          <!-- data-targets atualizados para nomes descritivos -->
+          <a href="#" class="nav-link active" data-target="agendamentos">Agendamentos Pendentes</a>
+          <a href="#" class="nav-link" data-target="estoque">Controle de Estoque</a>
+          <a href="#" class="nav-link" data-target="historico">Histórico</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Conteúdo Principal (Estrutura do Admin) -->
+  <main class="container py-4">
+
+    <!-- SEÇÃO 1: AGENDAMENTOS PENDENTES -->
+    <section id="agendamentos" class="conteudo-secao ativo">
+      <div class="card">
+        <div class="card-header">
+          <h2 class="h4 mb-0">Agendamentos Pendentes</h2>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>Professor</th>
+                  <th>Experimento</th>
+                  <th>Data</th>
+                  <th>Horário</th>
+                  <th>Laboratório</th>
+                  <th>Status</th>
+                  <!-- ATUALIZADO: Coluna de Ações -->
+                  <th class="text-center">Analisar</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- ATUALIZADO: Adicionado data-attributes para o JS ler -->
+                <tr data-id="1" 
+                    data-professor="Mariana Lopes" 
+                    data-experimento="Titulação Ácido-Base" 
+                    data-data="23/10/2025" 
+                    data-horario="10:00 - 11:30" 
+                    data-laboratorio="Química Orgânica"
+                    data-status="Pendente"
+                    data-materiais="10x Béquers 100ml&#10;10x Pipetas 25ml&#10;1L Solução NaOH 0.1M&#10;1L Solução HCl 0.1M&#10;5x Frascos Fenolftaleína">
+                  <td data-label="Professor">Mariana Lopes</td>
+                  <td data-label="Experimento">Titulação Ácido-Base</td>
+                  <td data-label="Data">23/10/2025</td>
+                  <td data-label="Horário">10:00 - 11:30</td>
+                  <td data-label="Laboratório">Química Orgânica</td>
+                  <td data-label="Status">Pendente</td>
+                  <!-- ATUALIZADO: Botão "Analisar" -->
+                  <td class="text-center acoes-cell">
+                    <button class="btn btn-sm btn-outline-primary btn-analisar">Analisar</button>
+                  </td>
+                </tr>
+                <tr data-id="2"
+                    data-professor="Rodrigo Martins"
+                    data-experimento="Cromatografia em Papel"
+                    data-data="25/10/2025"
+                    data-horario="14:00 - 15:30"
+                    data-laboratorio="Química Analítica"
+                    data-status="Pendente"
+                    data-materiais="15x Tiras de papel filtro&#10;15x Béquers 50ml&#10;5x Frascos Álcool Isopropílico&#10;Kit de Canetas Hidrográficas">
+                  <td data-label="Professor">Rodrigo Martins</td>
+                  <td data-label="Experimento">Cromatografia em Papel</td>
+                  <td data-label="Data">25/10/2025</td>
+                  <td data-label="Horário">14:00 - 15:30</td>
+                  <td data-label="Laboratório">Química Analítica</td>
+                  <td data-label="Status">Pendente</td>
+                  <td class="text-center acoes-cell">
+                    <button class="btn btn-sm btn-outline-primary btn-analisar">Analisar</button>
+                  </td>
+                </tr>
+                <tr data-id="3"
+                    data-professor="Fernanda Souza"
+                    data-experimento="Reações de Precipitação"
+                    data-data="28/10/2025"
+                    data-horario="08:00 - 09:30"
+                    data-laboratorio="Química Geral"
+                    data-status="Pendente"
+                    data-materiais="10x Tubos de Ensaio&#10;1x Estante para tubos&#10;50ml Nitrato de Prata&#10;50ml Cloreto de Sódio">
+                  <td data-label="Professor">Fernanda Souza</td>
+                  <td data-label="Experimento">Reações de Precipitação</td>
+                  <td data-label="Data">28/10/2025</td>
+                  <td data-label="Horário">08:00 - 09:30</td>
+                  <td data-label="Laboratório">Química Geral</td>
+                  <td data-label="Status">Pendente</td>
+                  <td class="text-center acoes-cell">
+                    <button class="btn btn-sm btn-outline-primary btn-analisar">Analisar</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 2: CONTROLE DE ESTOQUE -->
+    <section id="estoque" class="conteudo-secao">
+      <div class="card">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
+          <h2 class="h4 mb-0">Controle de Estoque</h2>
+          <div class="d-flex gap-2 mt-2 mt-md-0">
+            <button class="btn btn-custom" id="abrirModalItemBtn"><i class="bi bi-plus-circle-fill me-2"></i>Adicionar</button>
+            <button class="btn btn-outline-warning">Reportar Falta</button>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Descrição</th>
+                  <th class="text-center">Quantidade</th>
+                  <th>Localização</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="Item">Béquer de Vidro</td>
+                  <td data-label="Descrição">Capacidade 500ml</td>
+                  <td class="text-center mobile-center" data-label="Quantidade">25 UN</td>
+                  <td data-label="Localização">Lab. de Química 01</td>
+                </tr>
+                <tr>
+                  <td data-label="Item">Ácido Clorídrico</td>
+                  <td data-label="Descrição">Frasco de 1L, 37%</td>
+                  <td class="text-center mobile-center" data-label="Quantidade">5 L</td>
+                  <td data-label="Localização">Lab. de Química 01</td>
+                </tr>
+                <!-- Mais itens... -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEÇÃO 3: HISTÓRICO -->
+    <section id="historico" class="conteudo-secao">
+      <div class="card">
+        <div class="card-header">
+           <h2 class="h4 mb-0">Histórico de Agendamentos</h2>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover align-middle">
+              <thead>
+                <tr>
+                  <th>Professor</th>
+                  <th>Experimento</th>
+                  <th>Data</th>
+                  <th>Horário</th>
+                  <th>Laboratório</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td data-label="Professor">Mariana Lopes</td>
+                  <td data-label="Experimento">pH de Soluções</td>
+                  <td data-label="Data">10/09/2025</td>
+                  <td data-label="Horário">09:00 - 10:30</td>
+                  <td data-label="Laboratório">Química Geral</td>
+                  <td data-label="Status">Concluído</td>
+                </tr>
+                <tr>
+                  <td data-label="Professor">Rodrigo Martins</td>
+                  <td data-label="Experimento">Separação de Misturas</td>
+                  <td data-label="Data">15/09/2025</td>
+                  <td data-label="Horário">13:00 - 14:30</td>
+                  <td data-label="Laboratório">Química Analítica</td>
+                  <td data-label="Status">Cancelado</td>
+                </tr>
+                <!-- Mais histórico... -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Modal Adicionar Item (Estrutura do Admin) -->
+  <div class="modal-container" id="itemModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h5 class="modal-title">Adicionar Novo Item</h5>
+        <button type="button" class="btn-close" id="fecharModalBtn"></button>
+      </div>
+      <div class="modal-body">
+        <form id="formItem">
+          <div class="form-group mb-3">
+            <label for="item" class="form-label">Item</label>
+            <input type="text" class="form-control" id="item" required />
+          </div>
+          <div class="form-group mb-3">
+            <label for="descricao" class="form-label">Descrição</label>
+            <input type="text" class="form-control" id="descricao" required />
+          </div>
+          <div class="form-group mb-3">
+            <label for="quantidade" class="form-label">Quantidade</label>
+            <input type="number" class="form-control" id="quantidade" min="0" required />
+          </div>
+          <div class="form-group">
+            <label for="localizacao" class="form-label">Localização</label>
+            <select class="form-select" id="localizacao" required>
+              <option value="" disabled selected>Selecione um local...</option>
+              <option value="Lab. de Química 01">Lab. de Química 01</option>
+              <option value="Lab. de Química 02">Lab. de Química 02</option>
+              <option value="Lab. de Química 03">Lab. de Química 03</option>
+              <option value="Almoxarifado Central">Almoxarifado Central</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelarModalBtn">
+          Cancelar
+        </button>
+        <button type="submit" form="formItem" class="btn btn-success">
+          Adicionar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- NOVO: Modal Analisar Agendamento -->
+  <div class="modal-container" id="modalAnalisarPedido">
+    <div class="modal-card modal-lg"> <!-- modal-lg para mais espaço -->
+      <div class="modal-header">
+        <h5 class="modal-title">Analisar Agendamento</h5>
+        <button type="button" class="btn-close" id="fecharModalAnalisarBtn"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Detalhes do Agendamento -->
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <span class="detalhes-label">Professor:</span>
+            <span class="detalhes-valor" id="analise-professor"></span>
+          </div>
+           <div class="col-md-6">
+            <span class="detalhes-label">Experimento:</span>
+            <span class="detalhes-valor" id="analise-experimento"></span>
+          </div>
+          <div class="col-md-6">
+            <span class="detalhes-label">Data e Horário:</span>
+            <span class="detalhes-valor" id="analise-data-horario"></span>
+          </div>
+          <div class="col-md-6">
+            <span class="detalhes-label">Laboratório:</span>
+            <span class="detalhes-valor" id="analise-laboratorio"></span>
+          </div>
+        </div>
+        <!-- Lista de Materiais -->
+        <div class="detalhes-aula-grupo">
+          <span class="detalhes-label">Materiais Solicitados:</span>
+          <textarea class="form-control detalhes-kit-itens-lista" id="analise-materiais" rows="8" readonly></textarea>
+        </div>
+      </div>
+      <div class="modal-footer justify-content-between">
+        <!-- Botões de Ação -->
+        <div>
+          <button type="button" class="btn btn-success" id="btn-confirmar-agendamento">
+            <i class="bi bi-check-lg me-2"></i>Confirmar
+          </button>
+          <button type="button" class="btn btn-danger" id="btn-cancelar-agendamento">
+            <i class="bi bi-x-lg me-2"></i>Cancelar
+          </button>
+        </div>
+        <button type="button" class="btn btn-secondary" id="btn-fechar-analise">
+          Fechar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de Confirmação de Saída -->
+  <div class="modal-container" id="modalConfirmarSaida">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h5 class="modal-title">Confirmar Saída</h5>
+        <button type="button" class="btn-close" id="fecharModalSaidaBtn"></button>
+      </div>
+      <div class="modal-body">
+        <p>Você tem certeza que deseja sair do sistema?</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" id="cancelarSaidaBtn">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-danger" id="confirmarSaidaBtn">
+          Sair
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VLibras JS -->
+  <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+  <script>
+    new window.VLibras.Widget("https://vlibras.gov.br/app");
+  </script>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+    xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+    crossorigin="anonymous"></script>
+
+  <!-- Script JS Personalizado -->
+  <script src="telaTecnico.js"></script>
+
+</body>
+</html>
+
