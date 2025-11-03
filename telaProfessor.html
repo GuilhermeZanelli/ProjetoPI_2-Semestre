@@ -6,38 +6,54 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Professor - Sistema de Laboratórios ETEC</title>
 
+    <!-- Bootstrap CSS via CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Google Fonts (Roboto e Roboto Slab) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;700&family=Roboto:wght@400;500;700&display=swap"
         rel="stylesheet">
+    
+    <!-- Bootstrap Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
 
+    <!-- CSS Personalizado (agora inclui acessibilidade) -->
     <link rel="stylesheet" href="telaProfessor.css">
-    <link rel="stylesheet" href="acessibilidade.css">
 </head>
 
 <body>
 
-    <!-- Cabeçalho -->
-    <header class="cabecalho-inicial">
-        <div class="container-logo">
-            <a id="logoLink" href="https://etecjuliodemesquita.cps.sp.gov.br/">
+    <!-- VLibras Widget -->
+    <div vw class="enabled">
+        <div vw-access-button class="active"></div>
+        <div vw-plugin-wrapper>
+            <div class="vw-plugin-top-wrapper"></div>
+        </div>
+    </div>
+
+    <!-- Cabeçalho (Estrutura do Admin) -->
+    <header class="cabecalho-inicial p-3 d-flex flex-wrap justify-content-between align-items-center">
+        <!-- Coluna da Esquerda: Logo -->
+        <div class="container-logo d-flex align-items-center">
+            <a id="logoLink" href="https://etecjuliodemesquita.cps.sp.gov.br/"
+                title="Visitar site da ETEC Júlio de Mesquita" aria-label="Abrir site da ETEC Júlio de Mesquita">
                 <img src="https://bkpsitecpsnew.blob.core.windows.net/uploadsitecps/sites/143/2024/04/etec_santo_andre.png"
-                    alt="Etec Júlio de Mesquita">
+                    alt="Etec Júlio de Mesquita" class="me-2">
             </a>
         </div>
-        <div class="etec-info">
-            <strong>
-                ETEC Júlio de Mesquita
-            </strong>
-            <br>
-            <span>
-                Sistema de Laboratórios de Química
-            </span>
-        </div>
-        <div class="container-usuario">
 
+        <!-- Coluna do Meio: Informações da ETEC -->
+        <div class="etec-info flex-grow-1 text-center mx-3 my-2 my-md-0">
+            <strong>ETEC Júlio de Mesquita</strong>
+            <p class="mb-0">Sistema de Laboratórios de Química</p>
+        </div>
+
+        <!-- Coluna da Direita: Usuário e Ações -->
+        <div class="container-usuario d-flex align-items-center flex-wrap justify-content-center justify-content-md-end">
+            <!-- Acessibilidade Dropdown -->
             <div class="dropdown-acessibilidade me-2">
                 <button class="botao-acessibilidade" id="accessibilityBtn">
                     Acessibilidade
@@ -56,709 +72,539 @@
                     <a href="#" data-mode="tritanopia">Tritanopia</a>
                 </div>
             </div>
-
-            <div class="usuario-info">
-                <span>
-                    João Silva
-                </span>
-                <br>
-                <small>
-                    Professor
-                </small>
+            <!-- Info do Usuário -->
+            <div class="usuario-info me-3 text-md-end text-center">
+                <strong id="nome-usuario">João Silva</strong>
+                <p class="mb-0" id="tipo-usuario">Professor</p>
             </div>
-            <button id="botaoSair" class="botao-sair">
+            <!-- Botão Sair -->
+            <button class="botao-sair" id="botaoSair">
                 Sair
             </button>
-
         </div>
-
     </header>
 
-    <!-- VLibras -->
-    <div vw class="enabled">
-        <div vw-access-button class="active"></div>
-        <div vw-plugin-wrapper>
-            <div class="vw-plugin-top-wrapper"></div>
+    <!-- Barra de navegação (Estrutura do Admin) -->
+    <nav class="barra-navegacao-principal navbar navbar-expand-lg">
+        <div class="container-fluid justify-content-center">
+            <!-- Botão "Sanduíche" para telas pequenas -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Links de navegação -->
+            <div class="collapse navbar-collapse justify-content-center" id="navbarNav">
+                <div class="navbar-nav">
+                    <a href="#" class="nav-link active" data-target="dashboard">Dashboard</a>
+                    <a href="#" class="nav-link" data-target="novo-agendamento">Novo Agendamento</a>
+                    <a href="#" class="nav-link" data-target="meus-kits">Meus Kits</a>
+                    <a href="#" class="nav-link" data-target="historico">Histórico</a>
+                </div>
+            </div>
         </div>
-    </div>
-    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
-    <script>
-        new window.VLibras.Widget('https://vlibras.gov.br/app')
-    </script>
-
-    <!-- Barra de navegação -->
-    <nav class="barra-navegacao-principal">
-        <ul>
-            <li><a href="#" class="nav-link active" data-target="dashboard">Dashboard</a></li>
-            <li><a href="#" class="nav-link" data-target="novo-agendamento">Novo Agendamento</a></li>
-            <li><a href="#" class="nav-link" data-target="meus-kits">Meus Kits</a></li>
-            <li><a href="#" class="nav-link" data-target="historico">Histórico</a></li>
-        </ul>
     </nav>
 
-    <main>
+    <!-- Conteúdo Principal (Estrutura do Admin) -->
+    <main class="container py-4">
+
+        <!-- SEÇÃO 1: DASHBOARD -->
         <section id="dashboard" class="conteudo-secao ativo">
-
-            <div class="dashboard-cards">
-                <div class="container-cards">
-                    <div class="cards-imagem bg-blue">
-                        📅
-                    </div>
-                    <div class="cards-info">
-                        <span class="info-texto">
-                            Próximas Aulas
-                        </span>
-                        <span class="info-numero">
-                            3
-                            <!-- NUMERO DINAMICO -->
-                        </span>
+            
+            <!-- Cards de Resumo (Estilo Admin) -->
+            <div class="row g-4 mb-4">
+                <div class="col-lg-3 col-md-6 col-12">
+                    <div class="info-card">
+                        <i class="bi bi-calendar-check"></i>
+                        <div>
+                            <p>Próximas Aulas</p>
+                            <span id="card-proximas-aulas">3</span>
+                        </div>
                     </div>
                 </div>
-
-                <div class="container-cards">
-                    <div class="cards-imagem bg-green">
-                        ✅
-                    </div>
-                    <div class="cards-info">
-                        <span class="info-texto">
-                            Kits Preparados
-                        </span>
-                        <span class="info-numero">
-                            1
-                            <!-- NUMERO DINAMICO -->
-                        </span>
+                <div class="col-lg-3 col-md-6 col-12">
+                    <div class="info-card">
+                        <i class="bi bi-check-lg"></i>
+                        <div>
+                            <p>Kits Preparados</p>
+                            <span id="card-kits-preparados">1</span>
+                        </div>
                     </div>
                 </div>
-
-                <div class="container-cards">
-                    <div class="cards-imagem bg-yellow">
-                        ⌛
-                    </div>
-                    <div class="cards-info">
-                        <span class="info-texto">
-                            Aguardando
-                        </span>
-                        <span class="info-numero">
-                            1
-                            <!-- NUMERO DINAMICO -->
-                        </span>
+                <div class="col-lg-3 col-md-6 col-12">
+                    <div class="info-card">
+                        <i class="bi bi-hourglass-split"></i>
+                        <div>
+                            <p>Aguardando</p>
+                            <span id="card-aguardando">1</span>
+                        </div>
                     </div>
                 </div>
-
-                <div class="container-cards">
-                    <div class="cards-imagem bg-purple">
-                        🧪
-                    </div>
-                    <div class="cards-info">
-                        <span class="info-texto">
-                            Meus Kits
-                        </span>
-                        <span class="info-numero">
-                            5
-                            <!-- NUMERO DINAMICO -->
-                        </span>
+                <div class="col-lg-3 col-md-6 col-12">
+                    <div class="info-card">
+                        <i class="bi bi-box-seam"></i>
+                        <div>
+                            <p>Meus Kits</p>
+                            <span id="card-meus-kits">5</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-
-            <div class="dashboard-acoes-rapidas">
-
-                <h2 class="titulo-principal">
-                    Ações Rápidas
-                </h2>
-
-                <div class="cards-acoes-rapidas">
-
-                    <!-- COMPLETAR OS HREFs -->
-
-                    <!-- Novo Agendamento -->
-                    <a href="#" class="card-acao-rapida bg-red" id="acao-novo-agendamento">
-                        <div class="card-acao-rapida-icone">
-                            <span>
-                                📅
-                            </span>
+            <!-- Ações Rápidas (Envolvido em Card) -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2 class="h4 mb-0">Ações Rápidas</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <a href="#" class="card-acao-rapida bg-red" id="acao-novo-agendamento">
+                                <div class="card-acao-rapida-icone"><span>📅</span></div>
+                                <div class="card-acao-rapida-texto">
+                                    <span class="titulo">Novo Agendamento</span>
+                                    <span class="subtitulo">Agendar uso do laboratório</span>
+                                </div>
+                            </a>
                         </div>
-                        <div class="card-acao-rapida-texto">
-                            <span class="titulo">Novo Agendamento</span>
-                            <span class="subtitulo">Agendar uso do laboratório</span>
+                        <div class="col-md-4">
+                            <a href="#" class="card-acao-rapida bg-dark-blue" id="acao-criar-kit">
+                                <div class="card-acao-rapida-icone"><span>🧪</span></div>
+                                <div class="card-acao-rapida-texto">
+                                    <span class="titulo">Criar Kit</span>
+                                    <span class="subtitulo">Novo kit de materiais</span>
+                                </div>
+                            </a>
                         </div>
-                    </a>
-                    <!-- Criar kit -->
-                    <a href="#" class="card-acao-rapida bg-dark-blue" id="acao-criar-kit">
-                        <div class="card-acao-rapida-icone">
-                            <span>
-                                🧪
-                            </span>
+                        <div class="col-md-4">
+                             <a href="#" class="card-acao-rapida bg-solid-green" id="acao-ver-calendario">
+                                <div class="card-acao-rapida-icone"><span>🗓️</span></div>
+                                <div class="card-acao-rapida-texto">
+                                    <span class="titulo">Ver histórico</span>
+                                    <span class="subtitulo">Veja o último agendamento feito</span>
+                                </div>
+                            </a>
                         </div>
-                        <div class="card-acao-rapida-texto">
-                            <span class="titulo">Criar Kit</span>
-                            <span class="subtitulo">Novo kit de materiais</span>
-                        </div>
-                    </a>
-                    <!-- Ver calendário -->
-                    <a href="#" class="card-acao-rapida bg-solid-green">
-                        <div class="card-acao-rapida-icone">
-                            <span>
-                                📅
-                            </span>
-                        </div>
-                        <div class="card-acao-rapida-texto">
-                            <span class="titulo">Ver Calendário</span>
-                            <span class="subtitulo">Disponibilidade de laboratórios</span>
-                        </div>
-                    </a>
+                    </div>
                 </div>
             </div>
-
-            <div class="dashboard-proximas-aulas-agendadas">
-
-                <h2 class="titulo-principal">
-                    Próximas Aulas Agendadas
-                </h2>
-
-                <div class="lista-aulas">
-                    <article class="card-aulas status-preparado">
-
-                        <div class="aula-cabecalho">
-                            <div>
-                                <span class="status">
-                                    Preparando
-                                </span>
-                                <h3 class="titulo">
-                                    Titulação Simples
-                                </h3>
-                            </div>
-                            <div class="data-horario">
-                                <span>
-                                    15/01/2025 - 14:00-16:00
-                                </span>
-                                <small>
-                                    Lab 1 - Química Geral
-                                </small>
-                            </div>
-                        </div>
-
-                        <div class="aula-main">
-                            <div class="aula-info">
-                                <span>
-                                    Turma:
-                                </span>
-                                2° Química
-                            </div>
-                            <div class="aula-info">
-                                <span>
-                                    Alunos:
-                                </span>
-                                30
-                            </div>
-                            <div class="aula-info">
-                                <span>
-                                    Kit:
-                                </span>
-                                Titulação Básica
-                            </div>
-                            <div class="aula-info">
-                                <span>
-                                    Status:
-                                </span>
-                                ✅ Preparado
-                            </div>
-                        </div>
-                        <div class="aula-detalhes">
-                            <a href="#" class="btn-ver-detalhes">Ver detalhes</a>
-                            <a href="#" class="btn-editar-aula">Editar</a>
-                        </div>
-
-                    </article>
-
-
-                    <article class="card-aulas status-pendente">
-
-                        <div class="aula-cabecalho">
-                            <div>
-                                <span class="status">
-                                    Preparando
-                                </span>
-                                <h3 class="titulo">
-                                    Titulação Simples
-                                </h3>
-                            </div>
-                            <div class="data-horario">
-                                <span>
-                                    16/01/2025 - 14:00-16:00
-                                </span>
-                                <small>
-                                    Lab 2 - Química Orgânica
-                                </small>
-                            </div>
-                        </div>
-
-                        <div class="aula-main">
-                            <div class="aula-info">
-                                <span>
-                                    Turma:
-                                </span>
-                                1° Química
-                            </div>
-                            <div class="aula-info">
-                                <span>
-                                    Alunos:
-                                </span>
-                                32
-                            </div>
-                            <div class="aula-info">
-                                <span>
-                                    Kit:
-                                </span>
-                                Titulação Básica
-                            </div>
-                            <div class="aula-info">
-                                <span>
-                                    Status:
-                                </span>
-                                ⌛Pendente
-                            </div>
-                        </div>
-                        <div class="aula-detalhes">
-                            <a href="#" class="btn-ver-detalhes">Ver detalhes</a>
-                            <a href="#" class="btn-editar-aula">Editar</a>
-                        </div>
-                    </article>
+            
+            <!-- Próximas Aulas (Envolvido em Card) -->
+            <div class="card">
+                <div class="card-header">
+                     <h2 class="h4 mb-0">Próximas Aulas Agendadas</h2>
+                </div>
+                <div class="card-body">
+                    <!-- Lista de Aulas (layout de card nativo) -->
+                    <div class="lista-aulas" id="lista-proximas-aulas">
+                        <!-- Conteúdo será injetado pelo JS -->
+                        <p class="text-center p-3">Carregando agendamentos...</p>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- NOVO AGENDAMENTO ABA -->
+        <!-- SEÇÃO 2: NOVO AGENDAMENTO -->
         <section id="novo-agendamento" class="conteudo-secao">
-
-            <div class="novo-agendamento-container">
-                <h2 class="novo-agendamento-titulo">Novo Agendamento</h2>
-
-                <form class="agendamento-form">
-
-                    <div class="agendamento-grid duas-colunas">
-                        <div class="grupo-form">
-                            <label for="disciplina">Disciplina</label>
-                            <select name="disciplina" id="disciplina">
-                                <option value="" disabled selected>Selecione a disciplina</option>
-                            </select>
-                        </div>
-                        <div class="grupo-form">
-                            <label for="turma">Turma</label>
-                            <select name="turma" id="turma">
-                                <option value="" disabled selected>Selecione a turma</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="agendamento-grid tres-colunas">
-                        <div class="grupo-form">
-                            <label for="data">Data</label>
-                            <input type="text" name="data" id="data" placeholder="dd/mm/aaaa">
-                        </div>
-                        <div class="grupo-form">
-                            <label for="horario-inicio">Horario Início</label>
-                            <select name="horario-inicio" id="horario-inicio">
-                                <option value="" disabled selected>Selecione</option>
-                            </select>
-                        </div>
-                        <div class="grupo-form">
-                            <label for="horario-fim">Horário Fim</label>
-                            <select name="horario-fim" id="horario-fim">
-                                <option value="" disabled selected>Selecione</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <fieldset class="grupo-form selecao-laboratorio">
-                        <legend>Laboratório</legend>
-                        <div class="laboratorios-grid">
-
-                            <div class="laboratorios-card">
-                                <input type="radio" name="laboratorio" id="lab1" class="laboratorios-card-input">
-                                <label for="lab1" class="laboratorios-card-conteudo">
-                                    <strong>Laboratório 1</strong>
-                                    <small>Química Geral</small>
-                                    <small>Capacidade: 35 alunos</small>
-                                    <span class="laboratorios-status status-disponivel">✅ Disponível</span>
-                                </label>
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="h4 mb-0">Novo Agendamento</h2>
+                </div>
+                <div class="card-body p-4"> <!-- Adicionado padding aqui -->
+                    <form class="agendamento-form" id="formNovoAgendamento">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="disciplina" class="form-label">Disciplina</label>
+                                <select name="disciplina" id="disciplina" class="form-select" required>
+                                    <option value="" disabled selected>Selecione a disciplina</option>
+                                    <option value="Química Geral">Química Geral</option>
+                                    <option value="Química Orgânica">Química Orgânica</option>
+                                </select>
                             </div>
-
-                            <div class="laboratorios-card">
-                                <input type="radio" name="laboratorio" id="lab2" class="laboratorios-card-input">
-                                <label for="lab2" class="laboratorios-card-conteudo">
-                                    <strong>Laboratório 2</strong>
-                                    <small>Química Orgânica</small>
-                                    <small>Capacidade: 20 alunos</small>
-                                    <span class="laboratorios-status status-disponivel">✅ Disponível</span>
-                                </label>
-                            </div>
-
-                            <div class="laboratorios-card">
-                                <input type="radio" name="laboratorio" id="lab3" class="laboratorios-card-input">
-                                <label for="lab3" class="laboratorios-card-conteudo">
-                                    <strong>Laboratório 3</strong>
-                                    <small>Química Nuclear</small>
-                                    <small>Capacidade: 5 alunos</small>
-                                    <span class="laboratorios-status status-ocupado">⚠️ Ocupado 14:00 - 16:00</span>
-                                </label>
+                            <div class="col-md-6">
+                                <label for="turma" class="form-label">Turma</label>
+                                <select name="turma" id="turma" class="form-select" required>
+                                    <option value="" disabled selected>Selecione a turma</option>
+                                    <option value="1º M-TEC">1º M-TEC</option>
+                                    <option value="2º M-TEC">2º M-TEC</option>
+                                </select>
                             </div>
                         </div>
-                    </fieldset>
 
-                    <div class="grupo-form">
-                        <label for="titulo-aula">Título da Aula</label>
-                        <input type="text" name="titulo-aula" id="titulo-aula" placeholder="Título da Aula">
-                    </div>
-                    <div class="grupo-form">
-                        <label for="num-alunos">Número de Alunos</label>
-                        <input type="number" name="num-alunos" id="num-alunos" placeholder="Número de Alunos">
-                    </div>
-
-                    <fieldset class="grupo-form opcoes-kits">
-                        <legend class="label-form">Kits de Materiais</legend>
-                        <div class="item">
-                            <input type="radio" name="kit" id="kit-existente" value="existente" checked>
-                            <label for="kit-existente">Usar kit existente</label>
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-5">
+                                <label for="data" class="form-label">Data</label>
+                                <input type="date" name="data" id="data" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="horario-inicio" class="form-label">Horário Início</label>
+                                <select name="horario-inicio" id="horario-inicio" class="form-select" required>
+                                    <option value="" disabled selected>Selecione</option>
+                                    <option value="08:00">08:00</option>
+                                    <option value="10:00">10:00</option>
+                                    <option value="14:00">14:00</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="horario-fim" class="form-label">Horário Fim</label>
+                                <select name="horario-fim" id="horario-fim" class="form-select" required>
+                                    <option value="" disabled selected>Selecione</option>
+                                    <option value="10:00">10:00</option>
+                                    <option value="12:00">12:00</option>
+                                    <option value="16:00">16:00</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="item">
-                            <input type="radio" name="kit" id="kit-novo" value="novo">
-                            <label for="kit-novo">Criar novo kit</label>
+
+                        <fieldset class="mt-4">
+                            <legend class="form-label fs-5">Laboratório</legend>
+                            <div class="row g-3" id="lista-laboratorios-form">
+                                <!-- Laboratórios serão injetados pelo JS -->
+                                <p class="text-center">Carregando laboratórios...</p>
+                            </div>
+                        </fieldset>
+
+                        <div class="row g-3 mt-3">
+                            <div class="col-md-8">
+                                <label for="titulo-aula" class="form-label">Título da Aula</label>
+                                <input type="text" name="titulo-aula" id="titulo-aula" placeholder="Título da Aula" class="form-control" required>
+                            </div>
+                             <div class="col-md-4">
+                                <label for="num-alunos" class="form-label">Número de Alunos</label>
+                                <input type="number" name="num-alunos" id="num-alunos" placeholder="Número de Alunos" class="form-control" required min="1">
+                            </div>
                         </div>
-                    </fieldset>
+                       
+                        <fieldset class="mt-4">
+                            <legend class="form-label fs-5">Kits de Materiais</legend>
+                            <div class="form-check">
+                                <input type="radio" name="kit" id="kit-existente" value="existente" class="form-check-input" checked>
+                                <label for="kit-existente" class="form-check-label">Usar kit existente</label>
+                            </div>
+                            <!-- Select de kits existentes (aparece/desaparece) -->
+                            <div id="container-select-kit">
+                                <label for="select-kit-existente" class="form-label visually-hidden">Selecionar Kit</label>
+                                <select id="select-kit-existente" class="form-select mt-2">
+                                    <option value="">Carregando kits...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-check mt-2">
+                                <input type="radio" name="kit" id="kit-novo" value="novo" class="form-check-input">
+                                <label for="kit-novo" class="form-check-label">Criar novo kit para esta aula</g/label>
+                            </div>
+                            <!-- Textarea de novo kit (aparece/desaparece) -->
+                            <div id="container-novo-kit" style="display: none;">
+                                <label for="textarea-novo-kit" class="form-label visually-hidden">Descrição do Novo Kit</label>
+                                <textarea id="textarea-novo-kit" rows="4" placeholder="Liste os materiais e quantidades. Ex:&#10;- 1 Béquer 100ml&#10;- 1 Pipeta 25ml&#10;- 1 Frasco de Fenolftaleína" class="form-control mt-2"></textarea>
+                            </div>
+                        </fieldset>
 
-                    <div class="grupo-form">
-                        <label for="observacoes">Observações</label>
-                        <textarea name="observacoes" id="observacoes" rows="4" placeholder="Observações"></textarea>
-                    </div>
+                        <div class="mt-3">
+                            <label for="observacoes" class="form-label">Observações</label>
+                            <textarea name="observacoes" id="observacoes" rows="4" placeholder="Observações" class="form-control"></textarea>
+                        </div>
 
-                    <div class="acoes-form">
-                        <button type="button" class="botao-salvar-rascunho">Salvar Rascunho</button>
-                        <button type="submit" class="botao-confirmar-agendamento">Confirmar Agendamento</button>
-                    </div>
-
-                </form>
+                        <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                            <!-- <button type="button" class="btn btn-secondary">Salvar Rascunho</button> -->
+                            <button type="submit" class="btn btn-custom-confirmar">Confirmar Agendamento</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-
         </section>
 
-        <!-- MEUS KITS ABA -->
+        <!-- SEÇÃO 3: MEUS KITS -->
         <section id="meus-kits" class="conteudo-secao">
-
-            <div class="container-meus-kits">
-
-                <header class="cabecalho">
-                    <h2 class="titulo">Meus Kits de Materiais</h2>
-                    <a href="#" class="botao-novo-kit">+ Novo Kit</a>
-                </header>
-
-                <div class="container-kits">
-
-                    <article class="cards-kits">
-                        <header class="cabecalho">
-                            <h3 class="titulo">Titulação Básica</h3>
-                            <span class="quantidade">15 itens</span>
-                        </header>
-                        <p class="descricao">Kit para aulas de titulação ácido-base com indicadores</p>
-                        <div class="data-utilizado">
-                            <span>Usado em: 9 aulas</span>
-                            <span>Última vez: 03/01/2025</span>
-                        </div>
-                        <footer class="acoes">
-                            <a href="#" class="btn-ver-kit">Ver</a>
-                            <a href="#" class="btn-editar-kit">Editar</a>
-                        </footer>
-                    </article>
-
-                    <article class="cards-kits">
-                        <header class="cabecalho">
-                            <h3 class="titulo">Análise de Cátions</h3>
-                            <span class="quantidade">15 itens</span>
-                        </header>
-                        <p class="descricao">Kit para análise quantitativa grupo I</p>
-                        <div class="data-utilizado">
-                            <span>Usado em: 4 aulas</span>
-                            <span>Última vez: 01/01/2025</span>
-                        </div>
-                        <footer class="acoes">
-                            <a href="#" class="btn-ver-kit">Ver</a>
-                            <a href="#" class="btn-editar-kit">Editar</a>
-                        </footer>
-                    </article>
-
-                    <article class="cards-kits">
-                        <header class="cabecalho">
-                            <h3 class="titulo">Análise de Cátions</h3>
-                            <span class="quantidade">15 itens</span>
-                        </header>
-                        <p class="descricao">Kit para análise quantitativa grupo I</p>
-                        <div class="data-utilizado">
-                            <span>Usado em: 4 aulas</span>
-                            <span>Última vez: 01/01/2025</span>
-                        </div>
-                        <footer class="acoes">
-                            <a href="#" class="btn-ver-kit">Ver</a>
-                            <a href="#" class="btn-editar-kit">Editar</a>
-                        </footer>
-                    </article>
-
-                    <article class="cards-kits">
-                        <header class="cabecalho">
-                            <h3 class="titulo">Análise de Cátions</h3>
-                            <span class="quantidade">15 itens</span>
-                        </header>
-                        <p class="descricao">Kit para análise quantitativa grupo I</p>
-                        <div class="data-utilizado">
-                            <span>Usado em: 4 aulas</span>
-                            <span>Última vez: 01/01/2025</span>
-                        </div>
-                        <footer class="acoes">
-                            <a href="#" class="btn-ver-kit">Ver</a>
-                            <a href="#" class="btn-editar-kit">Editar</a>
-                        </footer>
-                    </article>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2 class="h4 mb-0">Meus Kits de Materiais</h2>
+                    <button class="btn btn-custom" id="abrirModalKitBtn"><i class="bi bi-plus-circle-fill me-2"></i>Novo Kit</button>
 
                 </div>
-
+                <div class="card-body">
+                    <div class="row g-4" id="lista-meus-kits">
+                        <!-- Kits serão injetados pelo JS -->
+                         <p class="text-center p-3">Carregando kits...</p>
+                    </div>
+                </div>
             </div>
-
         </section>
 
+        <!-- SEÇÃO 4: HISTÓRICO -->
         <section id="historico" class="conteudo-secao">
-
-            <div class="container-historico">
-
-                <h2 class="titulo-historico">Histórico de Agendamentos</h2>
-
-                <div class="filtro-historico">
-                    <input type="search" class="filtro-busca" placeholder="Buscar por título da aula...">
-                    <select name="periodo" class="filtro-select">
-                        <option value="Todos">Todos os períodos</option>
-                    </select>
-                    <select name="periodo" class="filtro-select">
-                        <option value="Todos">Todos os laboratórios</option>
-                    </select>
+             <div class="card">
+                <div class="card-header">
+                    <h2 class="h4 mb-0">Histórico de Agendamentos</h2>
                 </div>
+                <div class="card-body">
+                    <div class="filtro-historico row g-3 mb-3">
+                        <div class="col-md-6">
+                            <input type="search" class="form-control" placeholder="Buscar por título da aula...">
+                        </div>
+                        <div class="col-md-3">
+                            <select name="periodo" class="form-select">
+                                <option value="Todos">Todos os períodos</option>
+                            </select>
+                        </div>
+                         <div class="col-md-3">
+                            <select name="periodo" class="form-select">
+                                <option value="Todos">Todos os laboratórios</option>
+                            </select>
+                        </div>
+                    </div>
 
-                <div class="lista-historico">
-
-                    <article class="item-historico">
-                        <div class="item-historico-info">
-                            <h3 class="titulo">Titulação Simples</h3>
-                            <span class="subtitulo">Lab 1 - 14:00 - 16:00</span>
-                        </div>
-                        <div class="item-historico-detalhes">
-                            2° Química A - 28 Alunos
-                        </div>
-                        <div class="item-historico-detalhes">
-                            Kit: Titulação Insana
-                        </div>
-                        <div class="status-historico status-realizado">
-                            Realizada ✅
-                        </div>
-                        <div class="item-historico-data">
-                            10/01/2025
-                        </div>
-                    </article>
-
-                    <!-- <article class="item-historico">Repete aqui </article> -->
+                    <!-- ATUALIZADO: Tabela para responsividade -->
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Experimento</th>
+                                    <th>Laboratório</th>
+                                    <th>Turma</th>
+                                    <th>Data</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="lista-historico">
+                                <!-- Histórico será injetado pelo JS -->
+                                <tr><td colspan="5" class="text-center">Carregando histórico...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
-
-            </div>
-
-
-
-
-
-
+             </div>
         </section>
 
     </main>
 
+    <!-- VLibras JS -->
+    <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
+    <script>
+        new window.VLibras.Widget('https://vlibras.gov.br/app');
+    </script>
+    
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+    <!-- Script JS Personalizado -->
     <script src="telaProfessor.js"></script>
 
-    <!-- Modais -->
-    <!-- Modal do botão "Novo kit" -->
-    <!-- Div backdrop (lógica de clicar fora do pop-up) -->
-    <div class="modal-backdrop" id="modalNovoKitBackdrop"></div>
-    <div class="modal" id="modalNovoKit">
-        <header class="modal-header">
-            <h2 class="modal-titulo">Criar Novo Kit de Materiais</h2>
-            <button class="modal-fechar" id="fecharModalKitBtn">&times;</button>
-        </header>
-        <div class="modal-body">
-            <form id="formNovoKit">
-                <div class="grupo-form">
-                    <label for="kit-nome">Nome do Kit</label>
-                    <input type="text" id="kit-nome" placeholder="Ex: Titulação Ácido-Base">
-                </div>
-                <div class="grupo-form">
-                    <label for="kit-descricao">Itens e Descrição</label>
-                    <textarea id="kit-descricao" rows="6"
-                        placeholder="Liste os materiais e quantidades. Ex:&#10;- 1 Béquer 100ml&#10;- 1 Pipeta 25ml&#10;- 1 Frasco de Fenolftaleína"></textarea>
-                </div>
-            </form>
+    <!-- Modais (Estrutura do Admin) -->
+
+    <!-- Modal "Novo kit" -->
+    <div class="modal-container" id="modalNovoKit">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h5 class="modal-title">Criar Novo Kit de Materiais</h5>
+                <button type="button" class="btn-close" id="fecharModalKitBtn"></button>
+            </header>
+            <div class="modal-body">
+                <form id="formNovoKit">
+                    <div class="form-group mb-3">
+                        <label for="kit-nome" class="form-label">Nome do Kit</label>
+                        <input type="text" id="kit-nome" class="form-control" placeholder="Ex: Titulação Ácido-Base">
+                    </div>
+                    <div class="form-group">
+                        <label for="kit-descricao" class="form-label">Itens e Descrição</label>
+                        <textarea id="kit-descricao" class="form-control" rows="6"
+                            placeholder="Liste os materiais e quantidades. Ex:&#10;- 1 Béquer 100ml&#10;- 1 Pipeta 25ml&#10;- 1 Frasco de Fenolftaleína"></textarea>
+                    </div>
+                </form>
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelarModalKitBtn">Cancelar</button>
+                <button type="submit" form="formNovoKit" class="btn btn-success">Salvar Kit</button>
+            </footer>
         </div>
-        <footer class="modal-footer">
-            <button type="button" class="btn-secondary" id="cancelarModalKitBtn">Cancelar</button>
-            <button type="submit" form="formNovoKit" class="btn-primary">Salvar Kit</button>
-        </footer>
     </div>
 
-    <!-- Modal do botão "Ver Detalhes" -->
-    <div class="modal-backdrop" id="modalVerDetalhesBackdrop"></div>
-    <div class="modal" id="modalVerDetalhes">
-        <header class="modal-header">
-            <h2 class="modal-titulo">Detalhes da Aula</h2>
-            <button class="modal-fechar" id="fecharModalVerDetalhesBtn">&times;</button>
-        </header>
-        <div class="modal-body">
-            <div class="detalhes-aula-grupo">
-                <span class="detalhes-label">Título da Aula:</span>
-                <span class="detalhes-valor" id="detalhe-titulo">Titulação Simples</span>
-            </div>
-            <div class="detalhes-aula-grupo">
-                <span class="detalhes-label">Status:</span>
-                <span class="detalhes-valor" id="detalhe-status">✅ Preparado</span>
-            </div>
-            <div class="detalhes-aula-grid">
+    <!-- Modal "Ver Detalhes" (Aula) -->
+    <div class="modal-container" id="modalVerDetalhes">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h5 class="modal-title">Detalhes da Aula</h5>
+                <button type="button" class="btn-close" id="fecharModalVerDetalhesBtn"></button>
+            </header>
+            <div class="modal-body">
                 <div class="detalhes-aula-grupo">
-                    <span class="detalhes-label">Turma:</span>
-                    <span class="detalhes-valor" id="detalhe-turma">2° Química</span>
+                    <span class="detalhes-label">Título da Aula:</span>
+                    <span class="detalhes-valor" id="detalhe-titulo">Titulação Simples</span>
                 </div>
                 <div class="detalhes-aula-grupo">
-                    <span class="detalhes-label">Nº de Alunos:</span>
-                    <span class="detalhes-valor" id="detalhe-alunos">30</span>
+                    <span class="detalhes-label">Status:</span>
+                    <span class="detalhes-valor" id="detalhe-status">✅ Preparado</span>
+                </div>
+                <div class="row g-3 my-2">
+                    <div class="col-md-6">
+                        <span class="detalhes-label">Turma:</span>
+                        <span class="detalhes-valor" id="detalhe-turma">2° Química</span>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="detalhes-label">Nº de Alunos:</span>
+                        <span class="detalhes-valor" id="detalhe-alunos">30</span>
+                    </div>
+                    <div class="col-md-6">
+                        <span class="detalhes-label">Laboratório:</span>
+                        <span class="detalhes-valor" id="detalhe-lab">Lab 1 - Química Geral</span>
+                    </div>
+                     <div class="col-md-6">
+                        <span class="detalhes-label">Data/Horário:</span>
+                        <span class="detalhes-valor" id="detalhe-data">15/01/2025 - 14:00-16:00</span>
+                    </div>
                 </div>
                 <div class="detalhes-aula-grupo">
-                    <span class="detalhes-label">Laboratório:</span>
-                    <span class="detalhes-valor" id="detalhe-lab">Lab 1 - Química Geral</span>
+                    <span class="detalhes-label">Kit de Materiais:</span>
+                    <span class="detalhes-valor" id="detalhe-kit">Titulação Básica</span>
                 </div>
-                <div class="detalhes-aula-grupo">
-                    <span class="detalhes-label">Data/Horário:</span>
-                    <span class="detalhes-valor" id="detalhe-data">15/01/2025 - 14:00-16:00</span>
+                 <div class="detalhes-aula-grupo">
+                    <span class="detalhes-label">Observações:</span>
+                    <span class="detalhes-valor" id="detalhe-obs">Nenhuma.</span>
                 </div>
             </div>
-            <div class="detalhes-aula-grupo">
-                <span class="detalhes-label">Kit de Materiais:</span>
-                <span class="detalhes-valor" id="detalhe-kit">Titulação Básica</span>
-            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="fecharModalVerDetalhesBtn_footer">Fechar</button>
+            </footer>
         </div>
-        <footer class="modal-footer">
-            <button type="button" class="btn-secondary" id="fecharModalVerDetalhesBtn_footer">Fechar</button>
-        </footer>
     </div>
 
-    <!-- Modal do botão "Editar" (aula agendada) -->
-    <div class="modal-backdrop" id="modalEditarAulaBackdrop"></div>
-    <div class="modal" id="modalEditarAula">
-        <header class="modal-header">
-            <h2 class="modal-titulo">Editar Agendamento</h2>
-            <button class="modal-fechar" id="fecharModalEditarAulaBtn">&times;</button>
-        </header>
-        <div class="modal-body">
-            <form id="formEditarAula" class="agendamento-form">
-
-                <div class="grupo-form">
-                    <label for="edit-titulo-aula">Título da Aula</label>
-                    <input type="text" id="edit-titulo-aula" name="titulo-aula">
-                </div>
-
-                <div class="agendamento-grid duas-colunas">
-                    <div class="grupo-form">
-                        <label for="edit-disciplina">Disciplina</label>
-                        <select id="edit-disciplina" name="disciplina">
-                        </select>
+    <!-- Modal "Editar" (Aula) -->
+    <div class="modal-container" id="modalEditarAula">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h5 class="modal-title">Editar Agendamento</h5>
+                <button type="button" class="btn-close" id="fecharModalEditarAulaBtn"></button>
+            </header>
+            <div class="modal-body">
+                <form id="formEditarAula" class="agendamento-form">
+                    <div class="form-group mb-3">
+                        <label for="edit-titulo-aula" class="form-label">Título da Aula</label>
+                        <input type="text" id="edit-titulo-aula" name="titulo-aula" class="form-control">
                     </div>
-                    <div class="grupo-form">
-                        <label for="edit-turma">Turma</label>
-                        <select id="edit-turma" name="turma">
-                        </select>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label for="edit-disciplina" class="form-label">Disciplina</label>
+                            <select id="edit-disciplina" name="disciplina" class="form-select"></select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit-turma" class="form-label">Turma</label>
+                            <select id="edit-turma" name="turma" class="form-select"></select>
+                        </div>
                     </div>
-                </div>
-
-                <div class="agendamento-grid tres-colunas">
-                    <div class="grupo-form">
-                        <label for="edit-data">Data</label>
-                        <input type="text" id="edit-data" name="data" placeholder="dd/mm/aaaa">
+                    <div class="row g-3">
+                         <div class="col-md-5">
+                            <label for="edit-data" class="form-label">Data</label>
+                            <input type="date" id="edit-data" name="data" placeholder="dd/mm/aaaa" class="form-control">
+                        </div>
+                        <div class="col-md-3">
+                            <label for="edit-horario-inicio" class="form-label">Horário Início</label>
+                            <select id="edit-horario-inicio" name="horario-inicio" class="form-select"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="edit-horario-fim" class="form-label">Horário Fim</label>
+                            <select id="edit-horario-fim" name="horario-fim" class="form-select"></select>
+                        </div>
                     </div>
-                    <div class="grupo-form">
-                        <label for="edit-horario-inicio">Horário Início</label>
-                        <select id="edit-horario-inicio" name="horario-inicio">
-                        </select>
+                     <div class="form-group mt-3">
+                        <label for="edit-observacoes" class="form-label">Observações</label>
+                        <textarea id="edit-observacoes" name="observacoes" rows="3" class="form-control"></textarea>
                     </div>
-                    <div class="grupo-form">
-                        <label for="edit-horario-fim">Horário Fim</label>
-                        <select id="edit-horario-fim" name="horario-fim">
-                        </select>
-                    </div>
-                </div>
-
-            </form>
+                </form>
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelarModalEditarAulaBtn">Cancelar</button>
+                <button type="submit" form="formEditarAula" class="btn btn-success">Salvar Alterações</button>
+            </footer>
         </div>
-        <footer class="modal-footer">
-            <button type="button" class="btn-secondary" id="cancelarModalEditarAulaBtn">Cancelar</button>
-            <button type="submit" form="formEditarAula" class="btn-primary">Salvar Alterações</button>
-        </footer>
     </div>
 
-    <!-- Modal "Ver Detalhes" (kit) -->
-    <div class="modal-backdrop" id="modalVerKitBackdrop"></div>
-    <div class="modal" id="modalVerKit">
-        <header class="modal-header">
-            <h2 class="modal-titulo" id="detalhe-kit-titulo">Titulação Básica</h2>
-            <button class="modal-fechar" id="fecharModalVerKitBtn">&times;</button>
-        </header>
-        <div class="modal-body">
-
-            <div class="detalhes-aula-grupo"> <span class="detalhes-label">Itens e Descrição:</span>
-                <div class="detalhes-kit-itens-lista" id="detalhe-kit-itens">
-                    Kit para aulas de titulação ácido-base com indicadores
-                    - 1 Béquer 100ml
-                    - 1 Pipeta 25ml
-                    - 1 Frasco de Fenolftaleína
+    <!-- Modal "Ver Kit" -->
+    <div class="modal-container" id="modalVerKit">
+         <div class="modal-card">
+            <header class="modal-header">
+                <h5 class="modal-title" id="detalhe-kit-titulo">Titulação Básica</h5>
+                <button type="button" class="btn-close" id="fecharModalVerKitBtn"></button>
+            </header>
+            <div class="modal-body">
+                <div class="detalhes-aula-grupo mb-3">
+                    <span class="detalhes-label">Itens e Descrição:</span>
+                    <div class="detalhes-kit-itens-lista" id="detalhe-kit-itens">
+                        <!-- Conteúdo injetado pelo JS -->
+                    </div>
+                </div>
+                <div class="detalhes-aula-grupo">
+                    <span class="detalhes-label">Dados de Uso:</span>
+                    <span class="detalhes-valor" id="detalhe-kit-uso">
+                        <!-- Conteúdo injetado pelo JS -->
+                    </span>
                 </div>
             </div>
-
-            <div class="detalhes-aula-grupo"> <span class="detalhes-label">Dados de Uso:</span>
-                <span class="detalhes-valor" id="detalhe-kit-uso">
-                    Usado em: 8 aulas<br>
-                    Última vez: 10/01/2024
-                </span>
-            </div>
-
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="fecharModalVerKitBtn_footer">Fechar</button>
+            </footer>
         </div>
-        <footer class="modal-footer">
-            <button type="button" class="btn-secondary" id="fecharModalVerKitBtn_footer">Fechar</button>
-        </footer>
     </div>
 
     <!-- Modal "Editar Kit" -->
-    <div class="modal-backdrop" id="modalEditarKitBackdrop"></div>
-    <div class="modal" id="modalEditarKit">
-        <header class="modal-header">
-            <h2 class="modal-titulo">Editar Kit de Materiais</h2>
-            <button class="modal-fechar" id="fecharModalEditarKitBtn">&times;</button>
-        </header>
-        <div class="modal-body">
-            <form id="formEditarKit">
-                <div class="grupo-form">
-                    <label for="edit-kit-nome">Nome do Kit</label>
-                    <input type="text" id="edit-kit-nome" name="kit-nome">
-                </div>
-                <div class="grupo-form">
-                    <label for="edit-kit-descricao">Itens e Descrição</label>
-                    <textarea id="edit-kit-descricao" name="kit-descricao" rows="6"></textarea>
-                </div>
-            </form>
+    <div class="modal-container" id="modalEditarKit">
+        <div class="modal-card">
+            <header class="modal-header">
+                <h5 class="modal-title">Editar Kit de Materiais</h5>
+                <button type="button" class="btn-close" id="fecharModalEditarKitBtn"></button>
+            </header>
+            <div class="modal-body">
+                <form id="formEditarKit">
+                    <input type="hidden" id="edit-kit-id"> <!-- Campo oculto para o ID -->
+                    <div class="form-group mb-3">
+                        <label for="edit-kit-nome" class="form-label">Nome do Kit</label>
+                        <input type="text" id="edit-kit-nome" name="kit-nome" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="edit-kit-descricao" class="form-label">Itens e Descrição</label>
+                        <textarea id="edit-kit-descricao" name="kit-descricao" class="form-control" rows="6"></textarea>
+                    </div>
+                </form>
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelarModalEditarKitBtn">Cancelar</button>
+                <button type="submit" form="formEditarKit" class="btn btn-success">Salvar Alterações</button>
+            </footer>
         </div>
-        <footer class="modal-footer">
-            <button type="button" class="btn-secondary" id="cancelarModalEditarKitBtn">Cancelar</button>
-            <button type="submit" form="formEditarKit" class="btn-primary">Salvar Alterações</button>
-        </footer>
+    </div>
+
+    <!-- ADICIONADO: Modal de Confirmação de Saída -->
+    <div class="modal-container" id="modalConfirmarSaida">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Saída</h5>
+                <button type="button" class="btn-close" id="fecharModalSaidaBtn"></button>
+            </div>
+            <div class="modal-body">
+                <p>Você tem certeza que deseja sair do sistema?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelarSaidaBtn">Cancelar</button>
+                <button type="button" class="btn btn-custom" id="confirmarSaidaBtn">Sair</button> <!-- btn-custom para vermelho -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast/Alerta Global -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="globalToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <strong class="me-auto" id="toastTitle">Notificação</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastBody">
+                Mensagem.
+            </div>
+        </div>
     </div>
 
 </body>
 
 </html>
+
