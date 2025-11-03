@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     // --- VARIÁVEIS GLOBAIS ---
-    const API_URL = 'http://localhost:3000/api';
     let appState = {
         userId: null,
         userName: "Técnico",
@@ -17,61 +16,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const globalToast = globalToastEl ? new bootstrap.Toast(globalToastEl) : null;
 
     // --- CAMADA DE SERVIÇO (Lógica de API) ---
-    const apiService = {
-        /**
-         * Função base para requisições autenticadas.
-         */
-        fetchComToken: async (url, options = {}) => {
-            const headers = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${appState.token}`,
-                ...options.headers,
-            };
-
-            const response = await fetch(url, { ...options, headers });
-
-            if (response.status === 401 || response.status === 403) {
-                console.warn("Token inválido ou expirado. Deslogando.");
-                localStorage.clear();
-                window.location.href = 'telaLogin.html';
-                throw new Error('Token inválido ou expirado.');
-            }
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
-            }
-            
-            return response.status === 204 ? null : response.json();
-        },
-
-        // --- Leitura (GET) ---
-        getAgendamentosPendentes: () => {
-            return apiService.fetchComToken(`${API_URL}/tecnico/agendamentos/pendentes`);
-        },
-        getMateriais: () => {
-            return apiService.fetchComToken(`${API_URL}/materiais`);
-        },
-        getHistorico: () => {
-            return apiService.fetchComToken(`${API_URL}/agendamentos/historico`);
-        },
-
-        // --- Escrita (POST, PUT) ---
-        createMaterial: (itemData) => {
-            return apiService.fetchComToken(`${API_URL}/materiais`, {
-                method: 'POST',
-                body: JSON.stringify(itemData)
-            });
-        },
-        updateStatusAgendamento: (id, status) => {
-             return apiService.fetchComToken(`${API_URL}/tecnico/agendamentos/${id}/status`, {
-                method: 'PUT',
-                body: JSON.stringify({ status: status })
-            });
-        }
-    };
-    // --- FIM DA CAMADA DE SERVIÇO ---
-
+    // Removida! Agora usamos window.apiService do arquivo apiService.js
+    if (!window.apiService) {
+        console.error("apiService.js não foi carregado corretamente.");
+        showAlert("Erro crítico ao carregar a página. Recarregue.", "Erro", "error");
+        return;
+    }
 
     // --- INICIALIZAÇÃO ---
     checkLogin();
@@ -80,6 +30,7 @@ document.addEventListener("DOMContentLoaded", function () {
         iniciarListeners();
     }
 
+    // Esta função permanece
     function checkLogin() {
         appState.userId = localStorage.getItem('userId');
         appState.userName = localStorage.getItem('userName');
@@ -97,14 +48,14 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('tipo-usuario').innerText = appState.userType;
     }
 
-    // --- CARREGAMENTO DE DADOS (usando apiService) ---
+    // --- CARREGAMENTO DE DADOS (usando window.apiService) ---
     async function iniciarCarregamentoDados() {
         try {
-            // Chama a camada de serviço
+            // Chama o serviço global
             const [pendentes, materiais, historico] = await Promise.all([
-                apiService.getAgendamentosPendentes(),
-                apiService.getMateriais(),
-                apiService.getHistorico()
+                window.apiService.getAgendamentosPendentes(),
+                window.apiService.getMateriais(),
+                window.apiService.getHistorico()
             ]);
             
             appState.agendamentosPendentes = pendentes;
@@ -118,22 +69,22 @@ document.addEventListener("DOMContentLoaded", function () {
 
         } catch (error) {
              console.error("Erro fatal ao carregar dados:", error);
-            showAlert(error.message, "Erro de Conexão", "error");
+            if (!error.message.includes("expirou")) {
+                showAlert(error.message, "Erro de Conexão", "error");
+            }
             document.getElementById('lista-agendamentos-tbody').innerHTML = `<tr><td colspan="6" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
             document.getElementById('lista-estoque-tbody').innerHTML = `<tr><td colspan="5" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
-            document.getElementById('lista-historico-tbody').innerHTML = `<tr><td colspan="6" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
+            document.getElementById('lista-historico-tbody').innerHTML = `<tr><td colspan="4" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
         }
     }
     
-    // --- FUNÇÕES DE RENDERIZAÇÃO (Sem alterações) ---
-    
+    // --- FUNÇÕES DE RENDERIZAÇÃO ---
     function renderAgendamentosPendentes() {
         const tbody = document.getElementById('lista-agendamentos-tbody');
         if (appState.agendamentosPendentes.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" data-label="Aviso" class="text-center">Nenhum agendamento pendente.</td></tr>`;
             return;
         }
-        
         tbody.innerHTML = appState.agendamentosPendentes.map(aula => `
             <tr data-id="${aula.id_agendamento}">
                 <td data-label="Professor">${aula.nome_professor || 'N/A'}</td>
@@ -147,14 +98,12 @@ document.addEventListener("DOMContentLoaded", function () {
             </tr>
         `).join('');
     }
-    
     function renderEstoque() {
         const tbody = document.getElementById('lista-estoque-tbody');
         if (appState.materiais.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum item no estoque.</td></tr>`;
             return;
         }
-
         tbody.innerHTML = appState.materiais.map(item => `
             <tr data-id="${item.id}">
                 <td data-label="Item">${item.nome}</td>
@@ -165,14 +114,12 @@ document.addEventListener("DOMContentLoaded", function () {
             </tr>
         `).join('');
     }
-    
     function renderHistorico() {
         const tbody = document.getElementById('lista-historico-tbody');
         if (appState.agendamentosHistorico.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" data-label="Aviso" class="text-center">Nenhum histórico de agendamentos.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="4" data-label="Aviso" class="text-center">Nenhum histórico de agendamentos.</td></tr>`;
             return;
         }
-        
         tbody.innerHTML = appState.agendamentosHistorico.map(aula => `
             <tr data-id="${aula.id_agendamento}">
                 <td data-label="Professor">${aula.nome_professor || 'N/A'}</td>
@@ -187,14 +134,13 @@ document.addEventListener("DOMContentLoaded", function () {
         `).join('');
     }
 
-    // --- LÓGICA DE EVENTOS E MODAIS (usando apiService) ---
+    // --- LÓGICA DE EVENTOS E MODAIS (usando window.apiService) ---
     function iniciarListeners() {
         
-        // --- Navegação entre Seções (Sem alterações) ---
+        // --- Navegação ---
         const navLinks = document.querySelectorAll('.nav-link[data-target]');
         const sections = document.querySelectorAll('.conteudo-secao');
         const navbarCollapse = document.getElementById('navbarNav');
-
         navLinks.forEach(link => {
             link.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -202,10 +148,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 sections.forEach(section => section.classList.remove('ativo'));
                 const targetSection = document.getElementById(targetId);
                 if (targetSection) targetSection.classList.add('ativo');
-
                 navLinks.forEach(navLink => navLink.classList.remove('active'));
                 link.classList.add('active');
-
                 if (navbarCollapse.classList.contains('show')) {
                     const bsCollapse = new bootstrap.Collapse(navbarCollapse, { toggle: false });
                     bsCollapse.hide();
@@ -213,12 +157,11 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        // --- Acessibilidade (Sem alterações) ---
+        // --- Acessibilidade ---
         const body = document.body;
         const html = document.documentElement;
         const accessibilityBtn = document.getElementById('accessibilityBtn');
         const accessibilityDropdown = document.getElementById('accessibilityDropdown');
-
         if (accessibilityBtn && accessibilityDropdown) {
             accessibilityBtn.addEventListener('click', (e) => { e.stopPropagation(); accessibilityDropdown.classList.toggle('show'); });
         }
@@ -245,22 +188,18 @@ document.addEventListener("DOMContentLoaded", function () {
         colorModeLinks.forEach(link => {
             link.addEventListener('click', (e) => { e.preventDefault(); const mode = link.getAttribute('data-mode'); body.classList.remove('protanopia', 'deuteranopia', 'tritanopia'); if (mode !== 'normal') body.classList.add(mode); });
         });
-
-        // --- VLibras (Sem alterações) ---
         if (window.VLibras) {
             new window.VLibras.Widget('https://vlibras.gov.br/app');
         }
 
-        // --- Modal de Confirmação de Saída (Sem alterações) ---
+        // --- Modal Saída ---
         const modalConfirmarSaida = document.getElementById("modalConfirmarSaida");
         const btnFecharModalSaida = document.getElementById("fecharModalSaidaBtn");
         const btnCancelarSaida = document.getElementById("cancelarSaidaBtn");
         const btnConfirmarSaida = document.getElementById("confirmarSaidaBtn");
         const botaoSair = document.getElementById('botaoSair');
-
         function abrirModalSaida() { if (modalConfirmarSaida) modalConfirmarSaida.classList.add("visivel"); }
         function fecharModalSaida() { if (modalConfirmarSaida) modalConfirmarSaida.classList.remove("visivel"); }
-
         if(botaoSair) botaoSair.addEventListener("click", abrirModalSaida);
         if (btnFecharModalSaida) btnFecharModalSaida.addEventListener("click", fecharModalSaida);
         if (btnCancelarSaida) btnCancelarSaida.addEventListener("click", fecharModalSaida);
@@ -278,10 +217,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const btnFechar = document.getElementById("fecharModalItemBtn");
         const btnCancelar = document.getElementById("cancelarModalItemBtn");
         const formItem = document.getElementById("formItem");
-
         function abrirModalItem() { if (itemModal) itemModal.classList.add("visivel"); }
         function fecharModalItem() { if (itemModal) itemModal.classList.remove("visivel"); formItem.reset(); }
-
         if (btnAdicionar) btnAdicionar.addEventListener("click", abrirModalItem);
         if (btnFechar) btnFechar.addEventListener("click", fecharModalItem);
         if (btnCancelar) btnCancelar.addEventListener("click", fecharModalItem);
@@ -298,11 +235,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     valor: parseFloat(document.getElementById('itemValor').value)
                 };
                 try {
-                    // Chama a camada de serviço
-                    const data = await apiService.createMaterial(novoItem);
-                    
+                    // Chama o serviço global
+                    const data = await window.apiService.createMaterial(novoItem);
                     showAlert(`Item "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
-                    location.reload(); 
+                    location.reload();
                 } catch (error) {
                     console.error("Erro ao cadastrar item:", error);
                     showAlert(error.message, "Erro", "error");
@@ -310,7 +246,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
         
-        // Lógica condicional (Unidade/Peso/Litros) (Sem alterações)
         const tipoUnidadeSelect = document.getElementById('itemTipoUnidade');
         if (tipoUnidadeSelect) {
             tipoUnidadeSelect.addEventListener('change', (e) => {
@@ -323,20 +258,17 @@ document.addEventListener("DOMContentLoaded", function () {
         const btnFecharAnalisar = document.getElementById("fecharModalAnalisarBtn");
         const btnConfirmarAnalise = document.getElementById("btnConfirmarAnalise");
         const btnCancelarAnalise = document.getElementById("btnCancelarAnalise");
-
         function fecharModalAnalisar() { if (analisarModal) analisarModal.classList.remove("visivel"); }
         if (btnFecharAnalisar) btnFecharAnalisar.addEventListener("click", fecharModalAnalisar);
         adicionarCliqueFora(analisarModal, fecharModalAnalisar);
         
-        // Ações dentro do modal de análise
         if (btnConfirmarAnalise) btnConfirmarAnalise.addEventListener('click', () => handleAnalise(btnConfirmarAnalise.dataset.id, 'confirmado'));
         if (btnCancelarAnalise) btnCancelarAnalise.addEventListener('click', () => handleAnalise(btnCancelarAnalise.dataset.id, 'cancelado'));
         
         async function handleAnalise(id, status) {
             try {
-                // Chama a camada de serviço
-                await apiService.updateStatusAgendamento(id, status);
-                
+                // Chama o serviço global
+                await window.apiService.updateStatusAgendamento(id, status);
                 showAlert(`Agendamento ${status} com sucesso!`, 'Sucesso', 'success');
                 location.reload();
             } catch (error) {
@@ -344,7 +276,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
         
-        // --- Ações Dinâmicas (Delegação de Eventos) (Sem alterações) ---
+        // --- Ações Dinâmicas (Delegação de Eventos) ---
         document.getElementById('lista-agendamentos-tbody').addEventListener('click', (e) => {
             const target = e.target.closest('button');
             if (target && target.classList.contains('btn-analisar-agendamento')) {
@@ -355,7 +287,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     } // Fim de iniciarListeners()
     
-    // (Sem alterações)
+    
     function abrirModalAnalisar(id) {
         const aula = appState.agendamentosPendentes.find(a => a.id_agendamento == id);
         if (!aula) return;
@@ -373,8 +305,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // --- FUNÇÕES AUXILIARES (Sem alterações) ---
-
+    // --- FUNÇÕES AUXILIARES ---
     function adicionarCliqueFora(modalElement, fecharFn) {
         if (modalElement) {
             modalElement.addEventListener('click', (event) => {
@@ -384,14 +315,12 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     }
-    
     function atualizarInputValor(tipo) {
         const containerValor = document.getElementById('containerValorEstoque');
         if (!containerValor) return;
         const valorLabel = containerValor.querySelector('label');
         const valorInput = containerValor.querySelector('input');
         if (!valorLabel || !valorInput) return;
-
         switch (tipo) {
             case 'unidade':
                 valorLabel.textContent = 'Quantidade (UN)';
@@ -413,7 +342,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 break;
         }
     }
-
     function showAlert(message, title = "Notificação", type = "info") {
         if (!globalToast) {
             console.log(`[Alerta: ${title}] ${message}`);
@@ -448,7 +376,6 @@ document.addEventListener("DOMContentLoaded", function () {
         toastBody.innerText = message;
         globalToast.show();
     }
-
     function getStatusInfo(status) {
         switch (status) {
             case 'confirmado':
@@ -463,7 +390,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 return { statusClasse: 'bg-light text-dark', statusTexto: '?' };
         }
     }
-    
     function formatarData(dataString) {
         if (!dataString) return 'N/A';
         try {
@@ -481,6 +407,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (!dataString) return 'N/A';
         try {
             const dataObj = new Date(dataString);
+            // Usando UTC para evitar problemas de fuso horário
             const horas = String(dataObj.getUTCHours()).padStart(2, '0');
             const minutos = String(dataObj.getUTCMinutes()).padStart(2, '0');
             return `${horas}:${minutos}`;
@@ -490,3 +417,4 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 });
+

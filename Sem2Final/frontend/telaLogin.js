@@ -2,39 +2,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const loginForm = document.getElementById("login-form");
     const loginButton = document.getElementById("login-button");
     const loginError = document.getElementById("login-error");
-    const API_URL = 'http://localhost:3000/api';
 
-    // --- CAMADA DE SERVIÇO (Lógica de API) ---
-    const apiService = {
-        /**
-         * Tenta autenticar o usuário.
-         * @param {string} email 
-         * @param {string} password 
-         * @param {string} tipo_usuario 
-         * @returns {Promise<object>} Dados do usuário e token.
-         */
-        login: async (email, password, tipo_usuario) => {
-            const response = await fetch(`${API_URL}/login`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    email: email,
-                    password: password,
-                    tipo_usuario: tipo_usuario
-                })
-            });
+    // O objeto `window.apiService` é carregado pelo `apiService.js`
+    if (!window.apiService) {
+        console.error("apiService.js não foi carregado corretamente.");
+        loginError.querySelector('p').textContent = 'Erro crítico ao carregar a página. Recarregue.';
+        loginError.style.display = 'block';
+        return;
+    }
 
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || 'Erro desconhecido.');
-            }
-            return data;
-        }
-    };
-
-    // --- LÓGICA DE UI (Event Listeners) ---
     if (loginForm) {
         loginForm.addEventListener("submit", async (e) => {
             e.preventDefault();
@@ -47,16 +23,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const tipo_usuario = document.getElementById("account-type").value;
 
             try {
-                // Chama a camada de serviço
-                const data = await apiService.login(email, password, tipo_usuario);
+                // Chama o serviço global
+                const data = await window.apiService.login(email, password, tipo_usuario);
 
                 // Sucesso
                 loginError.style.display = 'none';
                 
-                // Salva informações do usuário (simples)
+                // Salva informações do usuário
                 localStorage.setItem('userId', data.userId);
-                localStorage.setItem('userName', data.nome);
-                localStorage.setItem('userType', tipo_usuario);
+                localStorage.setItem('userName', data.userName); 
+                localStorage.setItem('userType', data.userType);
                 localStorage.setItem('token', data.token); // Salva o token
 
                 // Redireciona para a página correta
@@ -74,3 +50,4 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
+

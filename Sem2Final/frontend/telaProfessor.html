@@ -117,7 +117,7 @@
                         <i class="bi bi-calendar-check"></i>
                         <div>
                             <p>Próximas Aulas</p>
-                            <span id="card-proximas-aulas">3</span>
+                            <span id="card-proximas-aulas">0</span>
                         </div>
                     </div>
                 </div>
@@ -126,7 +126,7 @@
                         <i class="bi bi-check-lg"></i>
                         <div>
                             <p>Kits Preparados</p>
-                            <span id="card-kits-preparados">1</span>
+                            <span id="card-kits-preparados">0</span>
                         </div>
                     </div>
                 </div>
@@ -135,7 +135,7 @@
                         <i class="bi bi-hourglass-split"></i>
                         <div>
                             <p>Aguardando</p>
-                            <span id="card-aguardando">1</span>
+                            <span id="card-aguardando">0</span>
                         </div>
                     </div>
                 </div>
@@ -144,7 +144,7 @@
                         <i class="bi bi-box-seam"></i>
                         <div>
                             <p>Meus Kits</p>
-                            <span id="card-meus-kits">5</span>
+                            <span id="card-meus-kits">0</span>
                         </div>
                     </div>
                 </div>
@@ -211,47 +211,22 @@
                 </div>
                 <div class="card-body p-4"> <!-- Adicionado padding aqui -->
                     <form class="agendamento-form" id="formNovoAgendamento">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <label for="disciplina" class="form-label">Disciplina</label>
-                                <select name="disciplina" id="disciplina" class="form-select" required>
-                                    <option value="" disabled selected>Selecione a disciplina</option>
-                                    <option value="Química Geral">Química Geral</option>
-                                    <option value="Química Orgânica">Química Orgânica</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label for="turma" class="form-label">Turma</label>
-                                <select name="turma" id="turma" class="form-select" required>
-                                    <option value="" disabled selected>Selecione a turma</option>
-                                    <option value="1º M-TEC">1º M-TEC</option>
-                                    <option value="2º M-TEC">2º M-TEC</option>
-                                </select>
-                            </div>
-                        </div>
+                        
+                        <!-- REMOVIDO: Campos desnecessários (disciplina, turma, num_alunos, titulo_aula) -->
 
-                        <div class="row g-3 mt-3">
+                        <div class="row g-3">
                             <div class="col-md-5">
                                 <label for="data" class="form-label">Data</label>
                                 <input type="date" name="data" id="data" class="form-control" required>
                             </div>
                             <div class="col-md-3">
                                 <label for="horario-inicio" class="form-label">Horário Início</label>
-                                <select name="horario-inicio" id="horario-inicio" class="form-select" required>
-                                    <option value="" disabled selected>Selecione</option>
-                                    <option value="08:00">08:00</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="14:00">14:00</option>
-                                </select>
+                                <!-- TODO: Popular horários dinamicamente? -->
+                                <input type="time" name="horario-inicio" id="horario-inicio" class="form-control" required>
                             </div>
                             <div class="col-md-3">
                                 <label for="horario-fim" class="form-label">Horário Fim</label>
-                                <select name="horario-fim" id="horario-fim" class="form-select" required>
-                                    <option value="" disabled selected>Selecione</option>
-                                    <option value="10:00">10:00</option>
-                                    <option value="12:00">12:00</option>
-                                    <option value="16:00">16:00</option>
-                                </select>
+                                <input type="time" name="horario-fim" id="horario-fim" class="form-control" required>
                             </div>
                         </div>
 
@@ -263,17 +238,6 @@
                             </div>
                         </fieldset>
 
-                        <div class="row g-3 mt-3">
-                            <div class="col-md-8">
-                                <label for="titulo-aula" class="form-label">Título da Aula</label>
-                                <input type="text" name="titulo-aula" id="titulo-aula" placeholder="Título da Aula" class="form-control" required>
-                            </div>
-                             <div class="col-md-4">
-                                <label for="num-alunos" class="form-label">Número de Alunos</label>
-                                <input type="number" name="num-alunos" id="num-alunos" placeholder="Número de Alunos" class="form-control" required min="1">
-                            </div>
-                        </div>
-                       
                         <fieldset class="mt-4">
                             <legend class="form-label fs-5">Kits de Materiais</legend>
                             <div class="form-check">
@@ -289,8 +253,8 @@
                             </div>
                             
                             <div class="form-check mt-2">
-                                <input type="radio" name="kit" id="kit-novo" value="novo" class="form-check-input">
-                                <label for="kit-novo" class="form-check-label">Criar novo kit para esta aula</g/label>
+                                <input type="radio" name="kit" id="kit-novo" value="novo" class="form-check-input" disabled>
+                                <label for="kit-novo" class="form-check-label text-muted">(Em breve) Criar novo kit para esta aula</label>
                             </div>
                             <!-- Textarea de novo kit (aparece/desaparece) -->
                             <div id="container-novo-kit" style="display: none;">
@@ -300,12 +264,11 @@
                         </fieldset>
 
                         <div class="mt-3">
-                            <label for="observacoes" class="form-label">Observações</label>
-                            <textarea name="observacoes" id="observacoes" rows="4" placeholder="Observações" class="form-control"></textarea>
+                            <label for="observacoes" class="form-label">Observações (Título/Descrição da Aula)</label>
+                            <textarea name="observacoes" id="observacoes" rows="4" placeholder="Ex: Aula de Titulação Ácido-Base" class="form-control"></textarea>
                         </div>
 
                         <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                            <!-- <button type="button" class="btn btn-secondary">Salvar Rascunho</button> -->
                             <button type="submit" class="btn btn-custom-confirmar">Confirmar Agendamento</button>
                         </div>
                     </form>
@@ -337,30 +300,15 @@
                     <h2 class="h4 mb-0">Histórico de Agendamentos</h2>
                 </div>
                 <div class="card-body">
-                    <div class="filtro-historico row g-3 mb-3">
-                        <div class="col-md-6">
-                            <input type="search" class="form-control" placeholder="Buscar por título da aula...">
-                        </div>
-                        <div class="col-md-3">
-                            <select name="periodo" class="form-select">
-                                <option value="Todos">Todos os períodos</option>
-                            </select>
-                        </div>
-                         <div class="col-md-3">
-                            <select name="periodo" class="form-select">
-                                <option value="Todos">Todos os laboratórios</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- ATUALIZADO: Tabela para responsividade -->
+                    <!-- REMOVIDO: Filtros (simplificação) -->
+                    <!-- Tabela para responsividade -->
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead>
                                 <tr>
                                     <th>Experimento</th>
                                     <th>Laboratório</th>
-                                    <th>Turma</th>
+                                    <th>Kit</th>
                                     <th>Data</th>
                                     <th class="text-center">Status</th>
                                 </tr>
@@ -388,7 +336,8 @@
         xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
         crossorigin="anonymous"></script>
 
-    <!-- Script JS Personalizado -->
+    <!-- Scripts da Aplicação -->
+    <script src="apiService.js"></script>
     <script src="telaProfessor.js"></script>
 
     <!-- Modais (Estrutura do Admin) -->
@@ -404,12 +353,12 @@
                 <form id="formNovoKit">
                     <div class="form-group mb-3">
                         <label for="kit-nome" class="form-label">Nome do Kit</label>
-                        <input type="text" id="kit-nome" class="form-control" placeholder="Ex: Titulação Ácido-Base">
+                        <input type="text" id="kit-nome" class="form-control" placeholder="Ex: Titulação Ácido-Base" required>
                     </div>
                     <div class="form-group">
                         <label for="kit-descricao" class="form-label">Itens e Descrição</label>
                         <textarea id="kit-descricao" class="form-control" rows="6"
-                            placeholder="Liste os materiais e quantidades. Ex:&#10;- 1 Béquer 100ml&#10;- 1 Pipeta 25ml&#10;- 1 Frasco de Fenolftaleína"></textarea>
+                            placeholder="Liste os materiais e quantidades. Ex:&#10;- 1 Béquer 100ml&#10;- 1 Pipeta 25ml&#10;- 1 Frasco de Fenolftaleína" required></textarea>
                     </div>
                 </form>
             </div>
@@ -424,43 +373,43 @@
     <div class="modal-container" id="modalVerDetalhes">
         <div class="modal-card">
             <header class="modal-header">
-                <h5 class="modal-title">Detalhes da Aula</h5>
+                <h5 class="modal-title" id="detalhe-titulo">Detalhes da Aula</h5>
                 <button type="button" class="btn-close" id="fecharModalVerDetalhesBtn"></button>
             </header>
             <div class="modal-body">
                 <div class="detalhes-aula-grupo">
-                    <span class="detalhes-label">Título da Aula:</span>
-                    <span class="detalhes-valor" id="detalhe-titulo">Titulação Simples</span>
+                    <span class="detalhes-label">Título/Descrição:</span>
+                    <span class="detalhes-valor" id="detalhe-titulo"></span>
                 </div>
                 <div class="detalhes-aula-grupo">
                     <span class="detalhes-label">Status:</span>
-                    <span class="detalhes-valor" id="detalhe-status">✅ Preparado</span>
+                    <span class="detalhes-valor" id="detalhe-status"></span>
                 </div>
                 <div class="row g-3 my-2">
                     <div class="col-md-6">
                         <span class="detalhes-label">Turma:</span>
-                        <span class="detalhes-valor" id="detalhe-turma">2° Química</span>
+                        <span class="detalhes-valor" id="detalhe-turma">N/A</span>
                     </div>
                     <div class="col-md-6">
                         <span class="detalhes-label">Nº de Alunos:</span>
-                        <span class="detalhes-valor" id="detalhe-alunos">30</span>
+                        <span class="detalhes-valor" id="detalhe-alunos">N/A</span>
                     </div>
                     <div class="col-md-6">
                         <span class="detalhes-label">Laboratório:</span>
-                        <span class="detalhes-valor" id="detalhe-lab">Lab 1 - Química Geral</span>
+                        <span class="detalhes-valor" id="detalhe-lab"></span>
                     </div>
                      <div class="col-md-6">
                         <span class="detalhes-label">Data/Horário:</span>
-                        <span class="detalhes-valor" id="detalhe-data">15/01/2025 - 14:00-16:00</span>
+                        <span class="detalhes-valor" id="detalhe-data"></span>
                     </div>
                 </div>
                 <div class="detalhes-aula-grupo">
                     <span class="detalhes-label">Kit de Materiais:</span>
-                    <span class="detalhes-valor" id="detalhe-kit">Titulação Básica</span>
+                    <span class="detalhes-valor" id="detalhe-kit"></span>
                 </div>
                  <div class="detalhes-aula-grupo">
                     <span class="detalhes-label">Observações:</span>
-                    <span class="detalhes-valor" id="detalhe-obs">Nenhuma.</span>
+                    <span class="detalhes-valor" id="detalhe-obs"></span>
                 </div>
             </div>
             <footer class="modal-footer">
@@ -469,7 +418,7 @@
         </div>
     </div>
 
-    <!-- Modal "Editar" (Aula) -->
+    <!-- Modal "Editar" (Aula) - (Simplificado/Desativado) -->
     <div class="modal-container" id="modalEditarAula">
         <div class="modal-card">
             <header class="modal-header">
@@ -477,44 +426,10 @@
                 <button type="button" class="btn-close" id="fecharModalEditarAulaBtn"></button>
             </header>
             <div class="modal-body">
-                <form id="formEditarAula" class="agendamento-form">
-                    <div class="form-group mb-3">
-                        <label for="edit-titulo-aula" class="form-label">Título da Aula</label>
-                        <input type="text" id="edit-titulo-aula" name="titulo-aula" class="form-control">
-                    </div>
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-6">
-                            <label for="edit-disciplina" class="form-label">Disciplina</label>
-                            <select id="edit-disciplina" name="disciplina" class="form-select"></select>
-                        </div>
-                        <div class="col-md-6">
-                            <label for="edit-turma" class="form-label">Turma</label>
-                            <select id="edit-turma" name="turma" class="form-select"></select>
-                        </div>
-                    </div>
-                    <div class="row g-3">
-                         <div class="col-md-5">
-                            <label for="edit-data" class="form-label">Data</label>
-                            <input type="date" id="edit-data" name="data" placeholder="dd/mm/aaaa" class="form-control">
-                        </div>
-                        <div class="col-md-3">
-                            <label for="edit-horario-inicio" class="form-label">Horário Início</label>
-                            <select id="edit-horario-inicio" name="horario-inicio" class="form-select"></select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="edit-horario-fim" class="form-label">Horário Fim</label>
-                            <select id="edit-horario-fim" name="horario-fim" class="form-select"></select>
-                        </div>
-                    </div>
-                     <div class="form-group mt-3">
-                        <label for="edit-observacoes" class="form-label">Observações</label>
-                        <textarea id="edit-observacoes" name="observacoes" rows="3" class="form-control"></textarea>
-                    </div>
-                </form>
+                <p>Função de edição em desenvolvimento. Por favor, cancele e crie um novo agendamento.</p>
             </div>
             <footer class="modal-footer">
-                <button type="button" class="btn btn-secondary" id="cancelarModalEditarAulaBtn">Cancelar</button>
-                <button type="submit" form="formEditarAula" class="btn btn-success">Salvar Alterações</button>
+                <button type="button" class="btn btn-secondary" id="cancelarModalEditarAulaBtn">Fechar</button>
             </footer>
         </div>
     </div>
@@ -523,20 +438,19 @@
     <div class="modal-container" id="modalVerKit">
          <div class="modal-card">
             <header class="modal-header">
-                <h5 class="modal-title" id="detalhe-kit-titulo">Titulação Básica</h5>
+                <h5 class="modal-title" id="detalhe-kit-titulo"></h5>
                 <button type="button" class="btn-close" id="fecharModalVerKitBtn"></button>
             </header>
             <div class="modal-body">
                 <div class="detalhes-aula-grupo mb-3">
                     <span class="detalhes-label">Itens e Descrição:</span>
-                    <div class="detalhes-kit-itens-lista" id="detalhe-kit-itens">
-                        <!-- Conteúdo injetado pelo JS -->
-                    </div>
+                    <!-- Usando pre para manter a formatação da textarea -->
+                    <pre class="detalhes-kit-itens-lista" id="detalhe-kit-itens"></pre>
                 </div>
                 <div class="detalhes-aula-grupo">
                     <span class="detalhes-label">Dados de Uso:</span>
                     <span class="detalhes-valor" id="detalhe-kit-uso">
-                        <!-- Conteúdo injetado pelo JS -->
+                        Em desenvolvimento.
                     </span>
                 </div>
             </div>
@@ -558,11 +472,11 @@
                     <input type="hidden" id="edit-kit-id"> <!-- Campo oculto para o ID -->
                     <div class="form-group mb-3">
                         <label for="edit-kit-nome" class="form-label">Nome do Kit</label>
-                        <input type="text" id="edit-kit-nome" name="kit-nome" class="form-control">
+                        <input type="text" id="edit-kit-nome" name="kit-nome" class="form-control" required>
                     </div>
                     <div class="form-group">
                         <label for="edit-kit-descricao" class="form-label">Itens e Descrição</label>
-                        <textarea id="edit-kit-descricao" name="kit-descricao" class="form-control" rows="6"></textarea>
+                        <textarea id="edit-kit-descricao" name="kit-descricao" class="form-control" rows="6" required></textarea>
                     </div>
                 </form>
             </div>
@@ -585,7 +499,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" id="cancelarSaidaBtn">Cancelar</button>
-                <button type="button" class="btn btn-custom" id="confirmarSaidaBtn">Sair</button> <!-- btn-custom para vermelho -->
+                <button type="button" class="btn btn-danger" id="confirmarSaidaBtn">Sair</button>
             </div>
         </div>
     </div>

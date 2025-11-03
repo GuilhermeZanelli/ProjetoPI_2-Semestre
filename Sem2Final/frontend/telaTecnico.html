@@ -73,8 +73,8 @@
       </div>
       <!-- Info do Usuário -->
       <div class="usuario-info me-3 text-md-end text-center">
-        <strong>Ernesto Silva</strong>
-        <p class="mb-0">Técnico</p>
+        <strong id="nome-usuario">Ernesto Silva</strong>
+        <p class="mb-0" id="tipo-usuario">Técnico</p>
       </div>
       <!-- Botão Sair -->
       <button class="botao-sair" id="botaoSair">
@@ -118,72 +118,16 @@
               <thead>
                 <tr>
                   <th>Professor</th>
-                  <th>Experimento</th>
                   <th>Data</th>
                   <th>Horário</th>
                   <th>Laboratório</th>
-                  <th>Status</th>
-                  <!-- ATUALIZADO: Coluna de Ações -->
+                  <th>Kit</th>
                   <th class="text-center">Analisar</th>
                 </tr>
               </thead>
-              <tbody>
-                <!-- ATUALIZADO: Adicionado data-attributes para o JS ler -->
-                <tr data-id="1" 
-                    data-professor="Mariana Lopes" 
-                    data-experimento="Titulação Ácido-Base" 
-                    data-data="23/10/2025" 
-                    data-horario="10:00 - 11:30" 
-                    data-laboratorio="Química Orgânica"
-                    data-status="Pendente"
-                    data-materiais="10x Béquers 100ml&#10;10x Pipetas 25ml&#10;1L Solução NaOH 0.1M&#10;1L Solução HCl 0.1M&#10;5x Frascos Fenolftaleína">
-                  <td data-label="Professor">Mariana Lopes</td>
-                  <td data-label="Experimento">Titulação Ácido-Base</td>
-                  <td data-label="Data">23/10/2025</td>
-                  <td data-label="Horário">10:00 - 11:30</td>
-                  <td data-label="Laboratório">Química Orgânica</td>
-                  <td data-label="Status">Pendente</td>
-                  <!-- ATUALIZADO: Botão "Analisar" -->
-                  <td class="text-center acoes-cell">
-                    <button class="btn btn-sm btn-outline-primary btn-analisar">Analisar</button>
-                  </td>
-                </tr>
-                <tr data-id="2"
-                    data-professor="Rodrigo Martins"
-                    data-experimento="Cromatografia em Papel"
-                    data-data="25/10/2025"
-                    data-horario="14:00 - 15:30"
-                    data-laboratorio="Química Analítica"
-                    data-status="Pendente"
-                    data-materiais="15x Tiras de papel filtro&#10;15x Béquers 50ml&#10;5x Frascos Álcool Isopropílico&#10;Kit de Canetas Hidrográficas">
-                  <td data-label="Professor">Rodrigo Martins</td>
-                  <td data-label="Experimento">Cromatografia em Papel</td>
-                  <td data-label="Data">25/10/2025</td>
-                  <td data-label="Horário">14:00 - 15:30</td>
-                  <td data-label="Laboratório">Química Analítica</td>
-                  <td data-label="Status">Pendente</td>
-                  <td class="text-center acoes-cell">
-                    <button class="btn btn-sm btn-outline-primary btn-analisar">Analisar</button>
-                  </td>
-                </tr>
-                <tr data-id="3"
-                    data-professor="Fernanda Souza"
-                    data-experimento="Reações de Precipitação"
-                    data-data="28/10/2025"
-                    data-horario="08:00 - 09:30"
-                    data-laboratorio="Química Geral"
-                    data-status="Pendente"
-                    data-materiais="10x Tubos de Ensaio&#10;1x Estante para tubos&#10;50ml Nitrato de Prata&#10;50ml Cloreto de Sódio">
-                  <td data-label="Professor">Fernanda Souza</td>
-                  <td data-label="Experimento">Reações de Precipitação</td>
-                  <td data-label="Data">28/10/2025</td>
-                  <td data-label="Horário">08:00 - 09:30</td>
-                  <td data-label="Laboratório">Química Geral</td>
-                  <td data-label="Status">Pendente</td>
-                  <td class="text-center acoes-cell">
-                    <button class="btn btn-sm btn-outline-primary btn-analisar">Analisar</button>
-                  </td>
-                </tr>
+              <tbody id="lista-agendamentos-tbody">
+                <!-- Conteúdo injetado pelo JS -->
+                <tr><td colspan="6" data-label="Aviso" class="text-center">Carregando agendamentos...</td></tr>
               </tbody>
             </table>
           </div>
@@ -198,7 +142,7 @@
           <h2 class="h4 mb-0">Controle de Estoque</h2>
           <div class="d-flex gap-2 mt-2 mt-md-0">
             <button class="btn btn-custom" id="abrirModalItemBtn"><i class="bi bi-plus-circle-fill me-2"></i>Adicionar</button>
-            <button class="btn btn-outline-warning">Reportar Falta</button>
+            <!-- <button class="btn btn-outline-warning">Reportar Falta</button> -->
           </div>
         </div>
         <div class="card-body">
@@ -208,24 +152,14 @@
                 <tr>
                   <th>Item</th>
                   <th>Descrição</th>
+                  <th>Tipo</th>
                   <th class="text-center">Quantidade</th>
                   <th>Localização</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td data-label="Item">Béquer de Vidro</td>
-                  <td data-label="Descrição">Capacidade 500ml</td>
-                  <td class="text-center mobile-center" data-label="Quantidade">25 UN</td>
-                  <td data-label="Localização">Lab. de Química 01</td>
-                </tr>
-                <tr>
-                  <td data-label="Item">Ácido Clorídrico</td>
-                  <td data-label="Descrição">Frasco de 1L, 37%</td>
-                  <td class="text-center mobile-center" data-label="Quantidade">5 L</td>
-                  <td data-label="Localização">Lab. de Química 01</td>
-                </tr>
-                <!-- Mais itens... -->
+              <tbody id="lista-estoque-tbody">
+                 <!-- Conteúdo injetado pelo JS -->
+                <tr><td colspan="5" data-label="Aviso" class="text-center">Carregando estoque...</td></tr>
               </tbody>
             </table>
           </div>
@@ -245,31 +179,14 @@
               <thead>
                 <tr>
                   <th>Professor</th>
-                  <th>Experimento</th>
                   <th>Data</th>
-                  <th>Horário</th>
                   <th>Laboratório</th>
-                  <th>Status</th>
+                  <th class="text-center">Status</th>
                 </tr>
               </thead>
-              <tbody>
-                <tr>
-                  <td data-label="Professor">Mariana Lopes</td>
-                  <td data-label="Experimento">pH de Soluções</td>
-                  <td data-label="Data">10/09/2025</td>
-                  <td data-label="Horário">09:00 - 10:30</td>
-                  <td data-label="Laboratório">Química Geral</td>
-                  <td data-label="Status">Concluído</td>
-                </tr>
-                <tr>
-                  <td data-label="Professor">Rodrigo Martins</td>
-                  <td data-label="Experimento">Separação de Misturas</td>
-                  <td data-label="Data">15/09/2025</td>
-                  <td data-label="Horário">13:00 - 14:30</td>
-                  <td data-label="Laboratório">Química Analítica</td>
-                  <td data-label="Status">Cancelado</td>
-                </tr>
-                <!-- Mais histórico... -->
+              <tbody id="lista-historico-tbody">
+                 <!-- Conteúdo injetado pelo JS -->
+                <tr><td colspan="6" data-label="Aviso" class="text-center">Carregando histórico...</td></tr>
               </tbody>
             </table>
           </div>
@@ -284,36 +201,54 @@
     <div class="modal-card">
       <div class="modal-header">
         <h5 class="modal-title">Adicionar Novo Item</h5>
-        <button type="button" class="btn-close" id="fecharModalBtn"></button>
+        <button type="button" class="btn-close" id="fecharModalItemBtn"></button>
       </div>
       <div class="modal-body">
         <form id="formItem">
           <div class="form-group mb-3">
-            <label for="item" class="form-label">Item</label>
-            <input type="text" class="form-control" id="item" required />
+            <label for="itemNome" class="form-label">Item</label>
+            <input type="text" class="form-control" id="itemNome" required />
           </div>
           <div class="form-group mb-3">
-            <label for="descricao" class="form-label">Descrição</label>
-            <input type="text" class="form-control" id="descricao" required />
+            <label for="itemDesc" class="form-label">Descrição</label>
+            <input type="text" class="form-control" id="itemDesc" />
           </div>
           <div class="form-group mb-3">
-            <label for="quantidade" class="form-label">Quantidade</label>
-            <input type="number" class="form-control" id="quantidade" min="0" required />
-          </div>
-          <div class="form-group">
-            <label for="localizacao" class="form-label">Localização</label>
-            <select class="form-select" id="localizacao" required>
+            <label for="itemLocal" class="form-label">Localização</label>
+            <select class="form-select" id="itemLocal" required>
               <option value="" disabled selected>Selecione um local...</option>
-              <option value="Lab. de Química 01">Lab. de Química 01</option>
-              <option value="Lab. de Química 02">Lab. de Química 02</option>
-              <option value="Lab. de Química 03">Lab. de Química 03</option>
+              <option value="Lab. 1 - Bancada">Lab. 1 - Bancada</option>
+              <option value="Lab. 2 - Bancada">Lab. 2 - Bancada</option>
+              <option value="Lab. 3 - Bancada">Lab. 3 - Bancada</option>
+              <option value="Armário 7">Armário 7</option>
+              <option value="Estoque">Estoque</option>
               <option value="Almoxarifado Central">Almoxarifado Central</option>
             </select>
+          </div>
+           <!-- Campos condicionais (Unidade/Peso) -->
+          <div class="row g-2">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label for="itemTipoUnidade" class="form-label">Tipo de Medida</label>
+                    <select class="form-select" id="itemTipoUnidade">
+                        <option value="unidade" selected>Unidade (UN)</option>
+                        <option value="peso">Peso (g)</option>
+                        <option value="litros">Volume (ml)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <!-- O Label e o Input aqui serão alterados pelo JS -->
+                <div class="form-group" id="containerValorEstoque">
+                    <label for="itemValor" class="form-label">Quantidade (UN)</label>
+                    <input type="number" class="form-control" id="itemValor" step="1" min="1" required placeholder="Ex: 10">
+                </div>
+            </div>
           </div>
         </form>
       </div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" id="cancelarModalBtn">
+        <button type="button" class="btn btn-secondary" id="cancelarModalItemBtn">
           Cancelar
         </button>
         <button type="submit" form="formItem" class="btn btn-success">
@@ -324,7 +259,7 @@
   </div>
 
   <!-- NOVO: Modal Analisar Agendamento -->
-  <div class="modal-container" id="modalAnalisarPedido">
+  <div class="modal-container" id="analisarModal">
     <div class="modal-card modal-lg"> <!-- modal-lg para mais espaço -->
       <div class="modal-header">
         <h5 class="modal-title">Analisar Agendamento</h5>
@@ -335,40 +270,38 @@
         <div class="row g-3 mb-3">
           <div class="col-md-6">
             <span class="detalhes-label">Professor:</span>
-            <span class="detalhes-valor" id="analise-professor"></span>
+            <span class="detalhes-valor" id="detalhe-professor"></span>
           </div>
            <div class="col-md-6">
-            <span class="detalhes-label">Experimento:</span>
-            <span class="detalhes-valor" id="analise-experimento"></span>
+            <span class="detalhes-label">Laboratório e Data:</span>
+            <span class="detalhes-valor" id="detalhe-lab-data"></span>
           </div>
           <div class="col-md-6">
-            <span class="detalhes-label">Data e Horário:</span>
-            <span class="detalhes-valor" id="analise-data-horario"></span>
+            <span class="detalhes-label">Kit Solicitado:</span>
+            <span class="detalhes-valor" id="detalhe-kit-nome"></span>
           </div>
           <div class="col-md-6">
-            <span class="detalhes-label">Laboratório:</span>
-            <span class="detalhes-valor" id="analise-laboratorio"></span>
+            <span class="detalhes-label">Observações do Professor:</span>
+            <span class="detalhes-valor" id="detalhe-observacoes"></span>
           </div>
         </div>
         <!-- Lista de Materiais -->
         <div class="detalhes-aula-grupo">
-          <span class="detalhes-label">Materiais Solicitados:</span>
-          <textarea class="form-control detalhes-kit-itens-lista" id="analise-materiais" rows="8" readonly></textarea>
+          <span class="detalhes-label">Itens do Kit (se houver):</span>
+          <textarea class="form-control detalhes-kit-itens-lista" id="detalhe-kit-itens" rows="6" readonly></textarea>
         </div>
       </div>
       <div class="modal-footer justify-content-between">
         <!-- Botões de Ação -->
         <div>
-          <button type="button" class="btn btn-success" id="btn-confirmar-agendamento">
+          <!-- IDs atualizados -->
+          <button type="button" class="btn btn-success" id="btnConfirmarAnalise" data-id="">
             <i class="bi bi-check-lg me-2"></i>Confirmar
           </button>
-          <button type="button" class="btn btn-danger" id="btn-cancelar-agendamento">
+          <button type="button" class="btn btn-danger" id="btnCancelarAnalise" data-id="">
             <i class="bi bi-x-lg me-2"></i>Cancelar
           </button>
         </div>
-        <button type="button" class="btn btn-secondary" id="btn-fechar-analise">
-          Fechar
-        </button>
       </div>
     </div>
   </div>
@@ -394,6 +327,20 @@
     </div>
   </div>
 
+  <!-- Toast/Alerta Global (Copiado de telaProfessor) -->
+  <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="globalToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <i class="bi bi-info-circle-fill me-2"></i>
+            <strong class="me-auto" id="toastTitle">Notificação</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body" id="toastBody">
+            Mensagem.
+        </div>
+    </div>
+  </div>
+
   <!-- VLibras JS -->
   <script src="https://vlibras.gov.br/app/vlibras-plugin.js"></script>
   <script>
@@ -405,7 +352,8 @@
     xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
     crossorigin="anonymous"></script>
 
-  <!-- Script JS Personalizado -->
+  <!-- Scripts da Aplicação -->
+  <script src="apiService.js"></script>
   <script src="telaTecnico.js"></script>
 
 </body>

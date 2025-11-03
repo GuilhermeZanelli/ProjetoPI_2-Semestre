@@ -2,9 +2,15 @@ document.addEventListener('DOMContentLoaded', function() {
     const novaSenhaForm = document.getElementById('novaSenhaForm');
     const changeButton = document.getElementById('change-password-button');
     const errorMessage = document.getElementById('senha-error'); 
-    const API_URL = 'http://localhost:3000/api';
+    
+    // O objeto `window.apiService` é carregado pelo `apiService.js`
+    if (!window.apiService) {
+        console.error("apiService.js não foi carregado corretamente.");
+        errorMessage.querySelector('p').textContent = 'Erro crítico ao carregar a página. Recarregue.';
+        errorMessage.style.display = 'block';
+        return;
+    }
 
-    // Pega o e-mail salvo na etapa anterior
     const email = localStorage.getItem('emailParaRecuperar');
     if (!email) {
         errorMessage.querySelector('p').textContent = 'Nenhum e-mail encontrado para recuperação. Por favor, volte ao início.';
@@ -13,30 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // --- CAMADA DE SERVIÇO (Lógica de API) ---
-    const apiService = {
-        /**
-         * Define uma nova senha para o usuário.
-         * @param {string} email 
-         * @param {string} novaSenha 
-         * @returns {Promise<object>} Resposta da API.
-         */
-        definirNovaSenha: async (email, novaSenha) => {
-            const response = await fetch(`${API_URL}/nova-senha`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email, novaSenha: novaSenha })
-            });
-
-            const data = await response.json();
-            if (!response.ok) {
-                throw new Error(data.error || 'Erro ao alterar a senha.');
-            }
-            return data;
-        }
-    };
-
-    // --- LÓGICA DE UI (Event Listeners) ---
     if (novaSenhaForm) {
         novaSenhaForm.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -56,8 +38,8 @@ document.addEventListener('DOMContentLoaded', function() {
             changeButton.textContent = 'Alterando...';
 
             try {
-                // Chama a camada de serviço
-                await apiService.definirNovaSenha(email, novaSenha);
+                // Chama o serviço global
+                await window.apiService.definirNovaSenha(email, novaSenha);
 
                 // --- SUCESSO ---
                 errorMessage.querySelector('p').textContent = 'Senha alterada com sucesso! Redirecionando para o login...';
@@ -83,10 +65,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Limpa o erro de "senhas não coincidem" ao digitar
     document.getElementById('confirmar-senha').addEventListener('input', function() {
         if (errorMessage.querySelector('p').textContent === 'As senhas não coincidem. Tente novamente.') {
             errorMessage.style.display = 'none';
         }
     });
 });
+

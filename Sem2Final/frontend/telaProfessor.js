@@ -1,12 +1,11 @@
 document.addEventListener("DOMContentLoaded", function () {
 
     // --- VARIÁVEIS GLOBAIS ---
-    const API_URL = 'http://localhost:3000/api';
     let appState = {
         userId: null,
         userName: "Professor",
         userType: "professor",
-        token: null,
+        token: null, // O token ainda é pego para o checkLogin
         agendamentos: [],
         kits: [],
         laboratorios: []
@@ -17,77 +16,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const globalToast = globalToastEl ? new bootstrap.Toast(globalToastEl) : null;
 
     // --- CAMADA DE SERVIÇO (Lógica de API) ---
-    const apiService = {
-        /**
-         * Função base para requisições autenticadas.
-         */
-        fetchComToken: async (url, options = {}) => {
-            const headers = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${appState.token}`,
-                ...options.headers,
-            };
-
-            const response = await fetch(url, { ...options, headers });
-
-            if (response.status === 401 || response.status === 403) {
-                console.warn("Token inválido ou expirado. Deslogando.");
-                localStorage.clear();
-                window.location.href = 'telaLogin.html';
-                throw new Error('Token inválido ou expirado.');
-            }
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
-            }
-            
-            return response.status === 204 ? null : response.json();
-        },
-
-        // --- Leitura (GET) ---
-        getAgendamentos: () => {
-            return apiService.fetchComToken(`${API_URL}/professor/agendamentos`);
-        },
-        getKits: () => {
-            return apiService.fetchComToken(`${API_URL}/professor/kits`);
-        },
-        getLaboratorios: () => {
-            return apiService.fetchComToken(`${API_URL}/laboratorios`);
-        },
-
-        // --- Escrita (POST, PUT, DELETE) ---
-        createAgendamento: (agendamentoData) => {
-            return apiService.fetchComToken(`${API_URL}/professor/agendamentos`, {
-                method: 'POST',
-                body: JSON.stringify(agendamentoData)
-            });
-        },
-        createKit: (kitData) => {
-            return apiService.fetchComToken(`${API_URL}/professor/kits`, {
-                method: 'POST',
-                body: JSON.stringify(kitData)
-            });
-        },
-        updateKit: (id, kitData) => {
-            return apiService.fetchComToken(`${API_URL}/professor/kits/${id}`, {
-                method: 'PUT',
-                body: JSON.stringify(kitData)
-            });
-        },
-        deleteKit: (id) => {
-            return apiService.fetchComToken(`${API_URL}/professor/kits/${id}`, {
-                method: 'DELETE'
-            });
-        },
-        cancelarAgendamento: (id) => {
-            return apiService.fetchComToken(`${API_URL}/professor/agendamentos/${id}/cancelar`, {
-                method: 'PUT'
-            });
-        }
-    };
-    // --- FIM DA CAMADA DE SERVIÇO ---
-
+    // Removida! Agora usamos window.apiService do arquivo apiService.js
+    if (!window.apiService) {
+        console.error("apiService.js não foi carregado corretamente.");
+        showAlert("Erro crítico ao carregar a página. Recarregue.", "Erro", "error");
+        return;
+    }
 
     // --- INICIALIZAÇÃO ---
     checkLogin();
@@ -98,7 +32,7 @@ document.addEventListener("DOMContentLoaded", function () {
         iniciarListenersDinamicos();
     }
 
-
+    // Esta função permanece: ela protege a *entrada* na página
     function checkLogin() {
         appState.userId = localStorage.getItem('userId');
         appState.userName = localStorage.getItem('userName');
@@ -116,14 +50,14 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('tipo-usuario').innerText = appState.userType;
     }
 
-    // --- CARREGAMENTO DE DADOS (usando apiService) ---
+    // --- CARREGAMENTO DE DADOS (usando window.apiService) ---
     async function iniciarCarregamentoDados() {
         try {
-            // Chama a camada de serviço
+            // Chama o serviço global
             const [agendamentos, kits, laboratorios] = await Promise.all([
-                apiService.getAgendamentos(),
-                apiService.getKits(),
-                apiService.getLaboratorios()
+                window.apiService.getAgendamentosProfessor(),
+                window.apiService.getKits(),
+                window.apiService.getLaboratorios()
             ]);
 
             appState.agendamentos = agendamentos;
@@ -139,39 +73,37 @@ document.addEventListener("DOMContentLoaded", function () {
 
         } catch (error) {
             console.error("Erro fatal ao carregar dados:", error);
-            showAlert(error.message, "Erro de Conexão", "error");
+            // Se o erro for de token, o apiService já redirecionou
+            if (!error.message.includes("expirou")) {
+                showAlert(error.message, "Erro de Conexão", "error");
+            }
             document.getElementById('lista-proximas-aulas').innerHTML = '<p class="text-center text-danger p-3">Falha ao carregar agendamentos.</p>';
             document.getElementById('lista-meus-kits').innerHTML = '<p class="text-center text-danger p-3">Falha ao carregar kits.</p>';
             document.getElementById('lista-historico').innerHTML = '<tr><td colspan="5" data-label="Erro" class="text-center text-danger">Falha ao carregar histórico.</td></tr>';
         }
     }
 
-    // --- FUNÇÕES DE RENDERIZAÇÃO (Sem alterações) ---
-
+    // --- FUNÇÕES DE RENDERIZAÇÃO ---
     function renderDashboardCards() {
         const agora = new Date();
         const proximos = appState.agendamentos.filter(a => new Date(a.data_hora_inicio) > agora && a.status_agendamento !== 'cancelado');
         const preparados = proximos.filter(a => a.status_agendamento === 'confirmado');
         const aguardando = proximos.filter(a => a.status_agendamento === 'pendente');
-
         document.getElementById('card-proximas-aulas').innerText = proximos.length;
         document.getElementById('card-kits-preparados').innerText = preparados.length;
         document.getElementById('card-aguardando').innerText = aguardando.length;
         document.getElementById('card-meus-kits').innerText = appState.kits.length;
     }
-
     function renderProximasAulas() {
         const container = document.getElementById('lista-proximas-aulas');
         const agora = new Date();
         const proximosAgendamentos = appState.agendamentos.filter(a => 
             new Date(a.data_hora_inicio) > agora && a.status_agendamento !== 'cancelado'
         ).sort((a, b) => new Date(a.data_hora_inicio) - new Date(b.data_hora_inicio));
-
         if (proximosAgendamentos.length === 0) {
             container.innerHTML = '<p class="text-center p-3">Nenhuma aula agendada.</p>';
             return;
         }
-
         container.innerHTML = proximosAgendamentos.map(aula => `
             <article class="card-aulas status-${aula.status_agendamento}" data-id="${aula.id_agendamento}">
                 <div class="aula-cabecalho">
@@ -191,26 +123,22 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="aula-detalhes">
                     <button class="btn btn-link btn-ver-detalhes" data-id="${aula.id_agendamento}">Ver detalhes</button>
                     ${aula.status_agendamento === 'pendente' ? 
-                        `<!-- <button class="btn btn-link btn-editar-aula" data-id="${aula.id_agendamento}">Editar</button> -->
-                         <button class="btn btn-link btn-link-danger btn-cancelar-aula" data-id="${aula.id_agendamento}">Cancelar</button>` : 
+                        `<button class="btn btn-link btn-link-danger btn-cancelar-aula" data-id="${aula.id_agendamento}">Cancelar</button>` : 
                         ''}
                 </div>
             </article>
         `).join('');
     }
-
     function renderHistorico() {
         const container = document.getElementById('lista-historico');
         const agora = new Date();
         const historico = appState.agendamentos.filter(a => 
             new Date(a.data_hora_inicio) <= agora || a.status_agendamento === 'cancelado'
         ).sort((a, b) => new Date(b.data_hora_inicio) - new Date(a.data_hora_inicio));
-
         if (historico.length === 0) {
             container.innerHTML = '<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum histórico encontrado.</td></tr>';
             return;
         }
-
         container.innerHTML = historico.map(aula => `
             <tr data-id="${aula.id_agendamento}">
                 <td data-label="Experimento">${aula.observacoes || 'Aula experimental'}</td>
@@ -223,14 +151,12 @@ document.addEventListener("DOMContentLoaded", function () {
             </tr>
         `).join('');
     }
-
     function renderMeusKits() {
         const container = document.getElementById('lista-meus-kits');
         if (appState.kits.length === 0) {
             container.innerHTML = '<p class="text-center p-3">Nenhum kit personalizado criado.</p>';
             return;
         }
-
         container.innerHTML = appState.kits.map(kit => `
             <div class="col-md-6 col-lg-4">
                 <article class="cards-kits h-100" data-id="${kit.id}">
@@ -239,8 +165,7 @@ document.addEventListener("DOMContentLoaded", function () {
                             <h3 class="titulo">${kit.nome_kit}</h3>
                         </header>
                         <p class="descricao">${kit.descricao_kit || 'Sem descrição.'}</p>
-                        <div class="data-utilizado mt-auto">
-                        </div>
+                        <div class="data-utilizado mt-auto"></div>
                     </div>
                     <footer class="card-footer acoes">
                         <button class="btn btn-link btn-ver-kit" data-id="${kit.id}">Ver</button>
@@ -251,9 +176,7 @@ document.addEventListener("DOMContentLoaded", function () {
             </div>
         `).join('');
     }
-
     function renderFormularioAgendamento() {
-        // Renderizar Laboratórios
         const labContainer = document.getElementById('lista-laboratorios-form');
         if (appState.laboratorios.length > 0) {
             labContainer.innerHTML = appState.laboratorios.map((lab, index) => `
@@ -271,8 +194,6 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             labContainer.innerHTML = '<p class="text-center text-danger">Nenhum laboratório encontrado.</p>';
         }
-
-        // Renderizar Kits no Dropdown
         const kitSelect = document.getElementById('select-kit-existente');
         if (appState.kits.length > 0) {
             kitSelect.innerHTML = '<option value="" disabled selected>Selecione um kit...</option>';
@@ -284,14 +205,11 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-
-    // --- LÓGICA DE NAVEGAÇÃO E MODAIS (Ações) (Sem alterações) ---
+    // --- LÓGICA DE NAVEGAÇÃO E MODAIS (Ações) ---
     function iniciarListenersGlobais() {
-        // --- Navegação entre Seções (Padrão Admin) ---
         const navLinks = document.querySelectorAll('.nav-link[data-target]');
         const sections = document.querySelectorAll('.conteudo-secao');
         const navbarCollapse = document.getElementById('navbarNav');
-
         navLinks.forEach(link => {
             link.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -299,36 +217,28 @@ document.addEventListener("DOMContentLoaded", function () {
                 sections.forEach(section => section.classList.remove('ativo'));
                 const targetSection = document.getElementById(targetId);
                 if (targetSection) targetSection.classList.add('ativo');
-
                 navLinks.forEach(navLink => navLink.classList.remove('active'));
                 link.classList.add('active');
-
                 if (navbarCollapse.classList.contains('show')) {
                     const bsCollapse = new bootstrap.Collapse(navbarCollapse, { toggle: false });
                     bsCollapse.hide();
                 }
             });
         });
-
-        // --- Ações Rápidas (Dashboard) ---
         const cardNovoAgendamento = document.getElementById("acao-novo-agendamento");
         const abaNovoAgendamento = document.querySelector(".nav-link[data-target='novo-agendamento']");
         if (cardNovoAgendamento && abaNovoAgendamento) {
             cardNovoAgendamento.addEventListener("click", (e) => { e.preventDefault(); abaNovoAgendamento.click(); });
         }
-
         const cardCriarKit = document.getElementById("acao-criar-kit");
         const abaMeusKits = document.querySelector('.nav-link[data-target="meus-kits"]');
         if (cardCriarKit && abaMeusKits) {
-            cardCriarKit.addEventListener('click', (e) => { e.preventDefault(); abaMeusKits.click(); abrirModalKit(null); }); // Abre modal de kit vazio
+            cardCriarKit.addEventListener('click', (e) => { e.preventDefault(); abaMeusKits.click(); abrirModalKit(null); });
         }
-        
-        // --- Acessibilidade (Padrão Admin) ---
         const body = document.body;
         const html = document.documentElement;
         const accessibilityBtn = document.getElementById('accessibilityBtn');
         const accessibilityDropdown = document.getElementById('accessibilityDropdown');
-
         if (accessibilityBtn && accessibilityDropdown) {
             accessibilityBtn.addEventListener('click', (e) => { e.stopPropagation(); accessibilityDropdown.classList.toggle('show'); });
         }
@@ -337,7 +247,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 accessibilityDropdown.classList.remove('show');
             }
         });
-
         const darkModeToggle = document.getElementById('toggle-dark-mode');
         if (darkModeToggle) {
             darkModeToggle.addEventListener('click', (e) => { e.preventDefault(); body.classList.toggle('dark-mode'); localStorage.setItem('darkMode', body.classList.contains('dark-mode')); });
@@ -345,7 +254,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (localStorage.getItem('darkMode') === 'true') {
             body.classList.add('dark-mode');
         }
-
         const increaseFontBtn = document.getElementById('increase-font');
         const decreaseFontBtn = document.getElementById('decrease-font');
         if (increaseFontBtn) increaseFontBtn.addEventListener('click', (e) => { e.preventDefault(); changeFontSize(0.1); });
@@ -359,17 +267,13 @@ document.addEventListener("DOMContentLoaded", function () {
         colorModeLinks.forEach(link => {
             link.addEventListener('click', (e) => { e.preventDefault(); const mode = link.getAttribute('data-mode'); body.classList.remove('protanopia', 'deuteranopia', 'tritanopia'); if (mode !== 'normal') body.classList.add(mode); });
         });
-
-        // --- Botão Sair (Padrão Admin) ---
         const modalConfirmarSaida = document.getElementById("modalConfirmarSaida");
         const btnFecharModalSaida = document.getElementById("fecharModalSaidaBtn");
         const btnCancelarSaida = document.getElementById("cancelarSaidaBtn");
         const btnConfirmarSaida = document.getElementById("confirmarSaidaBtn");
         const botaoSair = document.getElementById('botaoSair');
-
         function abrirModalSaida() { if (modalConfirmarSaida) modalConfirmarSaida.classList.add("visivel"); }
         function fecharModalSaida() { if (modalConfirmarSaida) modalConfirmarSaida.classList.remove("visivel"); }
-
         if(botaoSair) botaoSair.addEventListener("click", abrirModalSaida);
         if (btnFecharModalSaida) btnFecharModalSaida.addEventListener("click", fecharModalSaida);
         if (btnCancelarSaida) btnCancelarSaida.addEventListener("click", fecharModalSaida);
@@ -382,11 +286,8 @@ document.addEventListener("DOMContentLoaded", function () {
         adicionarCliqueFora(modalConfirmarSaida, fecharModalSaida);
     }
     
-    // --- LÓGICA DE FORMULÁRIOS E MODAIS (usando apiService) ---
-
+    // --- LÓGICA DE FORMULÁRIOS (usando window.apiService) ---
     function iniciarListenersFormularios() {
-        // --- Lógica de Rádio (Novo Agendamento) ---
-        // (Sem alterações, lógica de UI)
         const radioKitExistente = document.getElementById('kit-existente');
         const radioKitNovo = document.getElementById('kit-novo');
         const containerSelectKit = document.getElementById('container-select-kit');
@@ -399,24 +300,19 @@ document.addEventListener("DOMContentLoaded", function () {
         if (containerSelectKit) containerSelectKit.style.display = 'block';
         if (containerNovoKit) containerNovoKit.style.display = 'none';
 
-        
-        // --- Submit Formulário Novo Agendamento ---
         const formNovoAgendamento = document.getElementById('formNovoAgendamento');
         if (formNovoAgendamento) {
             formNovoAgendamento.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
                 const fk_kit = document.getElementById('select-kit-existente').value;
                 const data = document.getElementById('data').value;
                 const inicio = document.getElementById('horario-inicio').value;
                 const fim = document.getElementById('horario-fim').value;
                 const laboratorioRadio = document.querySelector('input[name="laboratorio"]:checked');
-
                 if (!laboratorioRadio) {
                     showAlert('Por favor, selecione um laboratório.', 'Erro', 'error');
                     return;
                 }
-
                 const agendamento = {
                     data_hora_inicio: `${data}T${inicio}:00`,
                     data_hora_fim: `${data}T${fim}:00`,
@@ -424,14 +320,11 @@ document.addEventListener("DOMContentLoaded", function () {
                     observacoes: document.getElementById('observacoes').value,
                     fk_kit: fk_kit || null,
                 };
-                
                 try {
-                    // Chama a camada de serviço
-                    await apiService.createAgendamento(agendamento);
-                    
+                    // Chama o serviço global
+                    await window.apiService.createAgendamento(agendamento);
                     showAlert('Agendamento criado com sucesso! Aguardando confirmação.', 'Sucesso', 'success');
                     location.reload(); 
-
                 } catch (error) {
                     console.error("Erro ao criar agendamento:", error);
                     showAlert(error.message, "Erro", "error");
@@ -439,7 +332,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        // --- Submit Formulário Novo Kit ---
         const formNovoKit = document.getElementById("formNovoKit");
         if (formNovoKit) formNovoKit.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -448,9 +340,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 descricao_kit: document.getElementById('kit-descricao').value
             };
             try {
-                // Chama a camada de serviço
-                await apiService.createKit(novoKit);
-                
+                // Chama o serviço global
+                await window.apiService.createKit(novoKit);
                 showAlert('Kit criado com sucesso!', 'Sucesso', 'success');
                 location.reload(); 
             } catch (error) {
@@ -459,7 +350,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
         
-        // --- Submit Formulário Editar Kit ---
         const formEditarKit = document.getElementById("formEditarKit");
         if (formEditarKit) formEditarKit.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -469,9 +359,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 descricao_kit: document.getElementById('edit-kit-descricao').value
             };
             try {
-                // Chama a camada de serviço
-                await apiService.updateKit(id, kitAtualizado);
-                
+                // Chama o serviço global
+                await window.apiService.updateKit(id, kitAtualizado);
                 showAlert('Kit atualizado com sucesso!', 'Sucesso', 'success');
                 location.reload();
             } catch (error) {
@@ -479,12 +368,9 @@ document.addEventListener("DOMContentLoaded", function () {
                  showAlert(error.message, "Erro", "error");
             }
         });
+    } 
 
-    } // Fim de iniciarListenersFormularios()
-
-
-    // --- Lógica de Modais (Sem alterações) ---
-
+    // --- Lógica de Modais ---
     function adicionarCliqueFora(modalElement, fecharFn) {
         if (modalElement) {
             modalElement.addEventListener('click', (event) => {
@@ -494,21 +380,18 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     }
-
-    // Modal "Novo Kit"
     const modalNovoKit = document.getElementById("modalNovoKit");
     const botaoAbrirModalKit = document.getElementById("abrirModalKitBtn");
     const botaoFecharModalKit = document.getElementById("fecharModalKitBtn");
     const botaoCancelarModalKit = document.getElementById("cancelarModalKitBtn");
-    // const formNovoKit = document.getElementById("formNovoKit"); // Já declarado
+    const formNovoKitRef = document.getElementById("formNovoKit"); // Renomeado para evitar conflito de escopo
     function abrirModalKit() { if (modalNovoKit) modalNovoKit.classList.add("visivel"); }
-    function fecharModalKit() { if (modalNovoKit) modalNovoKit.classList.remove("visivel"); formNovoKit.reset(); }
+    function fecharModalKit() { if (modalNovoKit) modalNovoKit.classList.remove("visivel"); if(formNovoKitRef) formNovoKitRef.reset(); }
     if (botaoAbrirModalKit) botaoAbrirModalKit.addEventListener("click", abrirModalKit);
     if (botaoFecharModalKit) botaoFecharModalKit.addEventListener("click", fecharModalKit);
     if (botaoCancelarModalKit) botaoCancelarModalKit.addEventListener("click", fecharModalKit);
     adicionarCliqueFora(modalNovoKit, fecharModalKit);
 
-    // Modal "Ver detalhes" (Aula)
     const modalVerDetalhes = document.getElementById("modalVerDetalhes");
     const btnFecharModalVerDetalhes = document.getElementById("fecharModalVerDetalhesBtn");
     const btnFecharModalFooter = document.getElementById("fecharModalVerDetalhesBtn_footer");
@@ -516,11 +399,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnFecharModalVerDetalhes) btnFecharModalVerDetalhes.addEventListener("click", fecharModalVerDetalhes);
     if (btnFecharModalFooter) btnFecharModalFooter.addEventListener("click", fecharModalVerDetalhes);
     adicionarCliqueFora(modalVerDetalhes, fecharModalVerDetalhes);
-
     function abrirModalVerDetalhes(id) {
         const aula = appState.agendamentos.find(a => a.id_agendamento == id);
         if (!aula) return;
-        
         document.getElementById('detalhe-titulo').innerText = aula.observacoes || 'Aula experimental';
         document.getElementById('detalhe-status').innerHTML = `<span class="status-texto status-${aula.status_agendamento}">${aula.status_agendamento}</span>`;
         document.getElementById('detalhe-turma').innerText = 'N/A';
@@ -529,11 +410,8 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('detalhe-data').innerText = `${formatarData(aula.data_hora_inicio)} ${formatarHorario(aula.data_hora_inicio)}-${formatarHorario(aula.data_hora_fim)}`;
         document.getElementById('detalhe-kit').innerText = aula.nome_kit || 'Nenhum';
         document.getElementById('detalhe-obs').innerText = aula.observacoes || 'Nenhuma.';
-        
         if (modalVerDetalhes) modalVerDetalhes.classList.add("visivel");
     }
-
-    // Modal "Editar" (Aula)
     const modalEditarAula = document.getElementById("modalEditarAula");
     const btnFecharModalEditarAula = document.getElementById("fecharModalEditarAulaBtn");
     const btnCancelarModalEditarAula = document.getElementById("cancelarModalEditarAulaBtn");
@@ -541,8 +419,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnFecharModalEditarAula) btnFecharModalEditarAula.addEventListener("click", fecharModalEditarAula);
     if (btnCancelarModalEditarAula) btnCancelarModalEditarAula.addEventListener("click", fecharModalEditarAula);
     adicionarCliqueFora(modalEditarAula, fecharModalEditarAula);
-
-    // Modal "Ver Kit"
     const modalVerKit = document.getElementById("modalVerKit");
     const btnFecharModalVerKit = document.getElementById("fecharModalVerKitBtn");
     const btnFecharModalKitFooter = document.getElementById("fecharModalVerKitBtn_footer");
@@ -550,26 +426,22 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnFecharModalVerKit) btnFecharModalVerKit.addEventListener("click", fecharModalVerKit);
     if (btnFecharModalKitFooter) btnFecharModalKitFooter.addEventListener("click", fecharModalVerKit);
     adicionarCliqueFora(modalVerKit, fecharModalVerKit);
-
     function abrirModalVerKit(id) {
         const kit = appState.kits.find(k => k.id == id);
         if (!kit) return;
         document.getElementById('detalhe-kit-titulo').innerText = kit.nome_kit;
         document.getElementById('detalhe-kit-itens').innerText = kit.descricao_kit;
-        document.getElementById('detalhe-kit-uso').innerText = 'Carregando...'; // TODO
+        document.getElementById('detalhe-kit-uso').innerText = 'Em desenvolvimento.';
         if (modalVerKit) modalVerKit.classList.add("visivel");
     }
-
-    // Modal "Editar Kit"
     const modalEditarKit = document.getElementById("modalEditarKit");
     const btnFecharModalEditarKit = document.getElementById("fecharModalEditarKitBtn");
     const btnCancelarModalEditarKit = document.getElementById("cancelarModalEditarKitBtn");
-    // const formEditarKit = document.getElementById("formEditarKit"); // Já declarado
-    function fecharModalEditarKit() { if (modalEditarKit) modalEditarKit.classList.remove("visivel"); formEditarKit.reset(); }
+    const formEditarKitRef = document.getElementById("formEditarKit"); // Renomeado
+    function fecharModalEditarKit() { if (modalEditarKit) modalEditarKit.classList.remove("visivel"); if(formEditarKitRef) formEditarKitRef.reset(); }
     if (btnFecharModalEditarKit) btnFecharModalEditarKit.addEventListener("click", fecharModalEditarKit);
     if (btnCancelarModalEditarKit) btnCancelarModalEditarKit.addEventListener("click", fecharModalEditarKit);
     adicionarCliqueFora(modalEditarKit, fecharModalEditarKit);
-
     function abrirModalEditarKit(id) {
         const kit = appState.kits.find(k => k.id == id);
         if (!kit) return;
@@ -579,26 +451,20 @@ document.addEventListener("DOMContentLoaded", function () {
         if (modalEditarKit) modalEditarKit.classList.add("visivel");
     }
 
-    // --- Listeners de Eventos Dinâmicos (usando apiService) ---
+    // --- Listeners de Eventos Dinâmicos (usando window.apiService) ---
     function iniciarListenersDinamicos() {
-        // Container "Próximas Aulas"
         document.getElementById('lista-proximas-aulas').addEventListener('click', async (e) => {
             const target = e.target.closest('button'); 
             if (!target) return;
-
             const id = target.dataset.id;
             if (!id) return;
-
             if (target.classList.contains('btn-ver-detalhes')) {
                 abrirModalVerDetalhes(id);
             }
-            // if (target.classList.contains('btn-editar-aula')) { ... }
             if (target.classList.contains('btn-cancelar-aula')) {
-                // TODO: Adicionar modal de confirmação "Tem certeza?"
                 try {
-                    // Chama a camada de serviço
-                    await apiService.cancelarAgendamento(id);
-                    
+                    // Chama o serviço global
+                    await window.apiService.cancelarAgendamentoProfessor(id);
                     showAlert('Agendamento cancelado.', 'Aviso', 'warning');
                     location.reload();
                 } catch (error) {
@@ -607,14 +473,11 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
         
-        // Container "Meus Kits"
         document.getElementById('lista-meus-kits').addEventListener('click', async (e) => {
             const target = e.target.closest('button');
             if (!target) return;
-            
             const id = target.dataset.id;
             if (!id) return;
-
             if (target.classList.contains('btn-ver-kit')) {
                 abrirModalVerKit(id);
             }
@@ -622,11 +485,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 abrirModalEditarKit(id);
             }
             if (target.classList.contains('btn-excluir-kit')) {
-                // TODO: Adicionar modal de confirmação
                  try {
-                    // Chama a camada de serviço
-                    await apiService.deleteKit(id);
-                    
+                    // Chama o serviço global
+                    await window.apiService.deleteKit(id);
                     showAlert('Kit excluído com sucesso.', 'Sucesso', 'success');
                     location.reload();
                 } catch (error) {
@@ -634,10 +495,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
         });
-    } // Fim de iniciarListenersDinamicos()
+    } 
 
-    // --- FUNÇÕES AUXILIARES (Sem alterações) ---
-
+    // --- FUNÇÕES AUXILIARES ---
     function showAlert(message, title = "Notificação", type = "info") {
         if (!globalToast) {
             console.log(`[Alerta: ${title}] ${message}`);
@@ -664,11 +524,15 @@ document.addEventListener("DOMContentLoaded", function () {
         if (toastIconContainer) {
             toastIconContainer.className = `bi ${iconClass} me-2`;
         }
-        toastTitle.childNodes[1].nodeValue = ` ${title}`;
+        // Garante que o nó de texto do título exista para ser atualizado
+        if (toastTitle.childNodes[1]) {
+            toastTitle.childNodes[1].nodeValue = ` ${title}`;
+        } else {
+            toastTitle.appendChild(document.createTextNode(` ${title}`));
+        }
         toastBody.innerText = message;
         globalToast.show();
     }
-    
     function getStatusIcone(status) {
         switch (status) {
             case 'confirmado': return '✅';
@@ -678,7 +542,6 @@ document.addEventListener("DOMContentLoaded", function () {
             default: return '?';
         }
     }
-
     function formatarData(dataString) {
         if (!dataString) return 'N/A';
         try {
@@ -691,7 +554,6 @@ document.addEventListener("DOMContentLoaded", function () {
             return dataString.split('T')[0];
         }
     }
-    
     function formatarHorario(dataString) {
         if (!dataString) return 'N/A';
         try {
@@ -703,5 +565,5 @@ document.addEventListener("DOMContentLoaded", function () {
             return '00:00';
         }
     }
-
 });
+

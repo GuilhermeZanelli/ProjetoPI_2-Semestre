@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
 
     // --- VARIÁVEIS GLOBAIS ---
-    const API_URL = 'http://localhost:3000/api';
     let appState = {
         userId: null,
         userName: "Admin",
@@ -17,72 +16,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const globalToast = globalToastEl ? new bootstrap.Toast(globalToastEl) : null;
 
     // --- CAMADA DE SERVIÇO (Lógica de API) ---
-    const apiService = {
-        /**
-         * Função base para requisições autenticadas.
-         */
-        fetchComToken: async (url, options = {}) => {
-            const headers = {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${appState.token}`,
-                ...options.headers,
-            };
-
-            const response = await fetch(url, { ...options, headers });
-
-            if (response.status === 401 || response.status === 403) {
-                console.warn("Token inválido ou expirado. Deslogando.");
-                localStorage.clear();
-                window.location.href = 'telaLogin.html';
-                throw new Error('Token inválido ou expirado.');
-            }
-            
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
-            }
-            
-            return response.status === 204 ? null : response.json();
-        },
-
-        // --- Leitura (GET) ---
-        getAgendamentos: () => {
-            return apiService.fetchComToken(`${API_URL}/admin/agendamentos`);
-        },
-        getUsuarios: () => {
-            return apiService.fetchComToken(`${API_URL}/admin/usuarios`);
-        },
-        getMateriais: () => {
-            return apiService.fetchComToken(`${API_URL}/materiais`);
-        },
-
-        // --- Escrita (POST, PUT, DELETE) ---
-        createUsuario: (userData) => {
-            return apiService.fetchComToken(`${API_URL}/admin/usuarios`, {
-                method: 'POST',
-                body: JSON.stringify(userData)
-            });
-        },
-        deleteUsuario: (id) => {
-            return apiService.fetchComToken(`${API_URL}/admin/usuarios/${id}`, {
-                method: 'DELETE'
-            });
-        },
-        createMaterial: (itemData) => {
-            return apiService.fetchComToken(`${API_URL}/materiais`, {
-                method: 'POST',
-                body: JSON.stringify(itemData)
-            });
-        },
-        updateStatusAgendamento: (id, status) => {
-             return apiService.fetchComToken(`${API_URL}/tecnico/agendamentos/${id}/status`, { // Rota do técnico serve para admin
-                method: 'PUT',
-                body: JSON.stringify({ status: status })
-            });
-        }
-    };
-    // --- FIM DA CAMADA DE SERVIÇO ---
-
+    // Removida! Agora usamos window.apiService do arquivo apiService.js
+    if (!window.apiService) {
+        console.error("apiService.js não foi carregado corretamente.");
+        showAlert("Erro crítico ao carregar a página. Recarregue.", "Erro", "error");
+        return;
+    }
 
     // --- INICIALIZAÇÃO ---
     checkLogin();
@@ -91,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
         iniciarListeners();
     }
 
+    // Esta função permanece
     function checkLogin() {
         appState.userId = localStorage.getItem('userId');
         appState.userName = localStorage.getItem('userName');
@@ -109,14 +49,14 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    // --- CARREGAMENTO DE DADOS (usando apiService) ---
+    // --- CARREGAMENTO DE DADOS (usando window.apiService) ---
     async function iniciarCarregamentoDados() {
         try {
-            // Chama a camada de serviço
+            // Chama o serviço global
             const [agendamentos, usuarios, materiais] = await Promise.all([
-                apiService.getAgendamentos(),
-                apiService.getUsuarios(),
-                apiService.getMateriais()
+                window.apiService.getAgendamentosAdmin(),
+                window.apiService.getUsuarios(),
+                window.apiService.getMateriais()
             ]);
 
             appState.agendamentos = agendamentos;
@@ -131,15 +71,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             console.error("Erro ao carregar dados:", error);
-            showAlert("Falha ao carregar dados do servidor.", "Erro de Conexão", "error");
+            if (!error.message.includes("expirou")) {
+                showAlert(error.message, "Erro de Conexão", "error");
+            }
             document.getElementById('lista-agendamentos-tbody').innerHTML = `<tr><td colspan="6" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
             document.getElementById('lista-usuarios-tbody').innerHTML = `<tr><td colspan="4" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
             document.getElementById('lista-estoque-tbody').innerHTML = `<tr><td colspan="5" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
         }
     }
 
-    // --- FUNÇÕES DE RENDERIZAÇÃO (Sem alterações) ---
-
+    // --- FUNÇÕES DE RENDERIZAÇÃO ---
     function renderDashboard() {
         const { agendamentos, usuarios, materiais } = appState;
         const pendentes = agendamentos.filter(a => a.status_agendamento === 'pendente').length;
@@ -149,14 +90,12 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('card-usuarios').innerText = usuarios.length;
         document.getElementById('card-estoque').innerText = materiais.length;
     }
-
     function renderAgendamentos() {
         const tbody = document.getElementById('lista-agendamentos-tbody');
         if (appState.agendamentos.length === 0) {
             tbody.innerHTML = `<tr><td colspan="6" data-label="Aviso" class="text-center">Nenhum agendamento encontrado.</td></tr>`;
             return;
         }
-
         tbody.innerHTML = appState.agendamentos.map(aula => {
             const { statusClasse, statusTexto } = getStatusInfo(aula.status_agendamento);
             return `
@@ -179,21 +118,18 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }).join('');
     }
-
     function renderUsuarios() {
         const tbody = document.getElementById('lista-usuarios-tbody');
         if (appState.usuarios.length === 0) {
             tbody.innerHTML = `<tr><td colspan="4" data-label="Aviso" class="text-center">Nenhum usuário cadastrado.</td></tr>`;
             return;
         }
-
         tbody.innerHTML = appState.usuarios.map(user => `
             <tr data-id="${user.id}">
                 <td data-label="Nome">${user.nome}</td>
                 <td data-label="Email">${user.email}</td>
                 <td data-label="Cargo">${user.tipo_usuario}</td>
                 <td data-label="Ações" class="text-center acoes-cell">
-                    <!-- <button class="btn btn-sm btn-outline-primary mx-1 btn-editar-usuario" data-id="${user.id}">Editar</button> -->
                     ${user.id != appState.userId ? // Não pode excluir a si mesmo
                     `<button class="btn btn-sm btn-outline-danger mx-1 btn-remover-usuario" data-id="${user.id}">Remover</button>` : 
                     '(Usuário Atual)'}
@@ -201,14 +137,12 @@ document.addEventListener('DOMContentLoaded', function () {
             </tr>
         `).join('');
     }
-
     function renderEstoque() {
         const tbody = document.getElementById('lista-estoque-tbody');
         if (appState.materiais.length === 0) {
             tbody.innerHTML = `<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum item no estoque.</td></tr>`;
             return;
         }
-
         tbody.innerHTML = appState.materiais.map(item => `
             <tr data-id="${item.id}">
                 <td data-label="Item">${item.nome}</td>
@@ -220,15 +154,13 @@ document.addEventListener('DOMContentLoaded', function () {
         `).join('');
     }
 
-
-    // --- LÓGICA DE EVENTOS E MODAIS (usando apiService) ---
+    // --- LÓGICA DE EVENTOS E MODAIS (usando window.apiService) ---
     function iniciarListeners() {
         
-        // --- Navegação entre Seções (Sem alterações) ---
+        // --- Navegação ---
         const navLinks = document.querySelectorAll('.nav-link[data-target]');
         const sections = document.querySelectorAll('.conteudo-secao');
         const navbarCollapse = document.getElementById('navbarNav');
-
         navLinks.forEach(link => {
             link.addEventListener('click', (event) => {
                 event.preventDefault();
@@ -236,10 +168,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 sections.forEach(section => section.classList.remove('ativo'));
                 const targetSection = document.getElementById(targetId);
                 if (targetSection) targetSection.classList.add('ativo');
-
                 navLinks.forEach(navLink => navLink.classList.remove('active'));
                 link.classList.add('active');
-
                 if (navbarCollapse.classList.contains('show')) {
                     const bsCollapse = new bootstrap.Collapse(navbarCollapse, { toggle: false });
                     bsCollapse.hide();
@@ -247,12 +177,11 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // --- Acessibilidade (Sem alterações) ---
+        // --- Acessibilidade ---
         const body = document.body;
         const html = document.documentElement;
         const accessibilityBtn = document.getElementById('accessibilityBtn');
         const accessibilityDropdown = document.getElementById('accessibilityDropdown');
-
         if (accessibilityBtn && accessibilityDropdown) {
             accessibilityBtn.addEventListener('click', (e) => { e.stopPropagation(); accessibilityDropdown.classList.toggle('show'); });
         }
@@ -279,22 +208,18 @@ document.addEventListener('DOMContentLoaded', function () {
         colorModeLinks.forEach(link => {
             link.addEventListener('click', (e) => { e.preventDefault(); const mode = link.getAttribute('data-mode'); body.classList.remove('protanopia', 'deuteranopia', 'tritanopia'); if (mode !== 'normal') body.classList.add(mode); });
         });
-
-        // --- VLibras (Sem alterações) ---
         if (window.VLibras) {
             new window.VLibras.Widget('https://vlibras.gov.br/app');
         }
 
-        // --- Modal de Confirmação de Saída (Sem alterações) ---
+        // --- Modal Saída ---
         const modalConfirmarSaida = document.getElementById("modalConfirmarSaida");
         const btnFecharModalSaida = document.getElementById("fecharModalSaidaBtn");
         const btnCancelarSaida = document.getElementById("cancelarSaidaBtn");
         const btnConfirmarSaida = document.getElementById("confirmarSaidaBtn");
         const botaoSair = document.getElementById('botaoSair');
-
         function abrirModalSaida() { if (modalConfirmarSaida) modalConfirmarSaida.classList.add("visivel"); }
         function fecharModalSaida() { if (modalConfirmarSaida) modalConfirmarSaida.classList.remove("visivel"); }
-
         if(botaoSair) botaoSair.addEventListener("click", abrirModalSaida);
         if (btnFecharModalSaida) btnFecharModalSaida.addEventListener("click", fecharModalSaida);
         if (btnCancelarSaida) btnCancelarSaida.addEventListener("click", fecharModalSaida);
@@ -312,10 +237,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const fecharUserModalBtn = document.getElementById('fecharModalBtn');
         const cancelarUserModalBtn = document.getElementById('cancelarModalBtn');
         const userForm = document.getElementById('formUsuario');
-
         const abrirUserModal = () => { if (userModal) userModal.classList.add('visivel'); }
         const fecharUserModal = () => { if (userModal) userModal.classList.remove('visivel'); userForm.reset(); }
-
         if (abrirUserModalBtn) abrirUserModalBtn.addEventListener('click', abrirUserModal);
         if (fecharUserModalBtn) fecharUserModalBtn.addEventListener('click', fecharUserModal);
         if (cancelarUserModalBtn) cancelarUserModalBtn.addEventListener('click', fecharUserModal);
@@ -331,9 +254,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     senha: document.getElementById('senha').value,
                 };
                 try {
-                    // Chama a camada de serviço
-                    const data = await apiService.createUsuario(novoUsuario);
-                    
+                    // Chama o serviço global
+                    const data = await window.apiService.createUsuario(novoUsuario);
                     showAlert(`Usuário "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
                     location.reload(); 
                 } catch (error) {
@@ -349,10 +271,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const fecharEstoqueModalBtn = document.getElementById('fecharModalEstoqueBtn');
         const cancelarEstoqueModalBtn = document.getElementById('cancelarModalEstoqueBtn');
         const estoqueForm = document.getElementById('formEstoque');
-
         const abrirEstoqueModal = () => { if (estoqueModal) estoqueModal.classList.add('visivel'); }
         const fecharEstoqueModal = () => { if (estoqueModal) estoqueModal.classList.remove('visivel'); estoqueForm.reset(); atualizarInputValor('unidade'); }
-
         if (abrirEstoqueModalBtn) abrirEstoqueModalBtn.addEventListener('click', abrirEstoqueModal);
         if (fecharEstoqueModalBtn) fecharEstoqueModalBtn.addEventListener('click', fecharEstoqueModal);
         if (cancelarEstoqueModalBtn) cancelarEstoqueModalBtn.addEventListener('click', fecharEstoqueModal);
@@ -369,9 +289,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     valor: parseFloat(document.getElementById('itemValor').value)
                 };
                 try {
-                    // Chama a camada de serviço
-                    const data = await apiService.createMaterial(novoItem);
-                    
+                    // Chama o serviço global
+                    const data = await window.apiService.createMaterial(novoItem);
                     showAlert(`Item "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
                     location.reload(); 
                 } catch (error) {
@@ -381,7 +300,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Lógica condicional (Unidade/Peso/Litros) (Sem alterações)
         const tipoUnidadeSelect = document.getElementById('itemTipoUnidade');
         if (tipoUnidadeSelect) {
             tipoUnidadeSelect.addEventListener('change', (e) => {
@@ -390,31 +308,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // --- Ações Dinâmicas (Delegação de Eventos) ---
-
-        // Ações na Tabela de Agendamentos
         document.getElementById('lista-agendamentos-tbody').addEventListener('click', async (e) => {
             const target = e.target;
             const id = target.dataset.id;
             if (!id) return;
-
-            // Confirmar Agendamento
             if (target.classList.contains('btn-confirmar-agendamento')) {
                 try {
-                    // Chama a camada de serviço
-                    await apiService.updateStatusAgendamento(id, 'confirmado');
-                    
+                    // Chama o serviço global
+                    await window.apiService.updateStatusAgendamento(id, 'confirmado');
                     showAlert('Agendamento confirmado!', 'Sucesso', 'success');
                     location.reload();
                 } catch (error) {
                     showAlert(error.message, 'Erro', 'error');
                 }
             }
-            // Cancelar Agendamento
             if (target.classList.contains('btn-cancelar-agendamento')) {
                  try {
-                    // Chama a camada de serviço
-                    await apiService.updateStatusAgendamento(id, 'cancelado');
-                    
+                    // Chama o serviço global
+                    await window.apiService.updateStatusAgendamento(id, 'cancelado');
                     showAlert('Agendamento cancelado.', 'Aviso', 'warning');
                     location.reload();
                 } catch (error) {
@@ -423,7 +334,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Ações na Tabela de Usuários
         document.getElementById('lista-usuarios-tbody').addEventListener('click', async (e) => {
             const target = e.target;
             const id = target.dataset.id;
@@ -431,21 +341,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // TODO: Adicionar modal de confirmação "Tem certeza?"
             try {
-                // Chama a camada de serviço
-                await apiService.deleteUsuario(id);
-                
+                // Chama o serviço global
+                await window.apiService.deleteUsuario(id);
                 showAlert('Usuário removido com sucesso.', 'Sucesso', 'success');
                 location.reload();
             } catch (error) {
                 showAlert(error.message, 'Erro ao remover', 'error');
             }
         });
+    }
 
-    } // Fim de iniciarListeners()
-
-
-    // --- FUNÇÕES AUXILIARES (Sem alterações) ---
-
+    // --- FUNÇÕES AUXILIARES ---
     function adicionarCliqueFora(modalElement, fecharFn) {
         if (modalElement) {
             modalElement.addEventListener('click', (event) => {
@@ -455,14 +361,12 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     }
-
     function atualizarInputValor(tipo) {
         const containerValor = document.getElementById('containerValorEstoque');
         if (!containerValor) return;
         const valorLabel = containerValor.querySelector('label');
         const valorInput = containerValor.querySelector('input');
         if (!valorLabel || !valorInput) return;
-
         switch (tipo) {
             case 'unidade':
                 valorLabel.textContent = 'Quantidade (UN)';
@@ -484,19 +388,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 break;
         }
     }
-
     function showAlert(message, title = "Notificação", type = "info") {
         if (!globalToast) {
             console.log(`[Alerta: ${title}] ${message}`);
             return;
         }
-
         const toastTitle = document.getElementById('toastTitle');
         const toastBody = document.getElementById('toastBody');
         const toastIconContainer = toastTitle.querySelector('i'); 
-
         globalToastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning', 'text-bg-info');
-        
         let iconClass = '';
         if (type === 'success') {
             globalToastEl.classList.add('text-bg-success');
@@ -511,16 +411,18 @@ document.addEventListener('DOMContentLoaded', function () {
              globalToastEl.classList.add('text-bg-info');
              iconClass = 'bi-info-circle-fill';
         }
-        
         if (toastIconContainer) {
             toastIconContainer.className = `bi ${iconClass} me-2`;
         }
-        toastTitle.childNodes[1].nodeValue = ` ${title}`; 
+        // Garante que o nó de texto do título exista para ser atualizado
+        if (toastTitle.childNodes[1]) {
+            toastTitle.childNodes[1].nodeValue = ` ${title}`;
+        } else {
+            toastTitle.appendChild(document.createTextNode(` ${title}`));
+        }
         toastBody.innerText = message;
-        
         globalToast.show();
     }
-    
     function getStatusInfo(status) {
         switch (status) {
             case 'confirmado':
@@ -535,7 +437,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 return { statusClasse: 'bg-light text-dark', statusTexto: '?' };
         }
     }
-
     function formatarData(dataString) {
         if (!dataString) return 'N/A';
         try {
@@ -548,7 +449,6 @@ document.addEventListener('DOMContentLoaded', function () {
             return dataString.split('T')[0];
         }
     }
-
     function formatarHorario(dataString) {
         if (!dataString) return 'N/A';
         try {
@@ -560,5 +460,5 @@ document.addEventListener('DOMContentLoaded', function () {
             return '00:00';
         }
     }
-
 });
+
