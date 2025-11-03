@@ -16,6 +16,74 @@ document.addEventListener('DOMContentLoaded', function () {
     const globalToastEl = document.getElementById('globalToast');
     const globalToast = globalToastEl ? new bootstrap.Toast(globalToastEl) : null;
 
+    // --- CAMADA DE SERVIÇO (Lógica de API) ---
+    const apiService = {
+        /**
+         * Função base para requisições autenticadas.
+         */
+        fetchComToken: async (url, options = {}) => {
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${appState.token}`,
+                ...options.headers,
+            };
+
+            const response = await fetch(url, { ...options, headers });
+
+            if (response.status === 401 || response.status === 403) {
+                console.warn("Token inválido ou expirado. Deslogando.");
+                localStorage.clear();
+                window.location.href = 'telaLogin.html';
+                throw new Error('Token inválido ou expirado.');
+            }
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
+            }
+            
+            return response.status === 204 ? null : response.json();
+        },
+
+        // --- Leitura (GET) ---
+        getAgendamentos: () => {
+            return apiService.fetchComToken(`${API_URL}/admin/agendamentos`);
+        },
+        getUsuarios: () => {
+            return apiService.fetchComToken(`${API_URL}/admin/usuarios`);
+        },
+        getMateriais: () => {
+            return apiService.fetchComToken(`${API_URL}/materiais`);
+        },
+
+        // --- Escrita (POST, PUT, DELETE) ---
+        createUsuario: (userData) => {
+            return apiService.fetchComToken(`${API_URL}/admin/usuarios`, {
+                method: 'POST',
+                body: JSON.stringify(userData)
+            });
+        },
+        deleteUsuario: (id) => {
+            return apiService.fetchComToken(`${API_URL}/admin/usuarios/${id}`, {
+                method: 'DELETE'
+            });
+        },
+        createMaterial: (itemData) => {
+            return apiService.fetchComToken(`${API_URL}/materiais`, {
+                method: 'POST',
+                body: JSON.stringify(itemData)
+            });
+        },
+        updateStatusAgendamento: (id, status) => {
+             return apiService.fetchComToken(`${API_URL}/tecnico/agendamentos/${id}/status`, { // Rota do técnico serve para admin
+                method: 'PUT',
+                body: JSON.stringify({ status: status })
+            });
+        }
+    };
+    // --- FIM DA CAMADA DE SERVIÇO ---
+
+
     // --- INICIALIZAÇÃO ---
     checkLogin();
     if (appState.token) {
@@ -40,45 +108,15 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('tipo-usuario').innerText = appState.userType;
     }
 
-    // --- Helper de Fetch ---
-    async function fetchComToken(url, options = {}) {
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${appState.token}`,
-            ...options.headers,
-        };
 
-        const response = await fetch(url, { ...options, headers });
-
-        if (response.status === 401 || response.status === 403) {
-            // Token inválido ou expirado
-            console.warn("Token inválido ou expirado. Deslogando.");
-            localStorage.clear();
-            window.location.href = 'telaLogin.html';
-            throw new Error('Token inválido ou expirado.');
-        }
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
-        }
-        
-        if (response.status === 204) { // No Content
-            return null;
-        }
-
-        return response.json();
-    }
-
-
-    // --- CARREGAMENTO DE DADOS (FETCH API) ---
+    // --- CARREGAMENTO DE DADOS (usando apiService) ---
     async function iniciarCarregamentoDados() {
         try {
-            // Carregar dados em paralelo
+            // Chama a camada de serviço
             const [agendamentos, usuarios, materiais] = await Promise.all([
-                fetchComToken(`${API_URL}/admin/agendamentos`),
-                fetchComToken(`${API_URL}/admin/usuarios`),
-                fetchComToken(`${API_URL}/materiais`) // Rota compartilhada com tecnico
+                apiService.getAgendamentos(),
+                apiService.getUsuarios(),
+                apiService.getMateriais()
             ]);
 
             appState.agendamentos = agendamentos;
@@ -100,7 +138,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- FUNÇÕES DE RENDERIZAÇÃO ---
+    // --- FUNÇÕES DE RENDERIZAÇÃO (Sem alterações) ---
 
     function renderDashboard() {
         const { agendamentos, usuarios, materiais } = appState;
@@ -183,10 +221,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    // --- LÓGICA DE EVENTOS E MODAIS ---
+    // --- LÓGICA DE EVENTOS E MODAIS (usando apiService) ---
     function iniciarListeners() {
         
-        // --- Navegação entre Seções ---
+        // --- Navegação entre Seções (Sem alterações) ---
         const navLinks = document.querySelectorAll('.nav-link[data-target]');
         const sections = document.querySelectorAll('.conteudo-secao');
         const navbarCollapse = document.getElementById('navbarNav');
@@ -209,7 +247,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         });
 
-        // --- Acessibilidade ---
+        // --- Acessibilidade (Sem alterações) ---
         const body = document.body;
         const html = document.documentElement;
         const accessibilityBtn = document.getElementById('accessibilityBtn');
@@ -242,12 +280,12 @@ document.addEventListener('DOMContentLoaded', function () {
             link.addEventListener('click', (e) => { e.preventDefault(); const mode = link.getAttribute('data-mode'); body.classList.remove('protanopia', 'deuteranopia', 'tritanopia'); if (mode !== 'normal') body.classList.add(mode); });
         });
 
-        // --- VLibras ---
+        // --- VLibras (Sem alterações) ---
         if (window.VLibras) {
             new window.VLibras.Widget('https://vlibras.gov.br/app');
         }
 
-        // --- Modal de Confirmação de Saída ---
+        // --- Modal de Confirmação de Saída (Sem alterações) ---
         const modalConfirmarSaida = document.getElementById("modalConfirmarSaida");
         const btnFecharModalSaida = document.getElementById("fecharModalSaidaBtn");
         const btnCancelarSaida = document.getElementById("cancelarSaidaBtn");
@@ -293,12 +331,11 @@ document.addEventListener('DOMContentLoaded', function () {
                     senha: document.getElementById('senha').value,
                 };
                 try {
-                    const data = await fetchComToken(`${API_URL}/admin/usuarios`, {
-                        method: 'POST',
-                        body: JSON.stringify(novoUsuario)
-                    });
+                    // Chama a camada de serviço
+                    const data = await apiService.createUsuario(novoUsuario);
+                    
                     showAlert(`Usuário "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
-                    location.reload(); // Recarrega
+                    location.reload(); 
                 } catch (error) {
                     console.error("Erro ao cadastrar usuário:", error);
                     showAlert(error.message, "Erro", "error");
@@ -328,16 +365,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     nome: document.getElementById('itemNome').value,
                     descricao: document.getElementById('itemDesc').value,
                     localizacao: document.getElementById('itemLocal').value,
-                    tipoUnidade: document.getElementById('itemTipoUnidade').value, // 'unidade', 'peso', 'litros'
+                    tipoUnidade: document.getElementById('itemTipoUnidade').value, 
                     valor: parseFloat(document.getElementById('itemValor').value)
                 };
                 try {
-                    const data = await fetchComToken(`${API_URL}/materiais`, {
-                        method: 'POST',
-                        body: JSON.stringify(novoItem)
-                    });
+                    // Chama a camada de serviço
+                    const data = await apiService.createMaterial(novoItem);
+                    
                     showAlert(`Item "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
-                    location.reload(); // Recarrega
+                    location.reload(); 
                 } catch (error) {
                     console.error("Erro ao cadastrar item:", error);
                     showAlert(error.message, "Erro", "error");
@@ -345,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Lógica condicional (Unidade/Peso/Litros) do modal de estoque
+        // Lógica condicional (Unidade/Peso/Litros) (Sem alterações)
         const tipoUnidadeSelect = document.getElementById('itemTipoUnidade');
         if (tipoUnidadeSelect) {
             tipoUnidadeSelect.addEventListener('change', (e) => {
@@ -364,10 +400,9 @@ document.addEventListener('DOMContentLoaded', function () {
             // Confirmar Agendamento
             if (target.classList.contains('btn-confirmar-agendamento')) {
                 try {
-                    await fetchComToken(`${API_URL}/tecnico/agendamentos/${id}/status`, {
-                        method: 'PUT',
-                        body: JSON.stringify({ status: 'confirmado' })
-                    });
+                    // Chama a camada de serviço
+                    await apiService.updateStatusAgendamento(id, 'confirmado');
+                    
                     showAlert('Agendamento confirmado!', 'Sucesso', 'success');
                     location.reload();
                 } catch (error) {
@@ -377,10 +412,9 @@ document.addEventListener('DOMContentLoaded', function () {
             // Cancelar Agendamento
             if (target.classList.contains('btn-cancelar-agendamento')) {
                  try {
-                    await fetchComToken(`${API_URL}/tecnico/agendamentos/${id}/status`, { // Rota do técnico serve para admin
-                        method: 'PUT',
-                        body: JSON.stringify({ status: 'cancelado' })
-                    });
+                    // Chama a camada de serviço
+                    await apiService.updateStatusAgendamento(id, 'cancelado');
+                    
                     showAlert('Agendamento cancelado.', 'Aviso', 'warning');
                     location.reload();
                 } catch (error) {
@@ -397,9 +431,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // TODO: Adicionar modal de confirmação "Tem certeza?"
             try {
-                await fetchComToken(`${API_URL}/admin/usuarios/${id}`, {
-                    method: 'DELETE'
-                });
+                // Chama a camada de serviço
+                await apiService.deleteUsuario(id);
+                
                 showAlert('Usuário removido com sucesso.', 'Sucesso', 'success');
                 location.reload();
             } catch (error) {
@@ -410,7 +444,7 @@ document.addEventListener('DOMContentLoaded', function () {
     } // Fim de iniciarListeners()
 
 
-    // --- FUNÇÕES AUXILIARES ---
+    // --- FUNÇÕES AUXILIARES (Sem alterações) ---
 
     function adicionarCliqueFora(modalElement, fecharFn) {
         if (modalElement) {
@@ -459,9 +493,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const toastTitle = document.getElementById('toastTitle');
         const toastBody = document.getElementById('toastBody');
-        const toastIconContainer = toastTitle.querySelector('i'); // Pega o <i> existente
+        const toastIconContainer = toastTitle.querySelector('i'); 
 
-        // Limpa classes de cor
         globalToastEl.classList.remove('text-bg-success', 'text-bg-danger', 'text-bg-warning', 'text-bg-info');
         
         let iconClass = '';
@@ -479,11 +512,10 @@ document.addEventListener('DOMContentLoaded', function () {
              iconClass = 'bi-info-circle-fill';
         }
         
-        // Atualiza o ícone e o título
         if (toastIconContainer) {
             toastIconContainer.className = `bi ${iconClass} me-2`;
         }
-        toastTitle.childNodes[1].nodeValue = ` ${title}`; // Atualiza o texto do título
+        toastTitle.childNodes[1].nodeValue = ` ${title}`; 
         toastBody.innerText = message;
         
         globalToast.show();
@@ -508,7 +540,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!dataString) return 'N/A';
         try {
             const dataObj = new Date(dataString);
-            // Usando UTC para evitar problemas de fuso horário
             const dia = String(dataObj.getUTCDate()).padStart(2, '0');
             const mes = String(dataObj.getUTCMonth() + 1).padStart(2, '0');
             const ano = dataObj.getUTCFullYear();
@@ -522,7 +553,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!dataString) return 'N/A';
         try {
             const dataObj = new Date(dataString);
-            // Usando UTC para evitar problemas de fuso horário
             const horas = String(dataObj.getUTCHours()).padStart(2, '0');
             const minutos = String(dataObj.getUTCMinutes()).padStart(2, '0');
             return `${horas}:${minutos}`;
@@ -532,4 +562,3 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 });
-

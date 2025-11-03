@@ -16,6 +16,79 @@ document.addEventListener("DOMContentLoaded", function () {
     const globalToastEl = document.getElementById('globalToast');
     const globalToast = globalToastEl ? new bootstrap.Toast(globalToastEl) : null;
 
+    // --- CAMADA DE SERVIÇO (Lógica de API) ---
+    const apiService = {
+        /**
+         * Função base para requisições autenticadas.
+         */
+        fetchComToken: async (url, options = {}) => {
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${appState.token}`,
+                ...options.headers,
+            };
+
+            const response = await fetch(url, { ...options, headers });
+
+            if (response.status === 401 || response.status === 403) {
+                console.warn("Token inválido ou expirado. Deslogando.");
+                localStorage.clear();
+                window.location.href = 'telaLogin.html';
+                throw new Error('Token inválido ou expirado.');
+            }
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
+            }
+            
+            return response.status === 204 ? null : response.json();
+        },
+
+        // --- Leitura (GET) ---
+        getAgendamentos: () => {
+            return apiService.fetchComToken(`${API_URL}/professor/agendamentos`);
+        },
+        getKits: () => {
+            return apiService.fetchComToken(`${API_URL}/professor/kits`);
+        },
+        getLaboratorios: () => {
+            return apiService.fetchComToken(`${API_URL}/laboratorios`);
+        },
+
+        // --- Escrita (POST, PUT, DELETE) ---
+        createAgendamento: (agendamentoData) => {
+            return apiService.fetchComToken(`${API_URL}/professor/agendamentos`, {
+                method: 'POST',
+                body: JSON.stringify(agendamentoData)
+            });
+        },
+        createKit: (kitData) => {
+            return apiService.fetchComToken(`${API_URL}/professor/kits`, {
+                method: 'POST',
+                body: JSON.stringify(kitData)
+            });
+        },
+        updateKit: (id, kitData) => {
+            return apiService.fetchComToken(`${API_URL}/professor/kits/${id}`, {
+                method: 'PUT',
+                body: JSON.stringify(kitData)
+            });
+        },
+        deleteKit: (id) => {
+            return apiService.fetchComToken(`${API_URL}/professor/kits/${id}`, {
+                method: 'DELETE'
+            });
+        },
+        cancelarAgendamento: (id) => {
+            return apiService.fetchComToken(`${API_URL}/professor/agendamentos/${id}/cancelar`, {
+                method: 'PUT'
+            });
+        }
+    };
+    // --- FIM DA CAMADA DE SERVIÇO ---
+
+
     // --- INICIALIZAÇÃO ---
     checkLogin();
     if (appState.token) {
@@ -43,44 +116,14 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('tipo-usuario').innerText = appState.userType;
     }
 
-    // --- Helper de Fetch ---
-    async function fetchComToken(url, options = {}) {
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${appState.token}`,
-            ...options.headers,
-        };
-
-        const response = await fetch(url, { ...options, headers });
-
-        if (response.status === 401 || response.status === 403) {
-            // Token inválido ou expirado
-            console.warn("Token inválido ou expirado. Deslogando.");
-            localStorage.clear();
-            window.location.href = 'telaLogin.html';
-            throw new Error('Token inválido ou expirado.');
-        }
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
-        }
-        
-        if (response.status === 204) { // No Content
-            return null;
-        }
-
-        return response.json();
-    }
-
-
-    // --- CARREGAMENTO DE DADOS (FETCH API) ---
+    // --- CARREGAMENTO DE DADOS (usando apiService) ---
     async function iniciarCarregamentoDados() {
         try {
+            // Chama a camada de serviço
             const [agendamentos, kits, laboratorios] = await Promise.all([
-                fetchComToken(`${API_URL}/professor/agendamentos`),
-                fetchComToken(`${API_URL}/professor/kits`),
-                fetchComToken(`${API_URL}/laboratorios`)
+                apiService.getAgendamentos(),
+                apiService.getKits(),
+                apiService.getLaboratorios()
             ]);
 
             appState.agendamentos = agendamentos;
@@ -103,7 +146,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // --- FUNÇÕES DE RENDERIZAÇÃO ---
+    // --- FUNÇÕES DE RENDERIZAÇÃO (Sem alterações) ---
 
     function renderDashboardCards() {
         const agora = new Date();
@@ -134,7 +177,6 @@ document.addEventListener("DOMContentLoaded", function () {
                 <div class="aula-cabecalho">
                     <div>
                         <span class="status-texto">${aula.status_agendamento}</span>
-                        <!-- CORRIGIDO: usa observacoes como fallback de titulo -->
                         <h3 class="titulo">${aula.observacoes || 'Aula experimental'}</h3> 
                     </div>
                     <div class="data-horario">
@@ -143,7 +185,6 @@ document.addEventListener("DOMContentLoaded", function () {
                     </div>
                 </div>
                 <div class="aula-main">
-                    <!-- CORRIGIDO: Removido campos que não existem (turma, alunos) -->
                     <div class="aula-info"><span>Kit:</span> ${aula.nome_kit || 'Nenhum'}</div>
                     <div class="aula-info"><span>Status:</span> ${getStatusIcone(aula.status_agendamento)} ${aula.status_agendamento}</div>
                 </div>
@@ -172,7 +213,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
         container.innerHTML = historico.map(aula => `
             <tr data-id="${aula.id_agendamento}">
-                <!-- CORRIGIDO: Removido campos que não existem -->
                 <td data-label="Experimento">${aula.observacoes || 'Aula experimental'}</td>
                 <td data-label="Laboratório">${aula.nome_laboratorio || 'N/A'}</td>
                 <td data-label="Kit">${aula.nome_kit || 'N/A'}</td>
@@ -245,7 +285,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // --- LÓGICA DE NAVEGAÇÃO E MODAIS (Ações) ---
+    // --- LÓGICA DE NAVEGAÇÃO E MODAIS (Ações) (Sem alterações) ---
     function iniciarListenersGlobais() {
         // --- Navegação entre Seções (Padrão Admin) ---
         const navLinks = document.querySelectorAll('.nav-link[data-target]');
@@ -342,15 +382,15 @@ document.addEventListener("DOMContentLoaded", function () {
         adicionarCliqueFora(modalConfirmarSaida, fecharModalSaida);
     }
     
-    // --- LÓGICA DE FORMULÁRIOS E MODAIS ---
+    // --- LÓGICA DE FORMULÁRIOS E MODAIS (usando apiService) ---
 
     function iniciarListenersFormularios() {
         // --- Lógica de Rádio (Novo Agendamento) ---
+        // (Sem alterações, lógica de UI)
         const radioKitExistente = document.getElementById('kit-existente');
         const radioKitNovo = document.getElementById('kit-novo');
         const containerSelectKit = document.getElementById('container-select-kit');
         const containerNovoKit = document.getElementById('container-novo-kit');
-        // CORREÇÃO: Desabilitar "Criar novo kit" no formulário, pois a API não suporta
         if (radioKitNovo) {
             radioKitNovo.disabled = true;
             radioKitNovo.parentElement.classList.add('text-muted');
@@ -382,16 +422,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     data_hora_fim: `${data}T${fim}:00`,
                     fk_laboratorio: laboratorioRadio.value,
                     observacoes: document.getElementById('observacoes').value,
-                    fk_kit: fk_kit || null, // Envia null se "Selecione" estiver marcado
+                    fk_kit: fk_kit || null,
                 };
                 
                 try {
-                    const data = await fetchComToken(`${API_URL}/professor/agendamentos`, {
-                        method: 'POST',
-                        body: JSON.stringify(agendamento)
-                    });
+                    // Chama a camada de serviço
+                    await apiService.createAgendamento(agendamento);
+                    
                     showAlert('Agendamento criado com sucesso! Aguardando confirmação.', 'Sucesso', 'success');
-                    location.reload(); // Recarrega a página
+                    location.reload(); 
 
                 } catch (error) {
                     console.error("Erro ao criar agendamento:", error);
@@ -409,12 +448,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 descricao_kit: document.getElementById('kit-descricao').value
             };
             try {
-                const data = await fetchComToken(`${API_URL}/professor/kits`, {
-                    method: 'POST',
-                    body: JSON.stringify(novoKit)
-                });
+                // Chama a camada de serviço
+                await apiService.createKit(novoKit);
+                
                 showAlert('Kit criado com sucesso!', 'Sucesso', 'success');
-                location.reload(); // Recarrega
+                location.reload(); 
             } catch (error) {
                  console.error("Erro ao criar kit:", error);
                  showAlert(error.message, "Erro", "error");
@@ -431,12 +469,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 descricao_kit: document.getElementById('edit-kit-descricao').value
             };
             try {
-                const data = await fetchComToken(`${API_URL}/professor/kits/${id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify(kitAtualizado)
-                });
+                // Chama a camada de serviço
+                await apiService.updateKit(id, kitAtualizado);
+                
                 showAlert('Kit atualizado com sucesso!', 'Sucesso', 'success');
-                location.reload(); // Recarrega
+                location.reload();
             } catch (error) {
                  console.error("Erro ao atualizar kit:", error);
                  showAlert(error.message, "Erro", "error");
@@ -446,7 +483,7 @@ document.addEventListener("DOMContentLoaded", function () {
     } // Fim de iniciarListenersFormularios()
 
 
-    // --- Lógica de Modais ---
+    // --- Lógica de Modais (Sem alterações) ---
 
     function adicionarCliqueFora(modalElement, fecharFn) {
         if (modalElement) {
@@ -463,7 +500,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const botaoAbrirModalKit = document.getElementById("abrirModalKitBtn");
     const botaoFecharModalKit = document.getElementById("fecharModalKitBtn");
     const botaoCancelarModalKit = document.getElementById("cancelarModalKitBtn");
-    const formNovoKit = document.getElementById("formNovoKit");
+    // const formNovoKit = document.getElementById("formNovoKit"); // Já declarado
     function abrirModalKit() { if (modalNovoKit) modalNovoKit.classList.add("visivel"); }
     function fecharModalKit() { if (modalNovoKit) modalNovoKit.classList.remove("visivel"); formNovoKit.reset(); }
     if (botaoAbrirModalKit) botaoAbrirModalKit.addEventListener("click", abrirModalKit);
@@ -484,9 +521,8 @@ document.addEventListener("DOMContentLoaded", function () {
         const aula = appState.agendamentos.find(a => a.id_agendamento == id);
         if (!aula) return;
         
-        document.getElementById('detalhe-titulo').innerText = aula.observacoes || 'Aula experimental'; // Corrigido
+        document.getElementById('detalhe-titulo').innerText = aula.observacoes || 'Aula experimental';
         document.getElementById('detalhe-status').innerHTML = `<span class="status-texto status-${aula.status_agendamento}">${aula.status_agendamento}</span>`;
-        // CORRIGIDO: Removido campos que não existem
         document.getElementById('detalhe-turma').innerText = 'N/A';
         document.getElementById('detalhe-alunos').innerText = 'N/A';
         document.getElementById('detalhe-lab').innerText = aula.nome_laboratorio || 'N/A';
@@ -497,7 +533,7 @@ document.addEventListener("DOMContentLoaded", function () {
         if (modalVerDetalhes) modalVerDetalhes.classList.add("visivel");
     }
 
-    // Modal "Editar" (Aula) - (Desabilitado por enquanto)
+    // Modal "Editar" (Aula)
     const modalEditarAula = document.getElementById("modalEditarAula");
     const btnFecharModalEditarAula = document.getElementById("fecharModalEditarAulaBtn");
     const btnCancelarModalEditarAula = document.getElementById("cancelarModalEditarAulaBtn");
@@ -505,7 +541,6 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnFecharModalEditarAula) btnFecharModalEditarAula.addEventListener("click", fecharModalEditarAula);
     if (btnCancelarModalEditarAula) btnCancelarModalEditarAula.addEventListener("click", fecharModalEditarAula);
     adicionarCliqueFora(modalEditarAula, fecharModalEditarAula);
-    // function abrirModalEditarAula(id) { ... } // Função não implementada pois campos não existem mais
 
     // Modal "Ver Kit"
     const modalVerKit = document.getElementById("modalVerKit");
@@ -529,7 +564,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const modalEditarKit = document.getElementById("modalEditarKit");
     const btnFecharModalEditarKit = document.getElementById("fecharModalEditarKitBtn");
     const btnCancelarModalEditarKit = document.getElementById("cancelarModalEditarKitBtn");
-    const formEditarKit = document.getElementById("formEditarKit");
+    // const formEditarKit = document.getElementById("formEditarKit"); // Já declarado
     function fecharModalEditarKit() { if (modalEditarKit) modalEditarKit.classList.remove("visivel"); formEditarKit.reset(); }
     if (btnFecharModalEditarKit) btnFecharModalEditarKit.addEventListener("click", fecharModalEditarKit);
     if (btnCancelarModalEditarKit) btnCancelarModalEditarKit.addEventListener("click", fecharModalEditarKit);
@@ -544,11 +579,11 @@ document.addEventListener("DOMContentLoaded", function () {
         if (modalEditarKit) modalEditarKit.classList.add("visivel");
     }
 
-    // --- Listeners de Eventos Dinâmicos (em containers) ---
+    // --- Listeners de Eventos Dinâmicos (usando apiService) ---
     function iniciarListenersDinamicos() {
         // Container "Próximas Aulas"
         document.getElementById('lista-proximas-aulas').addEventListener('click', async (e) => {
-            const target = e.target.closest('button'); // Pega o botão mesmo se clicar no ícone
+            const target = e.target.closest('button'); 
             if (!target) return;
 
             const id = target.dataset.id;
@@ -557,15 +592,13 @@ document.addEventListener("DOMContentLoaded", function () {
             if (target.classList.contains('btn-ver-detalhes')) {
                 abrirModalVerDetalhes(id);
             }
-            // if (target.classList.contains('btn-editar-aula')) {
-            //     abrirModalEditarAula(id);
-            // }
+            // if (target.classList.contains('btn-editar-aula')) { ... }
             if (target.classList.contains('btn-cancelar-aula')) {
                 // TODO: Adicionar modal de confirmação "Tem certeza?"
                 try {
-                    await fetchComToken(`${API_URL}/professor/agendamentos/${id}/cancelar`, {
-                        method: 'PUT'
-                    });
+                    // Chama a camada de serviço
+                    await apiService.cancelarAgendamento(id);
+                    
                     showAlert('Agendamento cancelado.', 'Aviso', 'warning');
                     location.reload();
                 } catch (error) {
@@ -591,9 +624,9 @@ document.addEventListener("DOMContentLoaded", function () {
             if (target.classList.contains('btn-excluir-kit')) {
                 // TODO: Adicionar modal de confirmação
                  try {
-                    await fetchComToken(`${API_URL}/professor/kits/${id}`, {
-                        method: 'DELETE'
-                    });
+                    // Chama a camada de serviço
+                    await apiService.deleteKit(id);
+                    
                     showAlert('Kit excluído com sucesso.', 'Sucesso', 'success');
                     location.reload();
                 } catch (error) {
@@ -603,7 +636,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     } // Fim de iniciarListenersDinamicos()
 
-    // --- FUNÇÕES AUXILIARES ---
+    // --- FUNÇÕES AUXILIARES (Sem alterações) ---
 
     function showAlert(message, title = "Notificação", type = "info") {
         if (!globalToast) {
@@ -672,4 +705,3 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 });
-

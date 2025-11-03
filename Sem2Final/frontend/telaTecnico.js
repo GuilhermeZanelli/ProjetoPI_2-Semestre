@@ -16,6 +16,63 @@ document.addEventListener("DOMContentLoaded", function () {
     const globalToastEl = document.getElementById('globalToast');
     const globalToast = globalToastEl ? new bootstrap.Toast(globalToastEl) : null;
 
+    // --- CAMADA DE SERVIÇO (Lógica de API) ---
+    const apiService = {
+        /**
+         * Função base para requisições autenticadas.
+         */
+        fetchComToken: async (url, options = {}) => {
+            const headers = {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${appState.token}`,
+                ...options.headers,
+            };
+
+            const response = await fetch(url, { ...options, headers });
+
+            if (response.status === 401 || response.status === 403) {
+                console.warn("Token inválido ou expirado. Deslogando.");
+                localStorage.clear();
+                window.location.href = 'telaLogin.html';
+                throw new Error('Token inválido ou expirado.');
+            }
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
+            }
+            
+            return response.status === 204 ? null : response.json();
+        },
+
+        // --- Leitura (GET) ---
+        getAgendamentosPendentes: () => {
+            return apiService.fetchComToken(`${API_URL}/tecnico/agendamentos/pendentes`);
+        },
+        getMateriais: () => {
+            return apiService.fetchComToken(`${API_URL}/materiais`);
+        },
+        getHistorico: () => {
+            return apiService.fetchComToken(`${API_URL}/agendamentos/historico`);
+        },
+
+        // --- Escrita (POST, PUT) ---
+        createMaterial: (itemData) => {
+            return apiService.fetchComToken(`${API_URL}/materiais`, {
+                method: 'POST',
+                body: JSON.stringify(itemData)
+            });
+        },
+        updateStatusAgendamento: (id, status) => {
+             return apiService.fetchComToken(`${API_URL}/tecnico/agendamentos/${id}/status`, {
+                method: 'PUT',
+                body: JSON.stringify({ status: status })
+            });
+        }
+    };
+    // --- FIM DA CAMADA DE SERVIÇO ---
+
+
     // --- INICIALIZAÇÃO ---
     checkLogin();
     if (appState.token) {
@@ -40,43 +97,14 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('tipo-usuario').innerText = appState.userType;
     }
 
-    // --- Helper de Fetch ---
-    async function fetchComToken(url, options = {}) {
-        const headers = {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${appState.token}`,
-            ...options.headers,
-        };
-
-        const response = await fetch(url, { ...options, headers });
-
-        if (response.status === 401 || response.status === 403) {
-            // Token inválido ou expirado
-            console.warn("Token inválido ou expirado. Deslogando.");
-            localStorage.clear();
-            window.location.href = 'telaLogin.html';
-            throw new Error('Token inválido ou expirado.');
-        }
-        
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
-        }
-        
-        if (response.status === 204) { // No Content
-            return null;
-        }
-
-        return response.json();
-    }
-
-    // --- CARREGAMENTO DE DADOS (FETCH API) ---
+    // --- CARREGAMENTO DE DADOS (usando apiService) ---
     async function iniciarCarregamentoDados() {
         try {
+            // Chama a camada de serviço
             const [pendentes, materiais, historico] = await Promise.all([
-                fetchComToken(`${API_URL}/tecnico/agendamentos/pendentes`),
-                fetchComToken(`${API_URL}/materiais`),
-                fetchComToken(`${API_URL}/agendamentos/historico`)
+                apiService.getAgendamentosPendentes(),
+                apiService.getMateriais(),
+                apiService.getHistorico()
             ]);
             
             appState.agendamentosPendentes = pendentes;
@@ -97,7 +125,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
     
-    // --- FUNÇÕES DE RENDERIZAÇÃO ---
+    // --- FUNÇÕES DE RENDERIZAÇÃO (Sem alterações) ---
     
     function renderAgendamentosPendentes() {
         const tbody = document.getElementById('lista-agendamentos-tbody');
@@ -159,10 +187,10 @@ document.addEventListener("DOMContentLoaded", function () {
         `).join('');
     }
 
-    // --- LÓGICA DE EVENTOS E MODAIS ---
+    // --- LÓGICA DE EVENTOS E MODAIS (usando apiService) ---
     function iniciarListeners() {
         
-        // --- Navegação entre Seções ---
+        // --- Navegação entre Seções (Sem alterações) ---
         const navLinks = document.querySelectorAll('.nav-link[data-target]');
         const sections = document.querySelectorAll('.conteudo-secao');
         const navbarCollapse = document.getElementById('navbarNav');
@@ -185,7 +213,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
 
-        // --- Acessibilidade ---
+        // --- Acessibilidade (Sem alterações) ---
         const body = document.body;
         const html = document.documentElement;
         const accessibilityBtn = document.getElementById('accessibilityBtn');
@@ -218,12 +246,12 @@ document.addEventListener("DOMContentLoaded", function () {
             link.addEventListener('click', (e) => { e.preventDefault(); const mode = link.getAttribute('data-mode'); body.classList.remove('protanopia', 'deuteranopia', 'tritanopia'); if (mode !== 'normal') body.classList.add(mode); });
         });
 
-        // --- VLibras ---
+        // --- VLibras (Sem alterações) ---
         if (window.VLibras) {
             new window.VLibras.Widget('https://vlibras.gov.br/app');
         }
 
-        // --- Modal de Confirmação de Saída ---
+        // --- Modal de Confirmação de Saída (Sem alterações) ---
         const modalConfirmarSaida = document.getElementById("modalConfirmarSaida");
         const btnFecharModalSaida = document.getElementById("fecharModalSaidaBtn");
         const btnCancelarSaida = document.getElementById("cancelarSaidaBtn");
@@ -266,17 +294,15 @@ document.addEventListener("DOMContentLoaded", function () {
                     nome: document.getElementById("itemNome").value,
                     descricao: document.getElementById("itemDesc").value,
                     localizacao: document.getElementById("itemLocal").value,
-                    // CORRIGIDO: usa 'tipoUnidade' e 'valor' como no admin
                     tipoUnidade: document.getElementById('itemTipoUnidade').value, 
                     valor: parseFloat(document.getElementById('itemValor').value)
                 };
                 try {
-                    const data = await fetchComToken(`${API_URL}/materiais`, {
-                        method: 'POST',
-                        body: JSON.stringify(novoItem)
-                    });
+                    // Chama a camada de serviço
+                    const data = await apiService.createMaterial(novoItem);
+                    
                     showAlert(`Item "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
-                    location.reload(); // Recarrega
+                    location.reload(); 
                 } catch (error) {
                     console.error("Erro ao cadastrar item:", error);
                     showAlert(error.message, "Erro", "error");
@@ -284,7 +310,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
         
-        // Lógica condicional (Unidade/Peso/Litros) do modal de estoque
+        // Lógica condicional (Unidade/Peso/Litros) (Sem alterações)
         const tipoUnidadeSelect = document.getElementById('itemTipoUnidade');
         if (tipoUnidadeSelect) {
             tipoUnidadeSelect.addEventListener('change', (e) => {
@@ -308,10 +334,9 @@ document.addEventListener("DOMContentLoaded", function () {
         
         async function handleAnalise(id, status) {
             try {
-                await fetchComToken(`${API_URL}/tecnico/agendamentos/${id}/status`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ status: status })
-                });
+                // Chama a camada de serviço
+                await apiService.updateStatusAgendamento(id, status);
+                
                 showAlert(`Agendamento ${status} com sucesso!`, 'Sucesso', 'success');
                 location.reload();
             } catch (error) {
@@ -319,7 +344,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
         
-        // --- Ações Dinâmicas (Delegação de Eventos) ---
+        // --- Ações Dinâmicas (Delegação de Eventos) (Sem alterações) ---
         document.getElementById('lista-agendamentos-tbody').addEventListener('click', (e) => {
             const target = e.target.closest('button');
             if (target && target.classList.contains('btn-analisar-agendamento')) {
@@ -330,19 +355,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
     } // Fim de iniciarListeners()
     
-    
+    // (Sem alterações)
     function abrirModalAnalisar(id) {
         const aula = appState.agendamentosPendentes.find(a => a.id_agendamento == id);
         if (!aula) return;
         
-        // Popula os campos do modal
         document.getElementById('detalhe-professor').innerText = aula.nome_professor;
         document.getElementById('detalhe-lab-data').innerText = `${aula.nome_laboratorio} | ${formatarData(aula.data_hora_inicio)} (${formatarHorario(aula.data_hora_inicio)} - ${formatarHorario(aula.data_hora_fim)})`;
         document.getElementById('detalhe-kit-nome').innerText = aula.nome_kit || "Nenhum";
         document.getElementById('detalhe-kit-itens').value = aula.descricao_kit || "Nenhum kit solicitado.";
         document.getElementById('detalhe-observacoes').innerText = aula.observacoes || "Nenhuma.";
         
-        // Armazena o ID nos botões para ação
         document.getElementById('btnConfirmarAnalise').dataset.id = id;
         document.getElementById('btnCancelarAnalise').dataset.id = id;
         
@@ -350,7 +373,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 
-    // --- FUNÇÕES AUXILIARES ---
+    // --- FUNÇÕES AUXILIARES (Sem alterações) ---
 
     function adicionarCliqueFora(modalElement, fecharFn) {
         if (modalElement) {
@@ -417,7 +440,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (toastIconContainer) {
             toastIconContainer.className = `bi ${iconClass} me-2`;
         }
-        // Ajuste para garantir que o título seja atualizado corretamente
         if(toastTitle.childNodes.length > 1) {
              toastTitle.childNodes[1].nodeValue = ` ${title}`;
         } else {
@@ -468,4 +490,3 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 });
-
