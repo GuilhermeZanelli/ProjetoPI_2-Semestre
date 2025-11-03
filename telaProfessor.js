@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function () {
             cardCriarKit.addEventListener('click', (e) => { e.preventDefault(); abaMeusKits.click(); abrirModalKit(null); }); // Abre modal de kit vazio
         }
 
-        const cardVerHistorico = document.getElementById("acao-rapida-ver-historico");
+        const cardVerHistorico = document.getElementById("acao-ver-historico");
         const abaHistorico = document.querySelector(".nav-link[data-target='historico']");
         if (cardVerHistorico && abaHistorico) {
             cardVerHistorico.addEventListener("click", (e) => { e.preventDefault(); abaHistorico.click() })
@@ -678,4 +678,5 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 });
+
 
