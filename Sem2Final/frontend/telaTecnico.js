@@ -24,13 +24,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     // --- INICIALIZAÇÃO ---
-    checkLogin();
-    if (appState.token) {
+    if (checkLogin()) {
         iniciarCarregamentoDados();
         iniciarListeners();
     }
 
-    // Esta função permanece
+    // Esta função agora retorna um booleano para controlar o fluxo de execução
     function checkLogin() {
         appState.userId = localStorage.getItem('userId');
         appState.userName = localStorage.getItem('userName');
@@ -41,11 +40,12 @@ document.addEventListener("DOMContentLoaded", function () {
             console.warn("Acesso não autorizado ou token inválido. Redirecionando para login.");
             localStorage.clear();
             window.location.href = 'telaLogin.html';
-            return;
+            return false; // Importante: retorna false para parar a execução
         }
 
         document.getElementById('nome-usuario').innerText = appState.userName;
         document.getElementById('tipo-usuario').innerText = appState.userType;
+        return true; // Importante: retorna true se o login for válido
     }
 
     // --- CARREGAMENTO DE DADOS (usando window.apiService) ---
@@ -423,4 +423,3 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
 });
-
