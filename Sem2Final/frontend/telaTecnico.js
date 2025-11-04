@@ -295,9 +295,15 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('detalhe-professor').innerText = aula.nome_professor;
         document.getElementById('detalhe-lab-data').innerText = `${aula.nome_laboratorio} | ${formatarData(aula.data_hora_inicio)} (${formatarHorario(aula.data_hora_inicio)} - ${formatarHorario(aula.data_hora_fim)})`;
         document.getElementById('detalhe-kit-nome').innerText = aula.nome_kit || "Nenhum";
-        document.getElementById('detalhe-kit-itens').value = aula.descricao_kit || "Nenhum kit solicitado.";
         document.getElementById('detalhe-observacoes').innerText = aula.observacoes || "Nenhuma.";
         
+        const listaMateriais = document.getElementById('lista-materiais-solicitados');
+        if (aula.materiais && aula.materiais.length > 0) {
+            listaMateriais.innerHTML = aula.materiais.map(m => `<li class="list-group-item">${m.nome}: ${m.quantidade_solicitada} ${m.unidade}</li>`).join('');
+        } else {
+            listaMateriais.innerHTML = '<li class="list-group-item">Nenhum material solicitado.</li>';
+        }
+
         document.getElementById('btnConfirmarAnalise').dataset.id = id;
         document.getElementById('btnCancelarAnalise').dataset.id = id;
         

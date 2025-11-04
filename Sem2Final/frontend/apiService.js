@@ -33,12 +33,9 @@
     async function fetchComToken(url, options = {}) {
         const token = localStorage.getItem('token');
 
-        // Se o token não existir, desloga o usuário imediatamente
         if (!token) {
-            console.warn("Token não encontrado no localStorage. Redirecionando para login.");
-            localStorage.clear();
             window.location.href = 'telaLogin.html';
-            throw new Error('Token não encontrado.');
+            return; 
         }
 
         const headers = {
@@ -50,9 +47,7 @@
         try {
             const response = await fetch(url, { ...options, headers });
 
-            // Se o token for inválido ou expirado, o backend retornará 401 ou 403
             if (response.status === 401 || response.status === 403) {
-                console.warn("Token inválido ou expirado (status " + response.status + "). Deslogando.");
                 localStorage.clear();
                 window.location.href = 'telaLogin.html';
                 throw new Error('Token inválido ou expirado.');
@@ -63,12 +58,11 @@
                 throw new Error(errorData.error || `Erro HTTP: ${response.status}`);
             }
             
-            // Retorna null para respostas 204 (No Content)
             return response.status === 204 ? null : response.json();
 
         } catch (error) {
             console.error(`Erro no fetchComToken para ${url}:`, error);
-            throw error; // Re-lança o erro
+            throw error;
         }
     }
 

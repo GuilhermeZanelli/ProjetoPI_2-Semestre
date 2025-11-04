@@ -239,27 +239,13 @@
                         </fieldset>
 
                         <fieldset class="mt-4">
-                            <legend class="form-label fs-5">Kits de Materiais</legend>
-                            <div class="form-check">
-                                <input type="radio" name="kit" id="kit-existente" value="existente" class="form-check-input" checked>
-                                <label for="kit-existente" class="form-check-label">Usar kit existente</label>
-                            </div>
-                            <!-- Select de kits existentes (aparece/desaparece) -->
-                            <div id="container-select-kit">
-                                <label for="select-kit-existente" class="form-label visually-hidden">Selecionar Kit</label>
-                                <select id="select-kit-existente" class="form-select mt-2">
-                                    <option value="">Carregando kits...</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-check mt-2">
-                                <input type="radio" name="kit" id="kit-novo" value="novo" class="form-check-input" disabled>
-                                <label for="kit-novo" class="form-check-label text-muted">(Em breve) Criar novo kit para esta aula</label>
-                            </div>
-                            <!-- Textarea de novo kit (aparece/desaparece) -->
-                            <div id="container-novo-kit" style="display: none;">
-                                <label for="textarea-novo-kit" class="form-label visually-hidden">Descrição do Novo Kit</label>
-                                <textarea id="textarea-novo-kit" rows="4" placeholder="Liste os materiais e quantidades. Ex:&#10;- 1 Béquer 100ml&#10;- 1 Pipeta 25ml&#10;- 1 Frasco de Fenolftaleína" class="form-control mt-2"></textarea>
+                            <legend class="form-label fs-5">Materiais da Aula</legend>
+                            <p>Selecione os materiais e as quantidades necessárias para esta aula.</p>
+                            <button type="button" class="btn btn-secondary" id="abrirModalMateriaisBtn">
+                                <i class="bi bi-box-seam me-2"></i>Selecionar Materiais
+                            </button>
+                            <div id="resumo-materiais-selecionados" class="mt-3">
+                                <!-- O resumo dos materiais selecionados aparecerá aqui -->
                             </div>
                         </fieldset>
 
@@ -518,6 +504,38 @@
         </div>
     </div>
 
+    <!-- Modal "Selecionar Materiais" -->
+    <div class="modal-container" id="modalSelecionarMateriais">
+        <div class="modal-card modal-lg">
+            <header class="modal-header">
+                <h5 class="modal-title">Selecionar Materiais</h5>
+                <button type="button" class="btn-close" id="fecharModalMateriaisBtn"></button>
+            </header>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <input type="text" id="pesquisa-material" class="form-control" placeholder="Pesquisar material...">
+                </div>
+                <div class="table-responsive" style="max-height: 400px;">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Material</th>
+                                <th>Estoque</th>
+                                <th>Quantidade</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lista-materiais-modal">
+                            <!-- Conteúdo injetado pelo JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <footer class="modal-footer">
+                <button type="button" class="btn btn-secondary" id="cancelarModalMateriaisBtn">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="confirmarSelecaoMateriaisBtn">Confirmar Seleção</button>
+            </footer>
+        </div>
+    </div>
 </body>
 
 </html>

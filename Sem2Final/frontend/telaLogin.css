@@ -36,22 +36,18 @@ body {
 .brand-image {
     display: block;
     margin: 0 auto 16px auto;
-    max-width: 110px;
+    max-width: 180px;
     width: 100%;
     height: auto;
 }
 
 .brand-images-top .brand-image {
     margin: 0;
-    /* ATUALIZADO: Aumentando altura para melhor visualização */
-    height: 60px;
+    height: 200px;
     width: auto;
     object-fit: contain;
 }
 
-.brand-images-top .brand-image[alt="Centro Paula Souza"] {
-    /* Esta regra não é mais necessária, a altura já controla o balanceamento */
-}
 
 .brand-images-top {
     display: flex;
@@ -60,7 +56,7 @@ body {
     /* ATUALIZADO: Aumentando o espaço entre os logos */
     gap: 25px;
     margin-bottom: 16px;
-    height: 70px; /* Ajustado para nova altura */
+    height: 100px; /* Ajustado para nova altura */
 }
 
 .brand-image.bottom {
@@ -83,7 +79,7 @@ body {
 
 
 .title-main {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 800;
     color: #000000;
 }

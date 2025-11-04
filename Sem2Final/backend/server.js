@@ -171,33 +171,57 @@ app.post('/api/professor/agendamentos', autenticarToken, async (req, res) => {
   if (req.user.tipo_usuario !== 'professor') {
     return res.status(403).json({ error: 'Acesso negado.' });
   }
-  
-  // CORRIGIDO: Removido campos que não existem no SQL (disciplina, turma, titulo_aula, num_alunos)
+
   const {
     data_hora_inicio, data_hora_fim,
-    fk_laboratorio, fk_kit, observacoes
+    fk_laboratorio, observacoes, materiais_selecionados
   } = req.body;
-  
-  // Validação simples
+
   if (!data_hora_inicio || !data_hora_fim || !fk_laboratorio) {
-      return res.status(400).json({ error: 'Data, horário e laboratório são obrigatórios.' });
+    return res.status(400).json({ error: 'Data, horário e laboratório são obrigatórios.' });
   }
-  
+
+  const connection = await pool.getConnection();
   try {
-    // CORRIGIDO: Query atualizada para o novo schema SQL
-    const [result] = await pool.query(
+    await connection.beginTransaction();
+
+    // Validar estoque
+    if (materiais_selecionados && materiais_selecionados.length > 0) {
+      for (const material of materiais_selecionados) {
+        const [rows] = await connection.query('SELECT quantidade FROM materiais WHERE id_material = ?', [material.id_material]);
+        if (rows.length === 0 || rows[0].quantidade < material.quantidade) {
+          await connection.rollback();
+          return res.status(400).json({ error: `Estoque insuficiente para o material ID ${material.id_material}.` });
+        }
+      }
+    }
+
+    const [result] = await connection.query(
       `INSERT INTO agendamentos 
-        (fk_usuario, data_hora_inicio, data_hora_fim, fk_laboratorio, fk_kit, observacoes, status_agendamento)
-       VALUES (?, ?, ?, ?, ?, ?, 'pendente')`, // Status inicial é 'pendente'
-      [req.user.id, data_hora_inicio, data_hora_fim, fk_laboratorio, fk_kit, observacoes]
+        (fk_usuario, data_hora_inicio, data_hora_fim, fk_laboratorio, observacoes, status_agendamento)
+       VALUES (?, ?, ?, ?, ?, 'pendente')`,
+      [req.user.id, data_hora_inicio, data_hora_fim, fk_laboratorio, observacoes]
     );
-    // Retorna o agendamento criado (buscando ele)
-    const [novoAgendamento] = await pool.query('SELECT * FROM agendamentos WHERE id_agendamento = ?', [result.insertId]);
+    const novoAgendamentoId = result.insertId;
+
+    if (materiais_selecionados && materiais_selecionados.length > 0) {
+      const materiaisValues = materiais_selecionados.map(m => [novoAgendamentoId, m.id_material, m.quantidade]);
+      await connection.query(
+        'INSERT INTO agendamento_materiais (fk_agendamento, fk_material, quantidade_solicitada) VALUES ?',
+        [materiaisValues]
+      );
+    }
+
+    await connection.commit();
+    const [novoAgendamento] = await pool.query('SELECT * FROM agendamentos WHERE id_agendamento = ?', [novoAgendamentoId]);
     res.status(201).json(novoAgendamento[0]);
 
   } catch (err) {
+    await connection.rollback();
     console.error(err);
     res.status(500).json({ error: err.message });
+  } finally {
+    connection.release();
   }
 });
 
@@ -253,50 +277,76 @@ app.post('/api/professor/kits', autenticarToken, async (req, res) => {
   if (req.user.tipo_usuario !== 'professor') {
     return res.status(403).json({ error: 'Acesso negado.' });
   }
-  const { nome_kit, descricao_kit } = req.body;
-  if (!nome_kit || !descricao_kit) {
-      return res.status(400).json({ error: 'Nome e descrição do kit são obrigatórios.'});
+  const { nome_kit, materiais_kit } = req.body;
+  if (!nome_kit || !materiais_kit || !Array.isArray(materiais_kit) || materiais_kit.length === 0) {
+    return res.status(400).json({ error: 'Nome do kit e lista de materiais são obrigatórios.' });
   }
+
+  const connection = await pool.getConnection();
   try {
-    const [result] = await pool.query(
-      `INSERT INTO kits (nome_kit, descricao_kit) VALUES (?, ?)`,
-      [nome_kit, descricao_kit]
-    );
-    const [novoKit] = await pool.query('SELECT *, id_kit as id FROM kits WHERE id_kit = ?', [result.insertId]);
+    await connection.beginTransaction();
+
+    const [result] = await connection.query('INSERT INTO kits (nome_kit) VALUES (?)', [nome_kit]);
+    const novoKitId = result.insertId;
+
+    const kitMateriaisValues = materiais_kit.map(m => [novoKitId, m.id_material, m.quantidade]);
+    await connection.query('INSERT INTO kit_materiais (fk_kit, fk_material, quantidade) VALUES ?', [kitMateriaisValues]);
+
+    await connection.commit();
+    const [novoKit] = await pool.query('SELECT *, id_kit as id FROM kits WHERE id_kit = ?', [novoKitId]);
     res.status(201).json(novoKit[0]);
+
   } catch (err) {
+    await connection.rollback();
     console.error(err);
-     if (err.code === 'ER_DUP_ENTRY') {
+    if (err.code === 'ER_DUP_ENTRY') {
       return res.status(409).json({ error: 'Um kit com este nome já existe.' });
     }
     res.status(500).json({ error: err.message });
+  } finally {
+    connection.release();
   }
 });
 
 // [PROFESSOR] Atualizar kit
 app.put('/api/professor/kits/:id', autenticarToken, async (req, res) => {
-    if (req.user.tipo_usuario !== 'professor') {
-        return res.status(403).json({ error: 'Acesso negado.' });
+  if (req.user.tipo_usuario !== 'professor') {
+    return res.status(403).json({ error: 'Acesso negado.' });
+  }
+  const { id } = req.params;
+  const { nome_kit, materiais_kit } = req.body;
+  if (!nome_kit || !materiais_kit || !Array.isArray(materiais_kit) || materiais_kit.length === 0) {
+    return res.status(400).json({ error: 'Nome do kit e lista de materiais são obrigatórios.' });
+  }
+
+  const connection = await pool.getConnection();
+  try {
+    await connection.beginTransaction();
+
+    const [result] = await connection.query('UPDATE kits SET nome_kit = ? WHERE id_kit = ?', [nome_kit, id]);
+    if (result.affectedRows === 0) {
+      await connection.rollback();
+      return res.status(404).json({ error: 'Kit não encontrado.' });
     }
-    const { id } = req.params;
-    const { nome_kit, descricao_kit } = req.body;
-    try {
-        const [result] = await pool.query(
-            'UPDATE kits SET nome_kit = ?, descricao_kit = ? WHERE id_kit = ?',
-            [nome_kit, descricao_kit, id]
-        );
-        if (result.affectedRows > 0) {
-            res.json({ success: true, message: 'Kit atualizado.' });
-        } else {
-            res.status(404).json({ error: 'Kit não encontrado.' });
-        }
-    } catch (err) {
-        console.error(err);
-         if (err.code === 'ER_DUP_ENTRY') {
-            return res.status(409).json({ error: 'Um kit com este nome já existe.' });
-        }
-        res.status(500).json({ error: err.message });
+
+    await connection.query('DELETE FROM kit_materiais WHERE fk_kit = ?', [id]);
+
+    const kitMateriaisValues = materiais_kit.map(m => [id, m.id_material, m.quantidade]);
+    await connection.query('INSERT INTO kit_materiais (fk_kit, fk_material, quantidade) VALUES ?', [kitMateriaisValues]);
+
+    await connection.commit();
+    res.json({ success: true, message: 'Kit atualizado.' });
+
+  } catch (err) {
+    await connection.rollback();
+    console.error(err);
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'Um kit com este nome já existe.' });
     }
+    res.status(500).json({ error: err.message });
+  } finally {
+    connection.release();
+  }
 });
 
 // [PROFESSOR] Excluir kit
@@ -489,22 +539,30 @@ app.get('/api/tecnico/agendamentos/pendentes', autenticarToken, async (req, res)
     return res.status(403).json({ error: 'Acesso negado.' });
   }
   try {
-    // CORRIGIDO: Query atualizada para o novo schema SQL
-    const [rows] = await pool.query(
+    const [agendamentos] = await pool.query(
       `SELECT 
          a.*, 
          l.nome_laboratorio, 
-         k.nome_kit,
-         k.descricao_kit,
          u.nome as nome_professor
        FROM agendamentos a
        LEFT JOIN laboratorios l ON a.fk_laboratorio = l.id_laboratorio
-       LEFT JOIN kits k ON a.fk_kit = k.id_kit
        LEFT JOIN usuarios u ON a.fk_usuario = u.id_usuario
        WHERE a.status_agendamento = 'pendente'
        ORDER BY a.data_hora_inicio ASC`
     );
-    res.json(rows);
+
+    for (const agendamento of agendamentos) {
+      const [materiais] = await pool.query(
+        `SELECT m.nome, am.quantidade_solicitada, m.unidade
+         FROM agendamento_materiais am
+         JOIN materiais m ON am.fk_material = m.id_material
+         WHERE am.fk_agendamento = ?`,
+        [agendamento.id_agendamento]
+      );
+      agendamento.materiais = materiais;
+    }
+
+    res.json(agendamentos);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -522,19 +580,65 @@ app.put('/api/tecnico/agendamentos/:id/status', autenticarToken, async (req, res
     if (!status || (status !== 'confirmado' && status !== 'cancelado')) {
         return res.status(400).json({ error: "Status inválido." });
     }
+
+    const connection = await pool.getConnection();
     try {
-        const [result] = await pool.query(
+        await connection.beginTransaction();
+
+        const [agendamentos] = await connection.query('SELECT * FROM agendamentos WHERE id_agendamento = ?', [id]);
+        if (agendamentos.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: 'Agendamento não encontrado.' });
+        }
+        const agendamento = agendamentos[0];
+
+        // Lógica de dedução de estoque
+        if (status === 'confirmado' && agendamento.status_agendamento === 'pendente') {
+            const [materiais] = await connection.query(`
+                SELECT am.quantidade_solicitada, m.id_material, m.unidade, m.quantidade as estoque_atual
+                FROM agendamento_materiais am
+                JOIN materiais m ON am.fk_material = m.id_material
+                WHERE am.fk_agendamento = ?`, [id]);
+
+            for (const material of materiais) {
+                if (material.unidade === 'g' || material.unidade === 'ml') {
+                    if (material.estoque_atual < material.quantidade_solicitada) {
+                        await connection.rollback();
+                        return res.status(400).json({ error: `Estoque insuficiente para o material ID ${material.id_material}.` });
+                    }
+                    await connection.query('UPDATE materiais SET quantidade = quantidade - ? WHERE id_material = ?', [material.quantidade_solicitada, material.id_material]);
+                }
+            }
+        }
+        // Lógica de devolução de estoque
+        else if (status === 'cancelado' && agendamento.status_agendamento === 'confirmado') {
+             const [materiais] = await connection.query(`
+                SELECT am.quantidade_solicitada, m.id_material, m.unidade
+                FROM agendamento_materiais am
+                JOIN materiais m ON am.fk_material = m.id_material
+                WHERE am.fk_agendamento = ?`, [id]);
+
+            for (const material of materiais) {
+                if (material.unidade === 'g' || material.unidade === 'ml') {
+                    await connection.query('UPDATE materiais SET quantidade = quantidade + ? WHERE id_material = ?', [material.quantidade_solicitada, material.id_material]);
+                }
+            }
+        }
+        
+        const [result] = await connection.query(
             'UPDATE agendamentos SET status_agendamento = ? WHERE id_agendamento = ?',
             [status, id]
         );
-        if (result.affectedRows > 0) {
-            res.json({ success: true, message: `Agendamento ${status}.` });
-        } else {
-            res.status(404).json({ error: 'Agendamento não encontrado.' });
-        }
+
+        await connection.commit();
+        res.json({ success: true, message: `Agendamento ${status}.` });
+
     } catch (err) {
+        await connection.rollback();
         console.error('Erro ao atualizar status:', err);
         res.status(500).json({ error: 'Erro interno do servidor.' });
+    } finally {
+        connection.release();
     }
 });
 

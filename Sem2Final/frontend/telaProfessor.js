@@ -8,7 +8,8 @@ document.addEventListener("DOMContentLoaded", function () {
         token: null, // O token ainda é pego para o checkLogin
         agendamentos: [],
         kits: [],
-        laboratorios: []
+        laboratorios: [],
+        materiais: []
     };
 
     // --- Toast Global ---
@@ -54,15 +55,17 @@ document.addEventListener("DOMContentLoaded", function () {
     async function iniciarCarregamentoDados() {
         try {
             // Chama o serviço global
-            const [agendamentos, kits, laboratorios] = await Promise.all([
+            const [agendamentos, kits, laboratorios, materiais] = await Promise.all([
                 window.apiService.getAgendamentosProfessor(),
                 window.apiService.getKits(),
-                window.apiService.getLaboratorios()
+                window.apiService.getLaboratorios(),
+                window.apiService.getMateriais()
             ]);
 
             appState.agendamentos = agendamentos;
             appState.kits = kits;
             appState.laboratorios = laboratorios;
+            appState.materiais = materiais;
 
             // Renderizar todas as seções
             renderDashboardCards();
@@ -288,23 +291,10 @@ document.addEventListener("DOMContentLoaded", function () {
     
     // --- LÓGICA DE FORMULÁRIOS (usando window.apiService) ---
     function iniciarListenersFormularios() {
-        const radioKitExistente = document.getElementById('kit-existente');
-        const radioKitNovo = document.getElementById('kit-novo');
-        const containerSelectKit = document.getElementById('container-select-kit');
-        const containerNovoKit = document.getElementById('container-novo-kit');
-        if (radioKitNovo) {
-            radioKitNovo.disabled = true;
-            radioKitNovo.parentElement.classList.add('text-muted');
-        }
-        if (radioKitExistente) radioKitExistente.checked = true;
-        if (containerSelectKit) containerSelectKit.style.display = 'block';
-        if (containerNovoKit) containerNovoKit.style.display = 'none';
-
         const formNovoAgendamento = document.getElementById('formNovoAgendamento');
         if (formNovoAgendamento) {
             formNovoAgendamento.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const fk_kit = document.getElementById('select-kit-existente').value;
                 const data = document.getElementById('data').value;
                 const inicio = document.getElementById('horario-inicio').value;
                 const fim = document.getElementById('horario-fim').value;
@@ -318,13 +308,12 @@ document.addEventListener("DOMContentLoaded", function () {
                     data_hora_fim: `${data}T${fim}:00`,
                     fk_laboratorio: laboratorioRadio.value,
                     observacoes: document.getElementById('observacoes').value,
-                    fk_kit: fk_kit || null,
+                    materiais_selecionados: appState.materiais.filter(m => m.quantidadeSolicitada > 0).map(m => ({ id_material: m.id, quantidade: m.quantidadeSolicitada }))
                 };
                 try {
-                    // Chama o serviço global
                     await window.apiService.createAgendamento(agendamento);
                     showAlert('Agendamento criado com sucesso! Aguardando confirmação.', 'Sucesso', 'success');
-                    location.reload(); 
+                    location.reload();
                 } catch (error) {
                     console.error("Erro ao criar agendamento:", error);
                     showAlert(error.message, "Erro", "error");
@@ -368,7 +357,32 @@ document.addEventListener("DOMContentLoaded", function () {
                  showAlert(error.message, "Erro", "error");
             }
         });
-    } 
+
+        // Listeners do Modal de Materiais
+        const modalMateriais = document.getElementById('modalSelecionarMateriais');
+        const abrirModalBtn = document.getElementById('abrirModalMateriaisBtn');
+        const fecharModalBtn = document.getElementById('fecharModalMateriaisBtn');
+        const cancelarModalBtn = document.getElementById('cancelarModalMateriaisBtn');
+        const confirmarSelecaoBtn = document.getElementById('confirmarSelecaoMateriaisBtn');
+
+        if (abrirModalBtn) abrirModalBtn.addEventListener('click', () => {
+            renderizarModalMateriais();
+            modalMateriais.classList.add('visivel');
+        });
+        if (fecharModalBtn) fecharModalBtn.addEventListener('click', () => modalMateriais.classList.remove('visivel'));
+        if (cancelarModalBtn) cancelarModalBtn.addEventListener('click', () => modalMateriais.classList.remove('visivel'));
+        if (confirmarSelecaoBtn) confirmarSelecaoBtn.addEventListener('click', () => {
+            const inputs = modalMateriais.querySelectorAll('input[data-id]');
+            inputs.forEach(input => {
+                const material = appState.materiais.find(m => m.id == input.dataset.id);
+                if (material) {
+                    material.quantidadeSolicitada = parseFloat(input.value) || 0;
+                }
+            });
+            renderizarResumoMateriais();
+            modalMateriais.classList.remove('visivel');
+        });
+    }
 
     // --- Lógica de Modais ---
     function adicionarCliqueFora(modalElement, fecharFn) {
@@ -541,6 +555,47 @@ document.addEventListener("DOMContentLoaded", function () {
             case 'concluido': return '✔️';
             default: return '?';
         }
+    }
+
+    function renderizarModalMateriais(filtro = '') {
+        const container = document.getElementById('lista-materiais-modal');
+        if (!container) return;
+
+        const materiaisFiltrados = appState.materiais.filter(m => m.nome.toLowerCase().includes(filtro.toLowerCase()));
+
+        if (materiaisFiltrados.length === 0) {
+            container.innerHTML = '<tr><td colspan="3" class="text-center">Nenhum material encontrado.</td></tr>';
+            return;
+        }
+
+        container.innerHTML = materiaisFiltrados.map(m => `
+            <tr>
+                <td>${m.nome}</td>
+                <td>${m.quantidade} ${m.unidade}</td>
+                <td>
+                    <input type="number" class="form-control" data-id="${m.id}" value="${m.quantidadeSolicitada || 0}" min="0" max="${m.quantidade}">
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    function renderizarResumoMateriais() {
+        const container = document.getElementById('resumo-materiais-selecionados');
+        if (!container) return;
+
+        const selecionados = appState.materiais.filter(m => m.quantidadeSolicitada > 0);
+
+        if (selecionados.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = `
+            <h6>Materiais Selecionados:</h6>
+            <ul>
+                ${selecionados.map(m => `<li>${m.nome}: ${m.quantidadeSolicitada} ${m.unidade}</li>`).join('')}
+            </ul>
+        `;
     }
     function formatarData(dataString) {
         if (!dataString) return 'N/A';
