@@ -203,17 +203,15 @@
             </div>
         </section>
 
-        <!-- SEÇÃO 2: NOVO AGENDAMENTO -->
+        <!-- SEÇÃO 2: NOVO AGENDAMENTO (MODIFICADA - Tarefa 1 e 4) -->
         <section id="novo-agendamento" class="conteudo-secao">
             <div class="card">
                 <div class="card-header">
                     <h2 class="h4 mb-0">Novo Agendamento</h2>
                 </div>
-                <div class="card-body p-4"> <!-- Adicionado padding aqui -->
+                <div class="card-body p-4">
                     <form class="agendamento-form" id="formNovoAgendamento">
                         
-                        <!-- REMOVIDO: Campos desnecessários (disciplina, turma, num_alunos, titulo_aula) -->
-
                         <div class="row g-3">
                             <div class="col-md-5">
                                 <label for="data" class="form-label">Data</label>
@@ -221,7 +219,6 @@
                             </div>
                             <div class="col-md-3">
                                 <label for="horario-inicio" class="form-label">Horário Início</label>
-                                <!-- TODO: Popular horários dinamicamente? -->
                                 <input type="time" name="horario-inicio" id="horario-inicio" class="form-control" required>
                             </div>
                             <div class="col-md-3">
@@ -238,30 +235,41 @@
                             </div>
                         </fieldset>
 
+                        <!-- MODIFICADO (Tarefas 1 e 4): Seletor de materiais interativo -->
                         <fieldset class="mt-4">
-                            <legend class="form-label fs-5">Kits de Materiais</legend>
-                            <div class="form-check">
-                                <input type="radio" name="kit" id="kit-existente" value="existente" class="form-check-input" checked>
-                                <label for="kit-existente" class="form-check-label">Usar kit existente</label>
-                            </div>
-                            <!-- Select de kits existentes (aparece/desaparece) -->
-                            <div id="container-select-kit">
-                                <label for="select-kit-existente" class="form-label visually-hidden">Selecionar Kit</label>
-                                <select id="select-kit-existente" class="form-select mt-2">
-                                    <option value="">Carregando kits...</option>
+                            <legend class="form-label fs-5">Materiais (Tabela Interativa - Tarefa 1)</legend>
+                            
+                            <!-- Opção de selecionar Kit existente (mantida) -->
+                            <div class="mb-3">
+                                <label for="select-kit-existente" class="form-label">Usar um Kit salvo?</label>
+                                <select id="select-kit-existente" class="form-select">
+                                    <option value="">Nenhum (ou selecione um kit para preencher a lista)</option>
+                                    <!-- Kits populados pelo JS -->
                                 </select>
                             </div>
-                            
-                            <div class="form-check mt-2">
-                                <input type="radio" name="kit" id="kit-novo" value="novo" class="form-check-input" disabled>
-                                <label for="kit-novo" class="form-check-label text-muted">(Em breve) Criar novo kit para esta aula</label>
-                            </div>
-                            <!-- Textarea de novo kit (aparece/desaparece) -->
-                            <div id="container-novo-kit" style="display: none;">
-                                <label for="textarea-novo-kit" class="form-label visually-hidden">Descrição do Novo Kit</label>
-                                <textarea id="textarea-novo-kit" rows="4" placeholder="Liste os materiais e quantidades. Ex:&#10;- 1 Béquer 100ml&#10;- 1 Pipeta 25ml&#10;- 1 Frasco de Fenolftaleína" class="form-control mt-2"></textarea>
+
+                            <!-- ADICIONADO: Novo seletor de materiais -->
+                            <div class="row g-3">
+                                <!-- Coluna da Esquerda: Busca e Disponíveis -->
+                                <div class="col-md-6">
+                                    <label for="filtroMateriaisAgendamento" class="form-label">Buscar Materiais Disponíveis</label>
+                                    <input type="text" id="filtroMateriaisAgendamento" class="form-control mb-2" placeholder="Buscar por nome, tipo...">
+                                    <div class="list-group" id="listaMateriaisDisponiveisAgendamento" style="max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px;">
+                                        <!-- JS vai popular isso -->
+                                        <p class="text-center text-muted small p-3">Carregando materiais...</p>
+                                    </div>
+                                </div>
+                                <!-- Coluna da Direita: Selecionados -->
+                                <div class="col-md-6">
+                                    <label class="form-label">Materiais Selecionados para esta Aula</label>
+                                    <div class="list-group" id="listaMateriaisSelecionadosAgendamento" style="min-height: 250px; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px; max-height: 250px; overflow-y: auto;">
+                                        <!-- JS vai popular isso -->
+                                        <p class="text-center text-muted small p-3" id="placeholderSelecionadosAgendamento">Adicione materiais da lista à esquerda.</p>
+                                    </div>
+                                </div>
                             </div>
                         </fieldset>
+                        <!-- FIM DA MODIFICAÇÃO -->
 
                         <div class="mt-3">
                             <label for="observacoes" class="form-label">Observações (Título/Descrição da Aula)</label>
@@ -300,8 +308,6 @@
                     <h2 class="h4 mb-0">Histórico de Agendamentos</h2>
                 </div>
                 <div class="card-body">
-                    <!-- REMOVIDO: Filtros (simplificação) -->
-                    <!-- Tabela para responsividade -->
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead>
@@ -340,7 +346,7 @@
     <script src="apiService.js"></script>
     <script src="telaProfessor.js"></script>
 
-    <!-- Modais (Estrutura do Admin) -->
+    <!-- Modais -->
     
     <!-- NOVO: Modal "Último Agendamento" -->
     <div class="modal-container" id="modalUltimoAgendamento">
@@ -380,9 +386,10 @@
     </div>
 
 
-    <!-- Modal "Novo kit" -->
+    <!-- MODIFICADO: Modal "Novo kit" (Tarefas 1 e 4) -->
     <div class="modal-container" id="modalNovoKit">
-        <div class="modal-card">
+        <!-- Aumentado o modal para caber a seleção de itens -->
+        <div class="modal-card modal-lg"> 
             <header class="modal-header">
                 <h5 class="modal-title">Criar Novo Kit de Materiais</h5>
                 <button type="button" class="btn-close" id="fecharModalKitBtn"></button>
@@ -393,11 +400,29 @@
                         <label for="kit-nome" class="form-label">Nome do Kit</label>
                         <input type="text" id="kit-nome" class="form-control" placeholder="Ex: Titulação Ácido-Base" required>
                     </div>
-                    <div class="form-group">
-                        <label for="kit-descricao" class="form-label">Itens e Descrição</label>
-                        <textarea id="kit-descricao" class="form-control" rows="6"
-                            placeholder="Liste os materiais e quantidades. Ex:&#10;- 1 Béquer 100ml&#10;- 1 Pipeta 25ml&#10;- 1 Frasco de Fenolftaleína" required></textarea>
-                    </div>
+                    
+                    <!-- REMOVIDO: Textarea de descrição -->
+
+                    <!-- ADICIONADO: Seletor de materiais (Tarefas 1 e 4) -->
+                    <fieldset class="mt-2">
+                        <legend class="form-label fs-6">Materiais do Kit</legend>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="filtroMateriaisKit" class="form-label">Buscar Materiais Disponíveis</label>
+                                <input type="text" id="filtroMateriaisKit" class="form-control mb-2" placeholder="Buscar por nome, tipo...">
+                                <div class="list-group" id="listaMateriaisDisponiveisKit" style="max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px;">
+                                    <!-- JS vai popular -->
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Materiais Selecionados</label>
+                                <div class="list-group" id="listaMateriaisSelecionadosKit" style="min-height: 250px; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px; max-height: 250px; overflow-y: auto;">
+                                    <!-- JS vai popular -->
+                                    <p class="text-center text-muted small p-3" id="placeholderSelecionadosKit">Adicione materiais da lista à esquerda.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
                 </form>
             </div>
             <footer class="modal-footer">
@@ -417,7 +442,7 @@
             <div class="modal-body">
                 <div class="detalhes-aula-grupo">
                     <span class="detalhes-label">Título/Descrição:</span>
-                    <span class="detalhes-valor" id="detalhe-titulo"></span>
+                    <span class="detalhes-valor" id="detalhe-titulo-val"></span> <!-- ID corrigido -->
                 </div>
                 <div class="detalhes-aula-grupo">
                     <span class="detalhes-label">Status:</span>
@@ -498,9 +523,10 @@
         </div>
     </div>
 
-    <!-- Modal "Editar Kit" -->
+    <!-- MODIFICADO: Modal "Editar Kit" (Tarefas 1 e 4) -->
     <div class="modal-container" id="modalEditarKit">
-        <div class="modal-card">
+        <!-- Aumentado o modal para caber a seleção de itens -->
+        <div class="modal-card modal-lg">
             <header class="modal-header">
                 <h5 class="modal-title">Editar Kit de Materiais</h5>
                 <button type="button" class="btn-close" id="fecharModalEditarKitBtn"></button>
@@ -512,10 +538,28 @@
                         <label for="edit-kit-nome" class="form-label">Nome do Kit</label>
                         <input type="text" id="edit-kit-nome" name="kit-nome" class="form-control" required>
                     </div>
-                    <div class="form-group">
-                        <label for="edit-kit-descricao" class="form-label">Itens e Descrição</label>
-                        <textarea id="edit-kit-descricao" name="kit-descricao" class="form-control" rows="6" required></textarea>
-                    </div>
+                    
+                    <!-- REMOVIDO: Textarea de descrição -->
+
+                    <!-- ADICIONADO: Seletor de materiais (Tarefas 1 e 4) -->
+                    <fieldset class="mt-2">
+                        <legend class="form-label fs-6">Materiais do Kit</legend>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="filtroMateriaisEditKit" class="form-label">Buscar Materiais Disponíveis</label>
+                                <input type="text" id="filtroMateriaisEditKit" class="form-control mb-2" placeholder="Buscar por nome, tipo...">
+                                <div class="list-group" id="listaMateriaisDisponiveisEditKit" style="max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px;">
+                                    <!-- JS vai popular -->
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Materiais Selecionados</label>
+                                <div class="list-group" id="listaMateriaisSelecionadosEditKit" style="min-height: 250px; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px; max-height: 250px; overflow-y: auto;">
+                                    <!-- JS vai popular -->
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
                 </form>
             </div>
             <footer class="modal-footer">

@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
         userType: "tecnico",
         token: null,
         agendamentosPendentes: [],
-        materiais: [],
+        materiais: [], // Fonte de dados principal para o estoque
         agendamentosHistorico: []
     };
 
@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const globalToast = globalToastEl ? new bootstrap.Toast(globalToastEl) : null;
 
     // --- CAMADA DE SERVIÇO (Lógica de API) ---
-    // Removida! Agora usamos window.apiService do arquivo apiService.js
     if (!window.apiService) {
         console.error("apiService.js não foi carregado corretamente.");
         showAlert("Erro crítico ao carregar a página. Recarregue.", "Erro", "error");
@@ -29,7 +28,6 @@ document.addEventListener("DOMContentLoaded", function () {
         iniciarListeners();
     }
 
-    // Esta função agora retorna um booleano para controlar o fluxo de execução
     function checkLogin() {
         appState.userId = localStorage.getItem('userId');
         appState.userName = localStorage.getItem('userName');
@@ -40,18 +38,17 @@ document.addEventListener("DOMContentLoaded", function () {
             console.warn("Acesso não autorizado ou token inválido. Redirecionando para login.");
             localStorage.clear();
             window.location.href = 'telaLogin.html';
-            return false; // Importante: retorna false para parar a execução
+            return false; 
         }
 
         document.getElementById('nome-usuario').innerText = appState.userName;
         document.getElementById('tipo-usuario').innerText = appState.userType;
-        return true; // Importante: retorna true se o login for válido
+        return true; 
     }
 
     // --- CARREGAMENTO DE DADOS (usando window.apiService) ---
     async function iniciarCarregamentoDados() {
         try {
-            // Chama o serviço global
             const [pendentes, materiais, historico] = await Promise.all([
                 window.apiService.getAgendamentosPendentes(),
                 window.apiService.getMateriais(),
@@ -59,12 +56,12 @@ document.addEventListener("DOMContentLoaded", function () {
             ]);
             
             appState.agendamentosPendentes = pendentes;
-            appState.materiais = materiais;
+            appState.materiais = materiais; // Lista completa de materiais
             appState.agendamentosHistorico = historico;
             
             // Renderizar
             renderAgendamentosPendentes();
-            renderEstoque();
+            renderEstoque(); // Renderiza a lista completa (agora filtrável)
             renderHistorico();
 
         } catch (error) {
@@ -98,22 +95,43 @@ document.addEventListener("DOMContentLoaded", function () {
             </tr>
         `).join('');
     }
+
+    // ATUALIZADO (Tarefa 1): Função agora filtra com base no input
     function renderEstoque() {
         const tbody = document.getElementById('lista-estoque-tbody');
-        if (appState.materiais.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum item no estoque.</td></tr>`;
+        
+        // (Tarefa 1) Pega o valor do filtro
+        const filtroInput = document.getElementById('filtroEstoque');
+        const filtroTexto = filtroInput ? filtroInput.value.toLowerCase() : '';
+
+        // (Tarefa 1) Filtra a lista de materiais do estado
+        const materiaisFiltrados = appState.materiais.filter(item => {
+            return item.nome.toLowerCase().includes(filtroTexto) ||
+                   (item.descricao && item.descricao.toLowerCase().includes(filtroTexto)) ||
+                   (item.localizacao && item.localizacao.toLowerCase().includes(filtroTexto));
+        });
+
+        if (materiaisFiltrados.length === 0) {
+             if (filtroTexto) {
+                tbody.innerHTML = `<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum item encontrado para "${filtroTexto}".</td></tr>`;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum item no estoque.</td></tr>`;
+            }
             return;
         }
-        tbody.innerHTML = appState.materiais.map(item => `
+        
+        // (Tarefa 2) Renderiza apenas os itens filtrados, mostrando tipo e classificação
+        tbody.innerHTML = materiaisFiltrados.map(item => `
             <tr data-id="${item.id}">
                 <td data-label="Item">${item.nome}</td>
                 <td data-label="Descrição">${item.descricao || 'N/A'}</td>
-                <td data-label="Tipo">${item.tipo_material}</td>
+                <td data-label="Tipo">${item.tipo_material} (${item.classificacao})</td>
                 <td data-label="Quantidade" class="text-center mobile-center">${item.quantidade} ${item.unidade}</td>
                 <td data-label="Localização">${item.localizacao || 'N/A'}</td>
             </tr>
         `).join('');
     }
+
     function renderHistorico() {
         const tbody = document.getElementById('lista-historico-tbody');
         if (appState.agendamentosHistorico.length === 0) {
@@ -211,7 +229,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
         adicionarCliqueFora(modalConfirmarSaida, fecharModalSaida);
         
-        // --- Modal Adicionar Item Estoque ---
+        // --- Modal Adicionar Item Estoque (ATUALIZADO - Etapa 1 / Tarefa 2) ---
         const itemModal = document.getElementById("itemModal");
         const btnAdicionar = document.getElementById("abrirModalItemBtn");
         const btnFechar = document.getElementById("fecharModalItemBtn");
@@ -227,15 +245,19 @@ document.addEventListener("DOMContentLoaded", function () {
         if (formItem) {
             formItem.addEventListener("submit", async function (e) {
                 e.preventDefault();
+                
+                // (Etapa 1 / Tarefa 2) Captura os dados dos novos campos
                 const novoItem = {
                     nome: document.getElementById("itemNome").value,
                     descricao: document.getElementById("itemDesc").value,
                     localizacao: document.getElementById("itemLocal").value,
-                    tipoUnidade: document.getElementById('itemTipoUnidade').value, 
-                    valor: parseFloat(document.getElementById('itemValor').value)
+                    tipo_material: document.getElementById('itemTipoMaterial').value, 
+                    classificacao: document.getElementById('itemClassificacao').value,
+                    quantidade: parseFloat(document.getElementById('itemQuantidade').value),
+                    unidade: document.getElementById('itemUnidade').value
                 };
+                
                 try {
-                    // Chama o serviço global
                     const data = await window.apiService.createMaterial(novoItem);
                     showAlert(`Item "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
                     location.reload();
@@ -246,14 +268,9 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
         
-        const tipoUnidadeSelect = document.getElementById('itemTipoUnidade');
-        if (tipoUnidadeSelect) {
-            tipoUnidadeSelect.addEventListener('change', (e) => {
-                atualizarInputValor(e.target.value);
-            });
-        }
+        // REMOVIDO: Listener do 'itemTipoUnidade'
 
-        // --- Modal Analisar Agendamento ---
+        // --- Modal Analisar Agendamento (ATUALIZADO - Tarefa 4) ---
         const analisarModal = document.getElementById("analisarModal");
         const btnFecharAnalisar = document.getElementById("fecharModalAnalisarBtn");
         const btnConfirmarAnalise = document.getElementById("btnConfirmarAnalise");
@@ -262,18 +279,73 @@ document.addEventListener("DOMContentLoaded", function () {
         if (btnFecharAnalisar) btnFecharAnalisar.addEventListener("click", fecharModalAnalisar);
         adicionarCliqueFora(analisarModal, fecharModalAnalisar);
         
+        // (Tarefa 4) Listeners atualizados para chamar handleAnalise
         if (btnConfirmarAnalise) btnConfirmarAnalise.addEventListener('click', () => handleAnalise(btnConfirmarAnalise.dataset.id, 'confirmado'));
         if (btnCancelarAnalise) btnCancelarAnalise.addEventListener('click', () => handleAnalise(btnCancelarAnalise.dataset.id, 'cancelado'));
         
+        // (Tarefa 4) NOVA Função handleAnalise
         async function handleAnalise(id, status) {
+            let pesos_solucao = []; // Array para coletar os pesos
+            
+            // Se for 'confirmado', valida e coleta os pesos
+            if (status === 'confirmado') {
+                const formPreparo = document.getElementById('formPreparoSolucoes');
+                // Valida o formulário (inputs de peso required)
+                if (!formPreparo.checkValidity()) {
+                    showAlert('Por favor, preencha o peso(g) de todos os reagentes em solução.', 'Erro', 'error');
+                    formPreparo.reportValidity(); // Mostra qual campo falhou
+                    return;
+                }
+                
+                // Coleta os pesos
+                const inputsPeso = formPreparo.querySelectorAll('input[data-item-id]');
+                inputsPeso.forEach(input => {
+                    pesos_solucao.push({
+                        id_material: input.dataset.itemId,
+                        peso: parseFloat(input.value)
+                    });
+                });
+            }
+
             try {
-                // Chama o serviço global
-                await window.apiService.updateStatusAgendamento(id, status);
+                // Envia os pesos (ou um array vazio se for 'cancelado')
+                await window.apiService.updateStatusAgendamento(id, status, pesos_solucao);
                 showAlert(`Agendamento ${status} com sucesso!`, 'Sucesso', 'success');
                 location.reload();
             } catch (error) {
                 showAlert(error.message, 'Erro', 'error');
             }
+        }
+
+        // ADICIONADO (Tarefa 1): Listener do filtro de estoque
+        const filtroEstoqueInput = document.getElementById('filtroEstoque');
+        if (filtroEstoqueInput) {
+            filtroEstoqueInput.addEventListener('input', () => {
+                renderEstoque(); // Re-renderiza a lista a cada digitação
+            });
+        }
+
+        // ADICIONADO (Tarefa 3): Listener do botão Desfazer
+        const btnDesfazer = document.getElementById('btnDesfazerEstoque');
+        if (btnDesfazer) {
+            btnDesfazer.addEventListener('click', async () => {
+                // TODO: Adicionar um modal de confirmação "Tem certeza?"
+                try {
+                    btnDesfazer.disabled = true;
+                    btnDesfazer.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Desfazendo...';
+                    
+                    await window.apiService.undoEstoqueChange();
+                    
+                    showAlert('Última alteração de estoque desfeita com sucesso!', 'Sucesso', 'success');
+                    setTimeout(() => location.reload(), 1500); 
+                    
+                } catch (error) {
+                    console.error("Erro ao desfazer:", error);
+                    showAlert(error.message, "Erro", "error");
+                    btnDesfazer.disabled = false;
+                    btnDesfazer.innerHTML = '<i class="bi bi-arrow-counterclockwise me-2"></i>Desfazer';
+                }
+            });
         }
         
         // --- Ações Dinâmicas (Delegação de Eventos) ---
@@ -287,7 +359,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     } // Fim de iniciarListeners()
     
-    
+    // ATUALIZADO (Tarefa 4): Função agora constrói HTML com inputs
     function abrirModalAnalisar(id) {
         const aula = appState.agendamentosPendentes.find(a => a.id_agendamento == id);
         if (!aula) return;
@@ -299,11 +371,39 @@ document.addEventListener("DOMContentLoaded", function () {
         
         const listaMateriais = document.getElementById('lista-materiais-solicitados');
         if (aula.materiais && aula.materiais.length > 0) {
-            listaMateriais.innerHTML = aula.materiais.map(m => `<li class="list-group-item">${m.nome}: ${m.quantidade_solicitada} ${m.unidade}</li>`).join('');
+            listaMateriais.innerHTML = aula.materiais.map(m => {
+                // (Tarefa 4) Capitaliza o 'formato'
+                const formatoTexto = m.formato.charAt(0).toUpperCase() + m.formato.slice(1);
+                const nome = `${m.nome} (${formatoTexto})`;
+                const solicitado = `Solicitado: ${m.quantidade_solicitada} ${m.unidade}`;
+                
+                // (Tarefa 4) Se for 'solucao', adiciona o input de peso
+                if (m.formato === 'solucao') {
+                    return `
+                    <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
+                        <div class="me-3">
+                          ${nome}
+                          <small class="d-block text-muted">${solicitado}</small> 
+                        </div>
+                        <div class="d-flex align-items-center" style="max-width: 200px;">
+                          <label for="peso-item-${m.id_material}" class="form-label me-2 mb-0 text-nowrap">Peso(g):</label>
+                          <input type="number" step="0.01" class="form-control form-control-sm" id="peso-item-${m.id_material}" data-item-id="${m.id_material}" required>
+                        </div>
+                    </li>`;
+                } else {
+                    // Se for 'solido' ou ferramenta, apenas lista
+                    return `
+                    <li class="list-group-item">
+                        ${nome}
+                        <small class="d-block text-muted">${solicitado}</small>
+                    </li>`;
+                }
+            }).join('');
         } else {
             listaMateriais.innerHTML = '<li class="list-group-item">Nenhum material solicitado.</li>';
         }
 
+        // Seta os IDs nos botões para o handleAnalise
         document.getElementById('btnConfirmarAnalise').dataset.id = id;
         document.getElementById('btnCancelarAnalise').dataset.id = id;
         
@@ -321,33 +421,9 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     }
-    function atualizarInputValor(tipo) {
-        const containerValor = document.getElementById('containerValorEstoque');
-        if (!containerValor) return;
-        const valorLabel = containerValor.querySelector('label');
-        const valorInput = containerValor.querySelector('input');
-        if (!valorLabel || !valorInput) return;
-        switch (tipo) {
-            case 'unidade':
-                valorLabel.textContent = 'Quantidade (UN)';
-                valorInput.step = '1';
-                valorInput.min = '1';
-                valorInput.placeholder = 'Ex: 10';
-                break;
-            case 'peso':
-                valorLabel.textContent = 'Peso (g)';
-                valorInput.step = '0.01';
-                valorInput.min = '0.01';
-                valorInput.placeholder = 'Ex: 500.5';
-                break;
-            case 'litros':
-                valorLabel.textContent = 'Volume (ml)';
-                valorInput.step = '0.1';
-                valorInput.min = '0.1';
-                valorInput.placeholder = 'Ex: 250.5';
-                break;
-        }
-    }
+    
+    // REMOVIDO: atualizarInputValor(tipo)
+
     function showAlert(message, title = "Notificação", type = "info") {
         if (!globalToast) {
             console.log(`[Alerta: ${title}] ${message}`);
@@ -382,6 +458,7 @@ document.addEventListener("DOMContentLoaded", function () {
         toastBody.innerText = message;
         globalToast.show();
     }
+    
     function getStatusInfo(status) {
         switch (status) {
             case 'confirmado':
@@ -396,6 +473,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 return { statusClasse: 'bg-light text-dark', statusTexto: '?' };
         }
     }
+    
     function formatarData(dataString) {
         if (!dataString) return 'N/A';
         try {

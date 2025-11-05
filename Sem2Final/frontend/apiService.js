@@ -103,12 +103,15 @@
              return fetchComToken(`${API_URL}/materiais`);
         },
         createMaterial: (itemData) => {
+            // Esta função é genérica, ela envia o objeto itemData
+            // A lógica de criar o objeto correto fica no telaAdmin.js/telaTecnico.js
             return fetchComToken(`${API_URL}/materiais`, {
                 method: 'POST',
                 body: JSON.stringify(itemData)
             });
         },
         getHistorico: () => {
+            // Rota movida para /api/agendamentos/historico (usada pelo Técnico/Admin)
             return fetchComToken(`${API_URL}/agendamentos/historico`);
         },
 
@@ -131,6 +134,7 @@
             return fetchComToken(`${API_URL}/professor/kits`);
         },
         createKit: (kitData) => {
+            // Esta função envia o kitData (que será montado em telaProfessor.js)
             return fetchComToken(`${API_URL}/professor/kits`, {
                 method: 'POST',
                 body: JSON.stringify(kitData)
@@ -152,10 +156,14 @@
         getAgendamentosPendentes: () => {
             return fetchComToken(`${API_URL}/tecnico/agendamentos/pendentes`);
         },
-        updateStatusAgendamento: (id, status) => {
+        // ATUALIZADO (Tarefa 4): Agora aceita 'pesos_solucao'
+        updateStatusAgendamento: (id, status, pesos_solucao = null) => {
              return fetchComToken(`${API_URL}/tecnico/agendamentos/${id}/status`, {
                 method: 'PUT',
-                body: JSON.stringify({ status: status })
+                body: JSON.stringify({ 
+                  status: status,
+                  pesos_solucao: pesos_solucao // Envia os pesos para o backend
+                })
             });
         },
 
@@ -177,6 +185,14 @@
                 method: 'DELETE'
             });
         },
+
+        // ADICIONADO (Tarefa 3): Rota para desfazer alteração no estoque
+        undoEstoqueChange: () => {
+            return fetchComToken(`${API_URL}/estoque/undo`, {
+                method: 'POST'
+            });
+        },
     };
 
 })(); // Fim da IIFE
+

@@ -197,12 +197,26 @@
         <!-- SEÇÃO 3: ESTOQUE -->
         <section id="estoque" class="conteudo-secao">
             <div class="card">
-                <!-- CABEÇALHO ATUALIZADO COM BOTÃO -->
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h2 class="h4 mb-0">Controle de Estoque</h2>
-                    <button class="btn btn-custom" id="abrirModalEstoqueBtn"><i class="bi bi-plus-circle-fill me-2"></i>Adicionar Item</button>
+                <!-- CABEÇALHO ATUALIZADO COM BOTÕES (Tarefa 3) -->
+                <div class="card-header d-flex flex-wrap justify-content-between align-items-center">
+                    <h2 class="h4 mb-0 me-2">Controle de Estoque</h2>
+                    <div class="d-flex gap-2 mt-2 mt-md-0">
+                        <button class="btn btn-outline-warning" id="btnDesfazerEstoque">
+                            <i class="bi bi-arrow-counterclockwise me-2"></i>Desfazer
+                        </button>
+                        <button class="btn btn-custom" id="abrirModalEstoqueBtn">
+                            <i class="bi bi-plus-circle-fill me-2"></i>Adicionar Item
+                        </button>
+                    </div>
                 </div>
                 <div class="card-body">
+                    
+                    <!-- ADICIONADO: Filtro de Estoque (Tarefa 1) -->
+                    <div class="mb-3 px-3">
+                        <label for="filtroEstoque" class="form-label">Buscar no Estoque</label>
+                        <input type="text" id="filtroEstoque" class="form-control" placeholder="Digite o nome do item para filtrar...">
+                    </div>
+
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
                             <thead>
@@ -264,7 +278,7 @@
         </div>
     </div>
 
-    <!-- Modal de Cadastro de Item de Estoque -->
+    <!-- Modal de Cadastro de Item de Estoque (MODIFICADO - Etapa 1 / Tarefa 2) -->
     <div class="modal-container" id="estoqueModal">
         <div class="modal-card">
             <div class="modal-header">
@@ -294,26 +308,39 @@
                         </select>
                     </div>
                     
-                    <!-- Campos condicionais (Unidade/Peso) -->
-                    <div class="row g-2">
+                    <!-- CAMPOS ATUALIZADOS (Sincronizados com o BD) -->
+                    <div class="row g-2 mb-3">
                         <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="itemTipoUnidade" class="form-label">Tipo de Medida</label>
-                                <select class="form-select" id="itemTipoUnidade">
-                                    <option value="unidade" selected>Unidade (UN)</option>
-                                    <option value="peso">Peso (g)</option>
-                                    <option value="litros">Volume (ml)</option>
-                                </select>
-                            </div>
+                            <label for="itemTipoMaterial" class="form-label">Tipo de Material</label>
+                            <select class="form-select" id="itemTipoMaterial" required>
+                                <option value="" selected disabled>Selecione...</option>
+                                <option value="equipamento">Equipamento</option>
+                                <option value="vidraria">Vidraria</option>
+                                <option value="reagente">Reagente</option>
+                                <option value="consumivel">Consumível</option>
+                            </select>
                         </div>
                         <div class="col-md-6">
-                            <!-- O Label e o Input aqui serão alterados pelo JS -->
-                            <div class="form-group" id="containerValorEstoque">
-                                <label for="itemValor" class="form-label">Quantidade (UN)</label>
-                                <input type="number" class="form-control" id="itemValor" step="1" min="1" required placeholder="Ex: 10">
-                            </div>
+                            <label for="itemClassificacao" class="form-label">Classificação (Uso)</label>
+                            <select class="form-select" id="itemClassificacao" required>
+                                <option value="" selected disabled>Selecione...</option>
+                                <option value="ferramenta">Ferramenta (Reutilizável)</option>
+                                <option value="consumivel">Consumível (Baixa no estoque)</option>
+                            </select>
                         </div>
                     </div>
+                    
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <label for="itemQuantidade" class="form-label">Quantidade</label>
+                            <input type="number" class="form-control" id="itemQuantidade" step="0.01" min="0" required placeholder="Ex: 10 ou 500.5">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="itemUnidade" class="form-label">Unidade</label>
+                            <input type="text" class="form-control" id="itemUnidade" required placeholder="Ex: UN, g, ml, caixas">
+                        </div>
+                    </div>
+                    <!-- FIM DAS MUDANÇAS -->
                 </form>
             </div>
             <div class="modal-footer">
@@ -369,4 +396,3 @@
     <script src="TelaAdmin.js"></script>
 </body>
 </html>
-

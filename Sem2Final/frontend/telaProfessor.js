@@ -5,18 +5,21 @@ document.addEventListener("DOMContentLoaded", function () {
         userId: null,
         userName: "Professor",
         userType: "professor",
-        token: null, // O token ainda é pego para o checkLogin
+        token: null,
         agendamentos: [],
         kits: [],
-        laboratorios: []
+        laboratorios: [],
+        materiais: [] // (Tarefas 1 e 4) - Armazena todos os materiais do estoque
     };
+
+    // (Tarefas 1 e 4) - Instâncias dos seletores de materiais
+    let agendamentoSelector, novoKitSelector, editKitSelector;
 
     // --- Toast Global ---
     const globalToastEl = document.getElementById('globalToast');
     const globalToast = globalToastEl ? new bootstrap.Toast(globalToastEl) : null;
 
     // --- CAMADA DE SERVIÇO (Lógica de API) ---
-    // Removida! Agora usamos window.apiService do arquivo apiService.js
     if (!window.apiService) {
         console.error("apiService.js não foi carregado corretamente.");
         showAlert("Erro crítico ao carregar a página. Recarregue.", "Erro", "error");
@@ -32,7 +35,6 @@ document.addEventListener("DOMContentLoaded", function () {
         iniciarListenersDinamicos();
     }
 
-    // Esta função permanece: ela protege a *entrada* na página
     function checkLogin() {
         appState.userId = localStorage.getItem('userId');
         appState.userName = localStorage.getItem('userName');
@@ -50,33 +52,38 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('tipo-usuario').innerText = appState.userType;
     }
 
-    // --- CARREGAMENTO DE DADOS (usando window.apiService) ---
+    // --- CARREGAMENTO DE DADOS (ATUALIZADO - Tarefas 1 e 4) ---
     async function iniciarCarregamentoDados() {
         try {
-            // Chama o serviço global
-            const [agendamentos, kits, laboratorios] = await Promise.all([
+            // (Tarefas 1 e 4) - Agora também busca materiais
+            const [agendamentos, kits, laboratorios, materiais] = await Promise.all([
                 window.apiService.getAgendamentosProfessor(),
                 window.apiService.getKits(),
-                window.apiService.getLaboratorios()
+                window.apiService.getLaboratorios(),
+                window.apiService.getMateriais() // Necessário para os seletores
             ]);
 
             appState.agendamentos = agendamentos;
             appState.kits = kits;
             appState.laboratorios = laboratorios;
+            appState.materiais = materiais; // Armazena a lista de materiais
 
             // Renderizar todas as seções
             renderDashboardCards();
             renderProximasAulas();
             renderHistorico();
             renderMeusKits();
-            renderFormularioAgendamento();
+            
+            // (Tarefas 1 e 4) - Inicializa os seletores de materiais agora que os dados estão prontos
+            inicializarSeletoresDeMateriais();
+            
+            // Renderiza o formulário DEPOIS que os seletores foram inicializados
+            renderFormularioAgendamento(); 
 
-            // Configurar o botão de último agendamento com os dados carregados
             configurarBotaoUltimoAgendamento();
 
         } catch (error) {
             console.error("Erro fatal ao carregar dados:", error);
-            // Se o erro for de token, o apiService já redirecionou
             if (!error.message.includes("expirou")) {
                 showAlert(error.message, "Erro de Conexão", "error");
             }
@@ -86,7 +93,7 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    // --- FUNÇÕES DE RENDERIZAÇÃO ---
+    // --- FUNÇÕES DE RENDERIZAÇÃO (Inalteradas) ---
     function renderDashboardCards() {
         const agora = new Date();
         const proximos = appState.agendamentos.filter(a => new Date(a.data_hora_inicio) > agora && a.status_agendamento !== 'cancelado');
@@ -154,20 +161,28 @@ document.addEventListener("DOMContentLoaded", function () {
             </tr>
         `).join('');
     }
+    
+    // (Tarefas 1 e 4) - MODIFICADO: A descrição (itens) agora vem de 'kit.materiais'
     function renderMeusKits() {
         const container = document.getElementById('lista-meus-kits');
         if (appState.kits.length === 0) {
             container.innerHTML = '<p class="text-center p-3">Nenhum kit personalizado criado.</p>';
             return;
         }
-        container.innerHTML = appState.kits.map(kit => `
+        container.innerHTML = appState.kits.map(kit => {
+            // Cria a descrição a partir da lista de materiais
+            const descricaoItens = kit.materiais && kit.materiais.length > 0
+                ? kit.materiais.map(m => `- ${m.quantidade_no_kit}${m.unidade || ''} de ${m.nome} (${m.formato})`).join('\n')
+                : 'Kit vazio.';
+
+            return `
             <div class="col-md-6 col-lg-4">
                 <article class="cards-kits h-100" data-id="${kit.id}">
                     <div class="card-body d-flex flex-column">
                         <header class="cabecalho">
                             <h3 class="titulo">${kit.nome_kit}</h3>
                         </header>
-                        <p class="descricao">${kit.descricao_kit || 'Sem descrição.'}</p>
+                        <pre class="descricao">${descricaoItens}</pre> 
                         <div class="data-utilizado mt-auto"></div>
                     </div>
                     <footer class="card-footer acoes">
@@ -177,8 +192,10 @@ document.addEventListener("DOMContentLoaded", function () {
                     </footer>
                 </article>
             </div>
-        `).join('');
+        `}).join('');
     }
+    
+    // ATUALIZADO (Tarefas 1 e 4): Agora só renderiza os labs e o dropdown de kits
     function renderFormularioAgendamento() {
         const labContainer = document.getElementById('lista-laboratorios-form');
         if (appState.laboratorios.length > 0) {
@@ -197,9 +214,10 @@ document.addEventListener("DOMContentLoaded", function () {
         } else {
             labContainer.innerHTML = '<p class="text-center text-danger">Nenhum laboratório encontrado.</p>';
         }
+
         const kitSelect = document.getElementById('select-kit-existente');
         if (appState.kits.length > 0) {
-            kitSelect.innerHTML = '<option value="" disabled selected>Selecione um kit...</option>';
+            kitSelect.innerHTML = '<option value="" selected>Nenhum (ou selecione um kit para preencher a lista)</option>';
             appState.kits.forEach(kit => {
                 kitSelect.innerHTML += `<option value="${kit.id}">${kit.nome_kit}</option>`;
             });
@@ -207,6 +225,226 @@ document.addEventListener("DOMContentLoaded", function () {
             kitSelect.innerHTML = '<option value="" disabled>Nenhum kit personalizado encontrado.</option>';
         }
     }
+
+
+    // --- (Tarefas 1 e 4) LÓGICA DO SELETOR DE MATERIAIS ---
+
+    /**
+     * Cria um seletor de materiais interativo.
+     * @param {string} context - O prefixo dos IDs (ex: 'Agendamento', 'Kit', 'EditKit')
+     */
+    function createMaterialSelector(context) {
+        const filtroEl = document.getElementById(`filtroMateriais${context}`);
+        const disponiveisEl = document.getElementById(`listaMateriaisDisponiveis${context}`);
+        const selecionadosEl = document.getElementById(`listaMateriaisSelecionados${context}`);
+        const placeholderEl = document.getElementById(`placeholderSelecionados${context}`);
+
+        let selectedItems = []; // Estado interno
+
+        function init() {
+            // Listener do filtro
+            if (filtroEl) {
+                filtroEl.addEventListener('input', () => renderDisponiveis());
+            }
+            
+            // Listeners da lista de disponíveis (Adicionar)
+            if (disponiveisEl) {
+                disponiveisEl.addEventListener('click', (e) => {
+                    const target = e.target.closest('.btn-add-material');
+                    if (target) {
+                        const id = target.dataset.id;
+                        addItem(id);
+                    }
+                });
+            }
+
+            // Listeners da lista de selecionados (Remover, Qtd, Formato)
+            if (selecionadosEl) {
+                selecionadosEl.addEventListener('click', (e) => {
+                    // Remover
+                    const removeBtn = e.target.closest('.btn-remove-material');
+                    if (removeBtn) {
+                        removeItem(removeBtn.dataset.id);
+                    }
+                });
+                
+                selecionadosEl.addEventListener('change', (e) => {
+                    const id = e.target.dataset.id;
+                    if (!id) return;
+                    
+                    // Atualizar Quantidade
+                    if (e.target.classList.contains('input-qtd-material')) {
+                        updateItem(id, 'quantidade', parseFloat(e.target.value) || 1);
+                    }
+                    // (Tarefa 4) Atualizar Formato (Sólido/Solução)
+                    if (e.target.classList.contains('input-formato-material')) {
+                        updateItem(id, 'formato', e.target.value);
+                    }
+                });
+            }
+            
+            renderDisponiveis();
+            renderSelecionados();
+        }
+
+        // Renderiza a lista de materiais disponíveis (filtrada)
+        function renderDisponiveis() {
+            if (!disponiveisEl) return;
+            
+            const filtro = filtroEl ? filtroEl.value.toLowerCase() : '';
+            const selectedIds = new Set(selectedItems.map(item => item.id_material));
+
+            const disponiveis = appState.materiais.filter(item => {
+                const jaSelecionado = selectedIds.has(item.id_material);
+                const correspondeFiltro = item.nome.toLowerCase().includes(filtro) || 
+                                         item.tipo_material.toLowerCase().includes(filtro);
+                return !jaSelecionado && correspondeFiltro;
+            });
+
+            if (disponiveis.length === 0) {
+                disponiveisEl.innerHTML = `<p class="text-center text-muted small p-3">Nenhum material encontrado.</p>`;
+                return;
+            }
+
+            disponiveisEl.innerHTML = disponiveis.map(item => `
+                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-2">
+                    <div class="me-2">
+                        <strong class="d-block">${item.nome}</strong>
+                        <small class="text-muted">${item.tipo_material} (${item.quantidade} ${item.unidade} em estoque)</small>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-success btn-add-material" data-id="${item.id_material}">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Renderiza a lista de materiais selecionados
+        function renderSelecionados() {
+            if (!selecionadosEl) return;
+
+            if (selectedItems.length === 0) {
+                if(placeholderEl) placeholderEl.style.display = 'block';
+                selecionadosEl.innerHTML = ''; // Limpa a lista
+                return;
+            }
+            
+            if(placeholderEl) placeholderEl.style.display = 'none';
+
+            selecionadosEl.innerHTML = selectedItems.map(item => {
+                // (Tarefa 4) Lógica para Sólido/Solução
+                let formatoHtml = '';
+                if (item.tipo_material === 'reagente') {
+                    formatoHtml = `
+                        <div class="d-flex gap-2 mt-1">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input input-formato-material" type="radio" 
+                                       name="formato-${context}-${item.id_material}" id="formato-solido-${context}-${item.id_material}" 
+                                       value="solido" data-id="${item.id_material}" ${item.formato === 'solido' ? 'checked' : ''}>
+                                <label class="form-check-label small" for="formato-solido-${context}-${item.id_material}">Sólido</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input input-formato-material" type="radio" 
+                                       name="formato-${context}-${item.id_material}" id="formato-solucao-${context}-${item.id_material}" 
+                                       value="solucao" data-id="${item.id_material}" ${item.formato === 'solucao' ? 'checked' : ''}>
+                                <label class="form-check-label small" for="formato-solucao-${context}-${item.id_material}">Solução</label>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                return `
+                <div class="list-group-item d-flex justify-content-between align-items-start py-2">
+                    <div class="me-2 flex-grow-1">
+                        <strong class="d-block">${item.nome}</strong>
+                        <div class="d-flex align-items-center mt-1">
+                            <label for="qtd-${context}-${item.id_material}" class="form-label me-2 small mb-0 text-nowrap">Qtd:</label>
+                            <input type="number" id="qtd-${context}-${item.id_material}" 
+                                   class="form-control form-control-sm input-qtd-material" 
+                                   style="width: 80px;" value="${item.quantidade}" min="1" 
+                                   data-id="${item.id_material}">
+                            <span class="ms-2 text-muted small">${item.unidade}</span>
+                        </div>
+                        ${formatoHtml}
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger btn-remove-material" data-id="${item.id_material}">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
+                `;
+            }).join('');
+        }
+        
+        // Adiciona um item à lista de selecionados
+        function addItem(id) {
+            const item = appState.materiais.find(m => m.id_material == id);
+            if (item) {
+                selectedItems.push({
+                    id_material: item.id_material,
+                    nome: item.nome,
+                    quantidade: 1,
+                    unidade: item.unidade,
+                    tipo_material: item.tipo_material,
+                    formato: 'solido' // (Tarefa 4) - Padrão
+                });
+                renderDisponiveis();
+                renderSelecionados();
+            }
+        }
+
+        // Remove um item da lista de selecionados
+        function removeItem(id) {
+            selectedItems = selectedItems.filter(item => item.id_material != id);
+            renderDisponiveis();
+            renderSelecionados();
+        }
+
+        // Atualiza um campo de um item (qtd ou formato)
+        function updateItem(id, campo, valor) {
+            const item = selectedItems.find(item => item.id_material == id);
+            if (item) {
+                item[campo] = valor;
+            }
+        }
+        
+        // Carrega uma lista de itens (ex: de um kit)
+        function loadFromKit(kitItems) {
+            if (!kitItems) {
+                selectedItems = [];
+            } else {
+                 selectedItems = kitItems.map(item => ({
+                    id_material: item.id_material,
+                    nome: item.nome,
+                    quantidade: item.quantidade_no_kit || item.quantidade, // Adapta para kits ou agendamentos
+                    unidade: item.unidade,
+                    tipo_material: item.tipo_material,
+                    formato: item.formato || 'solido'
+                }));
+            }
+            renderDisponiveis();
+            renderSelecionados();
+        }
+
+        // Retorna a lista de itens
+        function getSelectedItems() {
+            return selectedItems;
+        }
+
+        return { init, getSelectedItems, loadFromKit };
+    }
+
+    // (Tarefas 1 e 4) - Inicializa os 3 seletores
+    function inicializarSeletoresDeMateriais() {
+        agendamentoSelector = createMaterialSelector('Agendamento');
+        novoKitSelector = createMaterialSelector('Kit');
+        editKitSelector = createMaterialSelector('EditKit');
+
+        // Inicia os seletores dos modais (o do agendamento é iniciado no renderFormulario)
+        agendamentoSelector.init();
+        novoKitSelector.init();
+        editKitSelector.init();
+    }
+
 
     // --- LÓGICA DE NAVEGAÇÃO E MODAIS (Ações) ---
     function iniciarListenersGlobais() {
@@ -289,42 +527,58 @@ document.addEventListener("DOMContentLoaded", function () {
         adicionarCliqueFora(modalConfirmarSaida, fecharModalSaida);
     }
     
-    // --- LÓGICA DE FORMULÁRIOS (usando window.apiService) ---
+    // --- LÓGICA DE FORMULÁRIOS (ATUALIZADA - Tarefas 1 e 4) ---
     function iniciarListenersFormularios() {
-        const radioKitExistente = document.getElementById('kit-existente');
-        const radioKitNovo = document.getElementById('kit-novo');
-        const containerSelectKit = document.getElementById('container-select-kit');
-        const containerNovoKit = document.getElementById('container-novo-kit');
-        if (radioKitNovo) {
-            radioKitNovo.disabled = true;
-            radioKitNovo.parentElement.classList.add('text-muted');
-        }
-        if (radioKitExistente) radioKitExistente.checked = true;
-        if (containerSelectKit) containerSelectKit.style.display = 'block';
-        if (containerNovoKit) containerNovoKit.style.display = 'none';
 
+        // (Tarefas 1 e 4) - Listener do dropdown de kit (para preencher o seletor)
+        const kitSelect = document.getElementById('select-kit-existente');
+        if (kitSelect) {
+            kitSelect.addEventListener('change', (e) => {
+                const kitId = e.target.value;
+                if (!kitId) {
+                    agendamentoSelector.loadFromKit([]); // Limpa a lista
+                    return;
+                }
+                const kit = appState.kits.find(k => k.id == kitId);
+                if (kit) {
+                    agendamentoSelector.loadFromKit(kit.materiais); // Carrega os itens do kit
+                }
+            });
+        }
+
+        // (Tarefas 1 e 4) - ATUALIZADO: Submit do Novo Agendamento
         const formNovoAgendamento = document.getElementById('formNovoAgendamento');
         if (formNovoAgendamento) {
             formNovoAgendamento.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const fk_kit = document.getElementById('select-kit-existente').value;
+                
+                // Pega os itens do seletor
+                const materiais_selecionados = agendamentoSelector.getSelectedItems(); 
+                if (materiais_selecionados.length === 0) {
+                     showAlert('Por favor, selecione pelo menos um material.', 'Erro', 'error');
+                    return;
+                }
+                
                 const data = document.getElementById('data').value;
                 const inicio = document.getElementById('horario-inicio').value;
                 const fim = document.getElementById('horario-fim').value;
                 const laboratorioRadio = document.querySelector('input[name="laboratorio"]:checked');
+                
                 if (!laboratorioRadio) {
                     showAlert('Por favor, selecione um laboratório.', 'Erro', 'error');
                     return;
                 }
+                
                 const agendamento = {
                     data_hora_inicio: `${data}T${inicio}:00`,
                     data_hora_fim: `${data}T${fim}:00`,
                     fk_laboratorio: laboratorioRadio.value,
                     observacoes: document.getElementById('observacoes').value,
-                    fk_kit: fk_kit || null,
+                    // Envia a lista de materiais em vez de um fk_kit
+                    materiais_selecionados: materiais_selecionados, 
                 };
+
                 try {
-                    // Chama o serviço global
                     await window.apiService.createAgendamento(agendamento);
                     showAlert('Agendamento criado com sucesso! Aguardando confirmação.', 'Sucesso', 'success');
                     location.reload(); 
@@ -335,15 +589,23 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
+        // (Tarefas 1 e 4) - ATUALIZADO: Submit do Novo Kit
         const formNovoKit = document.getElementById("formNovoKit");
         if (formNovoKit) formNovoKit.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const materiais_kit = novoKitSelector.getSelectedItems();
+            if (materiais_kit.length === 0) {
+                 showAlert('Por favor, adicione pelo menos um material ao kit.', 'Erro', 'error');
+                 return;
+            }
+            
             const novoKit = {
                 nome_kit: document.getElementById('kit-nome').value,
-                descricao_kit: document.getElementById('kit-descricao').value
+                materiais_kit: materiais_kit // Envia a lista de materiais
             };
+            
             try {
-                // Chama o serviço global
                 await window.apiService.createKit(novoKit);
                 showAlert('Kit criado com sucesso!', 'Sucesso', 'success');
                 location.reload(); 
@@ -353,16 +615,24 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
         
+        // (Tarefas 1 e 4) - ATUALIZADO: Submit do Editar Kit
         const formEditarKit = document.getElementById("formEditarKit");
         if (formEditarKit) formEditarKit.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const materiais_kit = editKitSelector.getSelectedItems();
+            if (materiais_kit.length === 0) {
+                 showAlert('Por favor, adicione pelo menos um material ao kit.', 'Erro', 'error');
+                 return;
+            }
+            
             const id = document.getElementById('edit-kit-id').value;
             const kitAtualizado = {
                 nome_kit: document.getElementById('edit-kit-nome').value,
-                descricao_kit: document.getElementById('edit-kit-descricao').value
+                materiais_kit: materiais_kit // Envia a lista de materiais
             };
+            
             try {
-                // Chama o serviço global
                 await window.apiService.updateKit(id, kitAtualizado);
                 showAlert('Kit atualizado com sucesso!', 'Sucesso', 'success');
                 location.reload();
@@ -373,7 +643,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     } 
 
-    // --- Lógica de Modais ---
+    // --- Lógica de Modais (ATUALIZADA - Tarefas 1 e 4) ---
     function adicionarCliqueFora(modalElement, fecharFn) {
         if (modalElement) {
             modalElement.addEventListener('click', (event) => {
@@ -387,8 +657,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const botaoAbrirModalKit = document.getElementById("abrirModalKitBtn");
     const botaoFecharModalKit = document.getElementById("fecharModalKitBtn");
     const botaoCancelarModalKit = document.getElementById("cancelarModalKitBtn");
-    const formNovoKitRef = document.getElementById("formNovoKit"); // Renomeado para evitar conflito de escopo
-    function abrirModalKit() { if (modalNovoKit) modalNovoKit.classList.add("visivel"); }
+    const formNovoKitRef = document.getElementById("formNovoKit"); 
+    function abrirModalKit() { 
+        if (modalNovoKit) modalNovoKit.classList.add("visivel"); 
+        novoKitSelector.loadFromKit([]); // Limpa o seletor ao abrir
+    }
     function fecharModalKit() { if (modalNovoKit) modalNovoKit.classList.remove("visivel"); if(formNovoKitRef) formNovoKitRef.reset(); }
     if (botaoAbrirModalKit) botaoAbrirModalKit.addEventListener("click", abrirModalKit);
     if (botaoFecharModalKit) botaoFecharModalKit.addEventListener("click", fecharModalKit);
@@ -405,7 +678,7 @@ document.addEventListener("DOMContentLoaded", function () {
     function abrirModalVerDetalhes(id) {
         const aula = appState.agendamentos.find(a => a.id_agendamento == id);
         if (!aula) return;
-        document.getElementById('detalhe-titulo').innerText = aula.observacoes || 'Aula experimental';
+        document.getElementById('detalhe-titulo-val').innerText = aula.observacoes || 'Aula experimental'; // ID corrigido
         document.getElementById('detalhe-status').innerHTML = `<span class="status-texto status-${aula.status_agendamento}">${aula.status_agendamento}</span>`;
         document.getElementById('detalhe-turma').innerText = 'N/A';
         document.getElementById('detalhe-alunos').innerText = 'N/A';
@@ -415,6 +688,7 @@ document.addEventListener("DOMContentLoaded", function () {
         document.getElementById('detalhe-obs').innerText = aula.observacoes || 'Nenhuma.';
         if (modalVerDetalhes) modalVerDetalhes.classList.add("visivel");
     }
+    
     const modalEditarAula = document.getElementById("modalEditarAula");
     const btnFecharModalEditarAula = document.getElementById("fecharModalEditarAulaBtn");
     const btnCancelarModalEditarAula = document.getElementById("cancelarModalEditarAulaBtn");
@@ -422,6 +696,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnFecharModalEditarAula) btnFecharModalEditarAula.addEventListener("click", fecharModalEditarAula);
     if (btnCancelarModalEditarAula) btnCancelarModalEditarAula.addEventListener("click", fecharModalEditarAula);
     adicionarCliqueFora(modalEditarAula, fecharModalEditarAula);
+
     const modalVerKit = document.getElementById("modalVerKit");
     const btnFecharModalVerKit = document.getElementById("fecharModalVerKitBtn");
     const btnFecharModalKitFooter = document.getElementById("fecharModalVerKitBtn_footer");
@@ -429,28 +704,42 @@ document.addEventListener("DOMContentLoaded", function () {
     if (btnFecharModalVerKit) btnFecharModalVerKit.addEventListener("click", fecharModalVerKit);
     if (btnFecharModalKitFooter) btnFecharModalKitFooter.addEventListener("click", fecharModalVerKit);
     adicionarCliqueFora(modalVerKit, fecharModalVerKit);
+    
+    // ATUALIZADO (Tarefas 1 e 4): Renderiza a lista de materiais
     function abrirModalVerKit(id) {
         const kit = appState.kits.find(k => k.id == id);
         if (!kit) return;
         document.getElementById('detalhe-kit-titulo').innerText = kit.nome_kit;
-        document.getElementById('detalhe-kit-itens').innerText = kit.descricao_kit;
+        
+        // Renderiza a lista de itens
+        const descricaoItens = kit.materiais && kit.materiais.length > 0
+            ? kit.materiais.map(m => `- ${m.quantidade_no_kit}${m.unidade || ''} de ${m.nome} (${m.formato})`).join('\n')
+            : 'Kit vazio.';
+        document.getElementById('detalhe-kit-itens').innerText = descricaoItens;
+        
         document.getElementById('detalhe-kit-uso').innerText = 'Em desenvolvimento.';
         if (modalVerKit) modalVerKit.classList.add("visivel");
     }
+
     const modalEditarKit = document.getElementById("modalEditarKit");
     const btnFecharModalEditarKit = document.getElementById("fecharModalEditarKitBtn");
     const btnCancelarModalEditarKit = document.getElementById("cancelarModalEditarKitBtn");
-    const formEditarKitRef = document.getElementById("formEditarKit"); // Renomeado
+    const formEditarKitRef = document.getElementById("formEditarKit");
     function fecharModalEditarKit() { if (modalEditarKit) modalEditarKit.classList.remove("visivel"); if(formEditarKitRef) formEditarKitRef.reset(); }
     if (btnFecharModalEditarKit) btnFecharModalEditarKit.addEventListener("click", fecharModalEditarKit);
     if (btnCancelarModalEditarKit) btnCancelarModalEditarKit.addEventListener("click", fecharModalEditarKit);
     adicionarCliqueFora(modalEditarKit, fecharModalEditarKit);
+    
+    // ATUALIZADO (Tarefas 1 e 4): Carrega os itens do kit no seletor
     function abrirModalEditarKit(id) {
         const kit = appState.kits.find(k => k.id == id);
         if (!kit) return;
         document.getElementById('edit-kit-id').value = kit.id;
         document.getElementById('edit-kit-nome').value = kit.nome_kit;
-        document.getElementById('edit-kit-descricao').value = kit.descricao_kit;
+        
+        // Carrega os itens do kit no seletor
+        editKitSelector.loadFromKit(kit.materiais);
+        
         if (modalEditarKit) modalEditarKit.classList.add("visivel");
     }
 
@@ -458,28 +747,21 @@ document.addEventListener("DOMContentLoaded", function () {
     function configurarBotaoUltimoAgendamento() {
         const botaoUltimoAgendamento = document.getElementById('acao-ultimo-agendamento');
         if (!botaoUltimoAgendamento) return;
-
-        // Encontra o agendamento mais recente no passado
         const agora = new Date();
         const agendamentosPassados = appState.agendamentos
             .filter(a => new Date(a.data_hora_inicio) <= agora)
             .sort((a, b) => new Date(b.data_hora_inicio) - new Date(a.data_hora_inicio));
-
         const ultimoAgendamento = agendamentosPassados[0];
-
         if (ultimoAgendamento) {
             botaoUltimoAgendamento.addEventListener('click', (e) => {
                 e.preventDefault();
                 abrirModalUltimoAgendamento(ultimoAgendamento);
             });
         } else {
-            // Se não houver histórico, o botão vira "Novo Agendamento"
             const titulo = botaoUltimoAgendamento.querySelector('.titulo');
             const subtitulo = botaoUltimoAgendamento.querySelector('.subtitulo');
             if (titulo) titulo.textContent = 'Novo Agendamento';
             if (subtitulo) subtitulo.textContent = 'Clique para criar seu primeiro agendamento';
-            
-            // Leva para a aba de novo agendamento
             botaoUltimoAgendamento.addEventListener('click', (e) => {
                 e.preventDefault();
                 document.querySelector('.nav-link[data-target="novo-agendamento"]').click();
@@ -490,24 +772,20 @@ document.addEventListener("DOMContentLoaded", function () {
     const modalUltimoAgendamento = document.getElementById("modalUltimoAgendamento");
     const btnFecharModalUltimoAgendamento = document.getElementById("fecharModalUltimoAgendamentoBtn");
     const btnFecharModalUltimoFooter = document.getElementById("fecharModalUltimoAgendamentoBtn_footer");
-
     function fecharModalUltimoAgendamento() {
         if (modalUltimoAgendamento) modalUltimoAgendamento.classList.remove("visivel");
     }
-
     if (btnFecharModalUltimoAgendamento) btnFecharModalUltimoAgendamento.addEventListener("click", fecharModalUltimoAgendamento);
     if (btnFecharModalUltimoFooter) btnFecharModalUltimoFooter.addEventListener("click", fecharModalUltimoAgendamento);
     adicionarCliqueFora(modalUltimoAgendamento, fecharModalUltimoAgendamento);
 
     function abrirModalUltimoAgendamento(aula) {
         if (!aula) return;
-        // Popula os campos do novo modal
         document.getElementById('ultimo-agendamento-titulo').innerText = aula.observacoes || 'Aula experimental';
         document.getElementById('ultimo-agendamento-lab').innerText = aula.nome_laboratorio || 'N/A';
         document.getElementById('ultimo-agendamento-data').innerText = `${formatarData(aula.data_hora_inicio)} ${formatarHorario(aula.data_hora_inicio)}-${formatarHorario(aula.data_hora_fim)}`;
         document.getElementById('ultimo-agendamento-kit').innerText = aula.nome_kit || 'Nenhum';
         document.getElementById('ultimo-agendamento-obs').innerText = aula.observacoes || 'Nenhuma.';
-        
         if (modalUltimoAgendamento) modalUltimoAgendamento.classList.add("visivel");
     }
 
@@ -523,7 +801,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             if (target.classList.contains('btn-cancelar-aula')) {
                 try {
-                    // Chama o serviço global
                     await window.apiService.cancelarAgendamentoProfessor(id);
                     showAlert('Agendamento cancelado.', 'Aviso', 'warning');
                     location.reload();
@@ -546,7 +823,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
             if (target.classList.contains('btn-excluir-kit')) {
                  try {
-                    // Chama o serviço global
                     await window.apiService.deleteKit(id);
                     showAlert('Kit excluído com sucesso.', 'Sucesso', 'success');
                     location.reload();
@@ -584,7 +860,6 @@ document.addEventListener("DOMContentLoaded", function () {
         if (toastIconContainer) {
             toastIconContainer.className = `bi ${iconClass} me-2`;
         }
-        // Garante que o nó de texto do título exista para ser atualizado
         if (toastTitle.childNodes[1]) {
             toastTitle.childNodes[1].nodeValue = ` ${title}`;
         } else {

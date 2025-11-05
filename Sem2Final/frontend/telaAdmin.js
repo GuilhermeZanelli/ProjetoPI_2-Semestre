@@ -6,9 +6,9 @@ document.addEventListener('DOMContentLoaded', function () {
         userName: "Admin",
         userType: "admin",
         token: null,
-        agendamentos: [],
-        usuarios: [],
-        materiais: []
+        materiais: [],
+        // (Tarefa 1) Adicionado estado para o filtro
+        filtroEstoque: ''
     };
 
     // --- Toast Global ---
@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function () {
     const globalToast = globalToastEl ? new bootstrap.Toast(globalToastEl) : null;
 
     // --- CAMADA DE SERVIÇO (Lógica de API) ---
-    // Removida! Agora usamos window.apiService do arquivo apiService.js
     if (!window.apiService) {
         console.error("apiService.js não foi carregado corretamente.");
         showAlert("Erro crítico ao carregar a página. Recarregue.", "Erro", "error");
@@ -24,39 +23,36 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- INICIALIZAÇÃO ---
-    // A função checkLogin agora retorna true se o usuário estiver OK, e false caso contrário.
     if (checkLogin()) {
-        // Apenas continue a carregar a página se o login for válido.
         iniciarCarregamentoDados();
         iniciarListeners();
     }
 
-    // Esta função agora retorna um booleano para controlar o fluxo de execução
     function checkLogin() {
         appState.userId = localStorage.getItem('userId');
-        appState.userName = localStorage.getItem('userName');
+            renderEstoque(); // Renderiza a lista inicial
+            renderUsuarios();
+            renderEstoque();
+
         appState.userType = localStorage.getItem('userType');
         appState.token = localStorage.getItem('token');
 
         if (!appState.userId || !appState.userType || appState.userType !== 'admin' || !appState.token) {
             console.warn("Acesso não autorizado ou token inválido. Redirecionando para login.");
-            // Limpa o storage e redireciona
             localStorage.clear();
             window.location.href = 'telaLogin.html';
-            return false; // Importante: retorna false para parar a execução
+            return false; 
         }
 
-        // Se o usuário for válido, preenche os dados e continua
         document.getElementById('nome-usuario').innerText = appState.userName;
         document.getElementById('tipo-usuario').innerText = appState.userType;
-        return true; // Importante: retorna true se o login for válido
+        return true; 
     }
 
 
     // --- CARREGAMENTO DE DADOS (usando window.apiService) ---
     async function iniciarCarregamentoDados() {
         try {
-            // Chama o serviço global
             const [agendamentos, usuarios, materiais] = await Promise.all([
                 window.apiService.getAgendamentosAdmin(),
                 window.apiService.getUsuarios(),
@@ -65,13 +61,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             appState.agendamentos = agendamentos;
             appState.usuarios = usuarios;
-            appState.materiais = materiais;
+            appState.materiais = materiais; // Guarda a lista completa
 
             // Renderizar tudo
             renderDashboard();
             renderAgendamentos();
             renderUsuarios();
-            renderEstoque();
+            renderEstoque(); // Renderiza o estoque (agora filtrável)
 
         } catch (error) {
             console.error("Erro ao carregar dados:", error);
@@ -94,6 +90,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('card-usuarios').innerText = usuarios.length;
         document.getElementById('card-estoque').innerText = materiais.length;
     }
+    
     function renderAgendamentos() {
         const tbody = document.getElementById('lista-agendamentos-tbody');
         if (appState.agendamentos.length === 0) {
@@ -122,6 +119,7 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }).join('');
     }
+    
     function renderUsuarios() {
         const tbody = document.getElementById('lista-usuarios-tbody');
         if (appState.usuarios.length === 0) {
@@ -141,17 +139,37 @@ document.addEventListener('DOMContentLoaded', function () {
             </tr>
         `).join('');
     }
+
+    // ATUALIZADO (Tarefa 1): Função agora filtra com base no input
     function renderEstoque() {
         const tbody = document.getElementById('lista-estoque-tbody');
-        if (appState.materiais.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum item no estoque.</td></tr>`;
+        
+        // (Tarefa 1) Pega o valor do filtro
+        const filtroInput = document.getElementById('filtroEstoque');
+        const filtroTexto = filtroInput ? filtroInput.value.toLowerCase() : '';
+
+        // (Tarefa 1) Filtra a lista de materiais do estado
+        const materiaisFiltrados = appState.materiais.filter(item => {
+            return item.nome.toLowerCase().includes(filtroTexto) ||
+                   (item.descricao && item.descricao.toLowerCase().includes(filtroTexto)) ||
+                   (item.localizacao && item.localizacao.toLowerCase().includes(filtroTexto));
+        });
+
+        if (materiaisFiltrados.length === 0) {
+            if (filtroTexto) {
+                tbody.innerHTML = `<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum item encontrado para "${filtroTexto}".</td></tr>`;
+            } else {
+                tbody.innerHTML = `<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum item no estoque.</td></tr>`;
+            }
             return;
         }
-        tbody.innerHTML = appState.materiais.map(item => `
+        
+        // Renderiza apenas os itens filtrados
+        tbody.innerHTML = materiaisFiltrados.map(item => `
             <tr data-id="${item.id}">
                 <td data-label="Item">${item.nome}</td>
                 <td data-label="Descrição">${item.descricao || 'N/A'}</td>
-                <td data-label="Tipo">${item.tipo_material}</td>
+                <td data-label="Tipo">${item.tipo_material} (${item.classificacao})</td>
                 <td data-label="Quantidade" class="text-center mobile-center">${item.quantidade} ${item.unidade}</td>
                 <td data-label="Localização">${item.localizacao || 'N/A'}</td>
             </tr>
@@ -251,6 +269,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (userForm) {
             userForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
+
+                // ADICIONADO: Feedback de carregamento no botão
+                const submitButton = userForm.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...';
+
                 const novoUsuario = {
                     nome: document.getElementById('nome').value,
                     email: document.getElementById('email').value,
@@ -261,10 +286,19 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Chama o serviço global
                     const data = await window.apiService.createUsuario(novoUsuario);
                     showAlert(`Usuário "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
-                    location.reload(); 
+                    
+                    // CORRIGIDO: Atraso de 1.5s para o usuário ler o toast
+                    setTimeout(() => {
+                        location.reload(); 
+                    }, 1500);
+
                 } catch (error) {
                     console.error("Erro ao cadastrar usuário:", error);
                     showAlert(error.message, "Erro", "error");
+                    
+                    // ADICIONADO: Restaura o botão em caso de erro
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
                 }
             });
         }
@@ -275,25 +309,30 @@ document.addEventListener('DOMContentLoaded', function () {
         const fecharEstoqueModalBtn = document.getElementById('fecharModalEstoqueBtn');
         const cancelarEstoqueModalBtn = document.getElementById('cancelarModalEstoqueBtn');
         const estoqueForm = document.getElementById('formEstoque');
-        const abrirEstoqueModal = () => { if (estoqueModal) estoqueModal.classList.add('visivel'); }
-        const fecharEstoqueModal = () => { if (estoqueModal) estoqueModal.classList.remove('visivel'); estoqueForm.reset(); atualizarInputValor('unidade'); }
-        if (abrirEstoqueModalBtn) abrirEstoqueModalBtn.addEventListener('click', abrirEstoqueModal);
-        if (fecharEstoqueModalBtn) fecharEstoqueModalBtn.addEventListener('click', fecharEstoqueModal);
+        // (Tarefa 1) Pega o valor do filtro
+        const filtroInput = document.getElementById('filtroEstoque');
+
+        // (Tarefa 1) Filtra a lista de materiais do estado
         if (cancelarEstoqueModalBtn) cancelarEstoqueModalBtn.addEventListener('click', fecharEstoqueModal);
         adicionarCliqueFora(estoqueModal, fecharEstoqueModal);
 
+        // ATUALIZADO (Etapa 1 / Tarefa 2): Formulário de estoque
         if (estoqueForm) {
             estoqueForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
+                
+                // Captura os dados dos novos campos
                 const novoItem = {
                     nome: document.getElementById('itemNome').value,
                     descricao: document.getElementById('itemDesc').value,
                     localizacao: document.getElementById('itemLocal').value,
-                    tipoUnidade: document.getElementById('itemTipoUnidade').value, 
-                    valor: parseFloat(document.getElementById('itemValor').value)
+                    tipo_material: document.getElementById('itemTipoMaterial').value, 
+                    classificacao: document.getElementById('itemClassificacao').value,
+                    quantidade: parseFloat(document.getElementById('itemQuantidade').value),
+                    unidade: document.getElementById('itemUnidade').value
                 };
+                
                 try {
-                    // Chama o serviço global
                     const data = await window.apiService.createMaterial(novoItem);
                     showAlert(`Item "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
                     location.reload(); 
@@ -304,12 +343,40 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        const tipoUnidadeSelect = document.getElementById('itemTipoUnidade');
-        if (tipoUnidadeSelect) {
-            tipoUnidadeSelect.addEventListener('change', (e) => {
-                atualizarInputValor(e.target.value);
+        // REMOVIDO: Listener do 'itemTipoUnidade'
+        
+        // (Tarefa 1) Listener para o filtro
+        if (filtroInput) {
+            filtroInput.addEventListener('input', (e) => {
+                appState.filtroEstoque = e.target.value; // Atualiza o estado
+                renderEstoque(); // Re-renderiza a lista
             });
         }
+
+        // (Tarefa 3) Listener para o botão Desfazer
+        const btnDesfazer = document.getElementById('btnDesfazerEstoque');
+        if (btnDesfazer) {
+            btnDesfazer.addEventListener('click', async () => {
+                // TODO: Adicionar um modal de confirmação "Tem certeza?"
+                try {
+                    btnDesfazer.disabled = true;
+                    btnDesfazer.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Desfazendo...';
+                    
+                    await window.apiService.undoEstoqueChange();
+                    
+                    showAlert('Última alteração de estoque desfeita com sucesso!', 'Sucesso', 'success');
+                    // Recarrega a página para ver a mudança
+                    setTimeout(() => location.reload(), 1500); 
+                    
+                } catch (error) {
+                    console.error("Erro ao desfazer:", error);
+                    showAlert(error.message, "Erro", "error");
+                    btnDesfazer.disabled = false;
+                    btnDesfazer.innerHTML = '<i class="bi bi-arrow-counterclockwise me-2"></i>Desfazer';
+                }
+            });
+        }
+
 
         // --- Ações Dinâmicas (Delegação de Eventos) ---
         document.getElementById('lista-agendamentos-tbody').addEventListener('click', async (e) => {
@@ -318,7 +385,7 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!id) return;
             if (target.classList.contains('btn-confirmar-agendamento')) {
                 try {
-                    // Chama o serviço global
+                    // (Tarefa 4) - Na tela de admin, a confirmação é direta, sem pesos.
                     await window.apiService.updateStatusAgendamento(id, 'confirmado');
                     showAlert('Agendamento confirmado!', 'Sucesso', 'success');
                     location.reload();
@@ -328,7 +395,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             if (target.classList.contains('btn-cancelar-agendamento')) {
                  try {
-                    // Chama o serviço global
                     await window.apiService.updateStatusAgendamento(id, 'cancelado');
                     showAlert('Agendamento cancelado.', 'Aviso', 'warning');
                     location.reload();
@@ -343,14 +409,29 @@ document.addEventListener('DOMContentLoaded', function () {
             const id = target.dataset.id;
             if (!id || !target.classList.contains('btn-remover-usuario')) return;
 
+            // ADICIONADO: Feedback de carregamento
+            const originalButtonText = target.innerHTML;
+            target.disabled = true;
+            target.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>';
+
+
             // TODO: Adicionar modal de confirmação "Tem certeza?"
             try {
                 // Chama o serviço global
                 await window.apiService.deleteUsuario(id);
                 showAlert('Usuário removido com sucesso.', 'Sucesso', 'success');
-                location.reload();
+
+                // CORRIGIDO: Atraso de 1.5s para o usuário ler o toast
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+                
             } catch (error) {
                 showAlert(error.message, 'Erro ao remover', 'error');
+
+                // ADICIONADO: Restaura o botão em caso de erro
+                target.disabled = false;
+                target.innerHTML = originalButtonText;
             }
         });
     }
@@ -365,33 +446,9 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     }
-    function atualizarInputValor(tipo) {
-        const containerValor = document.getElementById('containerValorEstoque');
-        if (!containerValor) return;
-        const valorLabel = containerValor.querySelector('label');
-        const valorInput = containerValor.querySelector('input');
-        if (!valorLabel || !valorInput) return;
-        switch (tipo) {
-            case 'unidade':
-                valorLabel.textContent = 'Quantidade (UN)';
-                valorInput.step = '1';
-                valorInput.min = '1';
-                valorInput.placeholder = 'Ex: 10';
-                break;
-            case 'peso':
-                valorLabel.textContent = 'Peso (g)';
-                valorInput.step = '0.01';
-                valorInput.min = '0.01';
-                valorInput.placeholder = 'Ex: 500.5';
-                break;
-            case 'litros':
-                valorLabel.textContent = 'Volume (ml)';
-                valorInput.step = '0.1';
-                valorInput.min = '0.1';
-                valorInput.placeholder = 'Ex: 250.5';
-                break;
-        }
-    }
+
+    // REMOVIDO: Função atualizarInputValor(tipo) não é mais necessária
+
     function showAlert(message, title = "Notificação", type = "info") {
         if (!globalToast) {
             console.log(`[Alerta: ${title}] ${message}`);
@@ -427,6 +484,7 @@ document.addEventListener('DOMContentLoaded', function () {
         toastBody.innerText = message;
         globalToast.show();
     }
+    
     function getStatusInfo(status) {
         switch (status) {
             case 'confirmado':
@@ -441,6 +499,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return { statusClasse: 'bg-light text-dark', statusTexto: '?' };
         }
     }
+    
     function formatarData(dataString) {
         if (!dataString) return 'N/A';
         try {
@@ -453,6 +512,7 @@ document.addEventListener('DOMContentLoaded', function () {
             return dataString.split('T')[0];
         }
     }
+    
     function formatarHorario(dataString) {
         if (!dataString) return 'N/A';
         try {

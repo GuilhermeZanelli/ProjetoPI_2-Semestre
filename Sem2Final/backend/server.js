@@ -12,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // --- Middleware de Autenticação ---
+// ADICIONADO DE VOLTA: Definido aqui para evitar conflito de importação
 const autenticarToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1]; // Formato "Bearer TOKEN"
@@ -33,7 +34,6 @@ const autenticarToken = (req, res, next) => {
 
 // --- ROTAS PÚBLICAS (Login / Recuperação de Senha) ---
 
-// [LOGIN]
 app.post('/api/login', async (req, res) => {
   const { email, password, tipo_usuario } = req.body;
 
@@ -42,6 +42,9 @@ app.post('/api/login', async (req, res) => {
   }
 
   try {
+    // ATENÇÃO: Armazenar senhas em texto puro (como 'adm123') é inseguro.
+    // Esta query SÓ FUNCIONA porque o script SQL usa senhas em texto puro.
+    // Em produção, use 'bcrypt.compare()' e armazene hashes.
     const [rows] = await pool.query(
       'SELECT * FROM usuarios WHERE email = ? AND senha_hash = ? AND tipo_usuario = ?',
       [email, password, tipo_usuario]
@@ -70,8 +73,8 @@ app.post('/api/login', async (req, res) => {
         success: true, 
         redirectTo: redirectTo, 
         token: token, 
-        userId: user.id_usuario, // ADICIONADO: Envia o ID do usuário
-        userName: user.nome, // ADICIONADO: Envia o Nome
+        userId: user.id_usuario,
+        userName: user.nome,
         userType: user.tipo_usuario
       });
 
@@ -84,7 +87,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// [ESQUECEU SENHA] - Passo 1: Verificar E-mail
 app.post('/api/recuperar-senha', async (req, res) => {
   const { email } = req.body;
   if (!email) {
@@ -96,6 +98,7 @@ app.post('/api/recuperar-senha', async (req, res) => {
       [email]
     );
     if (rows.length > 0) {
+      // Em um app real, aqui você enviaria um e-mail com um token de reset
       res.json({ success: true, message: 'E-mail encontrado.' });
     } else {
       res.status(404).json({ error: 'E-mail não cadastrado no sistema.' });
@@ -106,13 +109,13 @@ app.post('/api/recuperar-senha', async (req, res) => {
   }
 });
 
-// [ESQUECEU SENHA] - Passo 2: Definir Nova Senha
 app.post('/api/nova-senha', async (req, res) => {
   const { email, novaSenha } = req.body;
   if (!email || !novaSenha) {
     return res.status(400).json({ error: 'E-mail e nova senha são obrigatórios.' });
   }
   try {
+    // ATENÇÃO: Armazenando senha em texto puro.
     const [result] = await pool.query(
       'UPDATE usuarios SET senha_hash = ? WHERE email = ?',
       [novaSenha, email]
@@ -128,8 +131,6 @@ app.post('/api/nova-senha', async (req, res) => {
   }
 });
 
-// [LABORATORIOS] - Rota pública para carregar labs nos formulários
-// ATUALIZADO: Protegida, pois só usuários logados precisam dela.
 app.get('/api/laboratorios', autenticarToken, async (req, res) => {
   try {
     const [rows] = await pool.query('SELECT *, id_laboratorio as id FROM laboratorios ORDER BY nome_laboratorio');
@@ -143,14 +144,74 @@ app.get('/api/laboratorios', autenticarToken, async (req, res) => {
 
 // --- ROTAS PROTEGIDAS (Exigem autenticação) ---
 
+/**
+ * (BUG FIX) Helper para buscar materiais de agendamentos.
+ * Busca tanto de 'agendamento_materiais' (ad-hoc) quanto de 'kit_materiais' (via fk_kit).
+ */
+async function getMateriaisAgendamento(connection, agendamentoId, kitId) {
+  let materiais = [];
+
+  // 1. Busca materiais ad-hoc (Tabela agendamento_materiais)
+  const [materiaisAdHoc] = await connection.query(
+    `SELECT 
+       m.nome, m.tipo_material, m.id_material,
+       am.quantidade_solicitada, m.unidade, 
+       am.formato, am.id_agendamento_material,
+       am.peso_preparo_g
+     FROM agendamento_materiais am
+     JOIN materiais m ON am.fk_material = m.id_material
+     WHERE am.fk_agendamento = ?`,
+    [agendamentoId]
+  );
+  
+  materiais = materiaisAdHoc.map(m => ({
+    ...m,
+    quantidade: m.quantidade_solicitada // Padroniza o nome da coluna de quantidade
+  }));
+
+
+  // 2. Busca materiais do kit (Tabela kit_materiais)
+  if (kitId) {
+    const [materiaisDoKit] = await connection.query(
+      `SELECT 
+         m.nome, m.tipo_material, m.id_material,
+         km.quantidade_no_kit, m.unidade, 
+         km.formato
+       FROM kit_materiais km
+       JOIN materiais m ON km.fk_material = m.id_material
+       WHERE km.fk_kit = ?`,
+      [kitId]
+    );
+    
+    // Adiciona os materiais do kit à lista
+    materiaisDoKit.forEach(mKit => {
+      // Evita duplicatas se o mesmo item estiver no kit E ad-hoc (o ad-hoc vence)
+      if (!materiais.find(mAdHoc => mAdHoc.id_material === mKit.id_material)) {
+        materiais.push({
+          ...mKit,
+          quantidade: mKit.quantidade_no_kit, // Padroniza
+          id_agendamento_material: null, // Marca que veio do kit
+          peso_preparo_g: null
+        });
+      }
+    });
+  }
+  
+  return materiais;
+}
+
+
 // [PROFESSOR] Obter agendamentos do professor logado
+// CORRIGIDO: Esta rota agora busca os materiais de cada agendamento (Bug 2)
 app.get('/api/professor/agendamentos', autenticarToken, async (req, res) => {
   if (req.user.tipo_usuario !== 'professor') {
     return res.status(403).json({ error: 'Acesso negado.' });
   }
+  
+  let connection;
   try {
-    // CORRIGIDO: Query atualizada para o novo schema SQL (sem titulo_aula, etc.)
-    const [rows] = await pool.query(
+    connection = await pool.getConnection();
+    const [agendamentos] = await connection.query(
       `SELECT a.*, l.nome_laboratorio, k.nome_kit
        FROM agendamentos a
        LEFT JOIN laboratorios l ON a.fk_laboratorio = l.id_laboratorio
@@ -159,14 +220,27 @@ app.get('/api/professor/agendamentos', autenticarToken, async (req, res) => {
        ORDER BY a.data_hora_inicio DESC`,
       [req.user.id] // ID do usuário vem do token
     );
-    res.json(rows);
+    
+    // (Bug 2) Loop para buscar materiais de cada agendamento
+    for (const agendamento of agendamentos) {
+      agendamento.materiais = await getMateriaisAgendamento(
+        connection, 
+        agendamento.id_agendamento, 
+        agendamento.fk_kit
+      );
+    }
+    
+    res.json(agendamentos);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
 // [PROFESSOR] Criar novo agendamento
+// CORRIGIDO: Esta rota agora salva o 'formato' (Sólido/Solução) e o 'fk_kit'
 app.post('/api/professor/agendamentos', autenticarToken, async (req, res) => {
   if (req.user.tipo_usuario !== 'professor') {
     return res.status(403).json({ error: 'Acesso negado.' });
@@ -174,7 +248,9 @@ app.post('/api/professor/agendamentos', autenticarToken, async (req, res) => {
 
   const {
     data_hora_inicio, data_hora_fim,
-    fk_laboratorio, observacoes, materiais_selecionados
+    fk_laboratorio, observacoes, 
+    materiais_selecionados, // Lista de materiais [{id, quantidade, formato}]
+    fk_kit // ID do kit selecionado
   } = req.body;
 
   if (!data_hora_inicio || !data_hora_fim || !fk_laboratorio) {
@@ -185,29 +261,26 @@ app.post('/api/professor/agendamentos', autenticarToken, async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    // Validar estoque
-    if (materiais_selecionados && materiais_selecionados.length > 0) {
-      for (const material of materiais_selecionados) {
-        const [rows] = await connection.query('SELECT quantidade FROM materiais WHERE id_material = ?', [material.id_material]);
-        if (rows.length === 0 || rows[0].quantidade < material.quantidade) {
-          await connection.rollback();
-          return res.status(400).json({ error: `Estoque insuficiente para o material ID ${material.id_material}.` });
-        }
-      }
-    }
-
+    // 1. Inserir o agendamento principal
     const [result] = await connection.query(
       `INSERT INTO agendamentos 
-        (fk_usuario, data_hora_inicio, data_hora_fim, fk_laboratorio, observacoes, status_agendamento)
-       VALUES (?, ?, ?, ?, ?, 'pendente')`,
-      [req.user.id, data_hora_inicio, data_hora_fim, fk_laboratorio, observacoes]
+        (fk_usuario, data_hora_inicio, data_hora_fim, fk_laboratorio, observacoes, fk_kit, status_agendamento)
+       VALUES (?, ?, ?, ?, ?, ?, 'pendente')`,
+      [req.user.id, data_hora_inicio, data_hora_fim, fk_laboratorio, observacoes, fk_kit || null] // Salva o fk_kit
     );
     const novoAgendamentoId = result.insertId;
 
+    // 2. Inserir os materiais selecionados (se houver)
     if (materiais_selecionados && materiais_selecionados.length > 0) {
-      const materiaisValues = materiais_selecionados.map(m => [novoAgendamentoId, m.id_material, m.quantidade]);
+      
+      // CORRIGIDO: Mapeia 'm.id' e 'm.formato'
+      const materiaisValues = materiais_selecionados.map(m => 
+        [novoAgendamentoId, m.id, m.quantidade, m.formato || 'solido']
+      );
+      
+      // CORRIGIDO: Insere o 'formato' na tabela
       await connection.query(
-        'INSERT INTO agendamento_materiais (fk_agendamento, fk_material, quantidade_solicitada) VALUES ?',
+        'INSERT INTO agendamento_materiais (fk_agendamento, fk_material, quantidade_solicitada, formato) VALUES ?',
         [materiaisValues]
       );
     }
@@ -231,8 +304,60 @@ app.put('/api/professor/agendamentos/:id/cancelar', autenticarToken, async (req,
         return res.status(403).json({ error: 'Acesso negado.' });
     }
     const { id } = req.params;
+    
+    let connection;
     try {
-        // CORREÇÃO: Admin também pode cancelar, professor só pode cancelar o seu
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        // Verifica se o agendamento já estava 'confirmado' para poder devolver o estoque
+        const [agendamentos] = await connection.query('SELECT * FROM agendamentos WHERE id_agendamento = ?', [id]);
+        if (agendamentos.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: 'Agendamento não encontrado.' });
+        }
+        const agendamento = agendamentos[0];
+
+        // Se o professor (ou admin) cancela um agendamento JÁ CONFIRMADO, devolve o estoque
+        if (agendamento.status_agendamento === 'confirmado') {
+            const materiais = await getMateriaisAgendamento(
+                connection, 
+                agendamento.id_agendamento, 
+                agendamento.fk_kit
+            );
+
+            for (const material of materiais) {
+                 const [infoBase] = await connection.query('SELECT classificacao, quantidade FROM materiais WHERE id_material = ?', [material.id_material]);
+                 material.classificacao = infoBase[0].classificacao;
+                 material.estoque_atual = infoBase[0].quantidade;
+
+                 if (material.classificacao === 'consumivel') {
+                    let quantidadeADevolver = material.formato === 'solucao' ? 
+                                              material.peso_preparo_g : // Se foi ad-hoc e solução
+                                              material.quantidade; // Se foi de kit ou ad-hoc sólido
+
+                    if (material.formato === 'solucao' && !material.id_agendamento_material) {
+                        quantidadeADevolver = 0; // Não pode devolver peso de kit (limitação)
+                    }
+
+                    if (quantidadeADevolver > 0) {
+                        await connection.query('UPDATE materiais SET quantidade = quantidade + ? WHERE id_material = ?', [quantidadeADevolver, material.id_material]);
+                        
+                        await registrarLogEstoque(
+                            connection,
+                            material.id_material,
+                            material.estoque_atual,
+                            material.estoque_atual + quantidadeADevolver,
+                            quantidadeADevolver,
+                            req.user.id,
+                            agendamento.id_agendamento
+                        );
+                    }
+                }
+            }
+        }
+
+        // Agora, cancela o agendamento
         let query = 'UPDATE agendamentos SET status_agendamento = ? WHERE id_agendamento = ?';
         const params = ['cancelado', id];
 
@@ -241,31 +366,67 @@ app.put('/api/professor/agendamentos/:id/cancelar', autenticarToken, async (req,
             params.push(req.user.id);
         }
 
-        const [result] = await pool.query(query, params);
+        const [result] = await connection.query(query, params);
         
+        await connection.commit();
+
         if (result.affectedRows > 0) {
             res.json({ success: true, message: 'Agendamento cancelado.' });
         } else {
+            // Isso pode acontecer se um professor tentar cancelar o de outro
+            await connection.rollback(); // Desfaz a devolução de estoque
             res.status(404).json({ error: 'Agendamento não encontrado ou não pertence a você.' });
         }
     } catch (err) {
+        if (connection) await connection.rollback();
         console.error(err);
         res.status(500).json({ error: err.message });
+    } finally {
+        if (connection) connection.release();
     }
 });
 
 
 // [PROFESSOR] Obter kits (Professor e Admin podem ver)
+// CORRIGIDO: Esta rota agora busca os materiais de cada kit.
 app.get('/api/professor/kits', autenticarToken, async (req, res) => {
   if (req.user.tipo_usuario !== 'professor' && req.user.tipo_usuario !== 'admin') {
     return res.status(403).json({ error: 'Acesso negado.' });
   }
   try {
-    // Busca todos os kits (simplificado, como no script SQL)
-    const [rows] = await pool.query(
-        `SELECT *, id_kit as id FROM kits ORDER BY nome_kit`
+    // 1. Busca todos os kits
+    const [kits] = await pool.query(
+        `SELECT id_kit as id, nome_kit FROM kits ORDER BY nome_kit`
     );
-    res.json(rows);
+
+    // 2. Busca todos os materiais de kit de uma vez
+    const [materiaisDosKits] = await pool.query(
+      `SELECT km.fk_kit, m.id_material, m.nome, km.quantidade_no_kit, km.formato, m.unidade, m.tipo_material
+       FROM kit_materiais km
+       JOIN materiais m ON km.fk_material = m.id_material`
+    );
+
+    // 3. Mapeia os materiais para seus respectivos kits
+    const kitsComMateriais = kits.map(kit => {
+      // Filtra os materiais que pertencem a este kit
+      const materiais = materiaisDosKits
+        .filter(m => m.fk_kit === kit.id)
+        .map(m => ({
+          id: m.id_material,
+          nome: m.nome,
+          quantidade: m.quantidade_no_kit,
+          formato: m.formato,
+          unidade: m.unidade,
+          tipo_material: m.tipo_material
+        }));
+      
+      return {
+        ...kit,
+        materiais: materiais // Adiciona o array de materiais ao objeto do kit
+      };
+    });
+
+    res.json(kitsComMateriais);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
@@ -277,8 +438,9 @@ app.post('/api/professor/kits', autenticarToken, async (req, res) => {
   if (req.user.tipo_usuario !== 'professor') {
     return res.status(403).json({ error: 'Acesso negado.' });
   }
-  const { nome_kit, materiais_kit } = req.body;
-  if (!nome_kit || !materiais_kit || !Array.isArray(materiais_kit) || materiais_kit.length === 0) {
+  const { nome_kit, materiais_kit } = req.body; // materiais_kit = [{id, quantidade, formato}]
+  
+  if (!nome_kit || !materiais_kit || !Array.isArray(materiais_kit)) {
     return res.status(400).json({ error: 'Nome do kit e lista de materiais são obrigatórios.' });
   }
 
@@ -289,11 +451,23 @@ app.post('/api/professor/kits', autenticarToken, async (req, res) => {
     const [result] = await connection.query('INSERT INTO kits (nome_kit) VALUES (?)', [nome_kit]);
     const novoKitId = result.insertId;
 
-    const kitMateriaisValues = materiais_kit.map(m => [novoKitId, m.id_material, m.quantidade]);
-    await connection.query('INSERT INTO kit_materiais (fk_kit, fk_material, quantidade) VALUES ?', [kitMateriaisValues]);
+    if (materiais_kit.length > 0) {
+      // CORRIGIDO: m.id (em vez de m.id_material) e m.formato
+      const kitMateriaisValues = materiais_kit.map(m => [novoKitId, m.id, m.quantidade, m.formato || 'solido']);
+      
+      // CORRIGIDO: Colunas (quantidade_no_kit, formato)
+      await connection.query(
+        'INSERT INTO kit_materiais (fk_kit, fk_material, quantidade_no_kit, formato) VALUES ?', 
+        [kitMateriaisValues]
+      );
+    }
 
     await connection.commit();
-    const [novoKit] = await pool.query('SELECT *, id_kit as id FROM kits WHERE id_kit = ?', [novoKitId]);
+    // CORRIGIDO: Retorna o kit completo (embora o frontend vá recarregar)
+    const [novoKit] = await pool.query(
+      `SELECT id_kit as id, nome_kit FROM kits WHERE id_kit = ?`, 
+      [novoKitId]
+    );
     res.status(201).json(novoKit[0]);
 
   } catch (err) {
@@ -315,8 +489,10 @@ app.put('/api/professor/kits/:id', autenticarToken, async (req, res) => {
   }
   const { id } = req.params;
   const { nome_kit, materiais_kit } = req.body;
-  if (!nome_kit || !materiais_kit || !Array.isArray(materiais_kit) || materiais_kit.length === 0) {
-    return res.status(400).json({ error: 'Nome do kit e lista de materiais são obrigatórios.' });
+  
+  // ATUALIZADO: Permite salvar um kit com 0 materiais (para esvaziar)
+  if (!nome_kit || !materiais_kit || !Array.isArray(materiais_kit)) {
+    return res.status(400).json({ error: 'Nome do kit e lista de materiais (mesmo que vazia) são obrigatórios.' });
   }
 
   const connection = await pool.getConnection();
@@ -329,10 +505,20 @@ app.put('/api/professor/kits/:id', autenticarToken, async (req, res) => {
       return res.status(404).json({ error: 'Kit não encontrado.' });
     }
 
+    // 1. Deleta os materiais antigos
     await connection.query('DELETE FROM kit_materiais WHERE fk_kit = ?', [id]);
 
-    const kitMateriaisValues = materiais_kit.map(m => [id, m.id_material, m.quantidade]);
-    await connection.query('INSERT INTO kit_materiais (fk_kit, fk_material, quantidade) VALUES ?', [kitMateriaisValues]);
+    // 2. Insere os novos materiais (se houver)
+    if (materiais_kit.length > 0) {
+      // CORRIGIDO: m.id (em vez de m.id_material) e m.formato
+      const kitMateriaisValues = materiais_kit.map(m => [id, m.id, m.quantidade, m.formato || 'solido']);
+
+      // CORRIGIDO: Colunas (quantidade_no_kit, formato)
+      await connection.query(
+        'INSERT INTO kit_materiais (fk_kit, fk_material, quantidade_no_kit, formato) VALUES ?', 
+        [kitMateriaisValues]
+      );
+    }
 
     await connection.commit();
     res.json({ success: true, message: 'Kit atualizado.' });
@@ -432,6 +618,8 @@ app.delete('/api/admin/usuarios/:id', autenticarToken, async (req, res) => {
         return res.status(400).json({ error: 'Você não pode excluir a si mesmo.'});
     }
     try {
+        // [RISCO] Esta query pode falhar se o usuário tiver agendamentos.
+        // Adicionando 'ON DELETE SET NULL' no SQL seria mais seguro.
         const [result] = await pool.query('DELETE FROM usuarios WHERE id_usuario = ?', [id]);
         if (result.affectedRows > 0) {
             res.sendStatus(204);
@@ -448,9 +636,10 @@ app.delete('/api/admin/usuarios/:id', autenticarToken, async (req, res) => {
 });
 
 
-// [ADMIN/TECNICO] Obter todos os materiais (Estoque)
+// [ADMIN/TECNICO/PROFESSOR] Obter todos os materiais (Estoque)
+// ATUALIZADO: Rota agora é acessível ao professor para o seletor
 app.get('/api/materiais', autenticarToken, async (req, res) => {
-    if (req.user.tipo_usuario !== 'admin' && req.user.tipo_usuario !== 'tecnico') {
+    if (req.user.tipo_usuario !== 'admin' && req.user.tipo_usuario !== 'tecnico' && req.user.tipo_usuario !== 'professor') {
         return res.status(403).json({ error: 'Acesso negado.' });
     }
     try {
@@ -468,49 +657,121 @@ app.post('/api/materiais', autenticarToken, async (req, res) => {
         return res.status(403).json({ error: 'Acesso negado.' });
     }
     
-    // CORRIGIDO: Campos do form do admin (tipoUnidade, valor)
-    const { nome, descricao, localizacao, tipoUnidade, valor } = req.body;
+    // (Etapa 1) - Recebe os campos corretos do banco
+    const { nome, descricao, localizacao, tipo_material, classificacao, quantidade, unidade } = req.body;
 
-    if (!nome || !tipoUnidade || !valor) {
-         return res.status(400).json({ error: 'Nome, Tipo e Valor/Quantidade são obrigatórios.'});
-    }
-
-    let tipo_material = 'consumivel';
-    let unidade = 'UN';
-
-    if (tipoUnidade === 'peso') {
-        tipo_material = 'reagente';
-        unidade = 'g';
-    } else if (tipoUnidade === 'litros') {
-        tipo_material = 'reagente';
-        unidade = 'ml';
-    } else if (tipoUnidade === 'unidade') {
-        tipo_material = 'vidraria'; // Assumindo que 'unidade' é vidraria/equipamento
-        unidade = 'UN';
+    if (!nome || !tipo_material || !classificacao || !quantidade || !unidade) {
+         return res.status(400).json({ error: 'Todos os campos (Nome, Tipo, Classificação, Qtd, Unidade) são obrigatórios.'});
     }
     
+    let connection;
     try {
-        const [result] = await pool.query(
-            `INSERT INTO materiais (nome, descricao, localizacao, tipo_material, quantidade, unidade, status) 
-             VALUES (?, ?, ?, ?, ?, ?, 'disponivel')`,
-            [nome, descricao, localizacao, tipo_material, valor, unidade]
+        connection = await pool.getConnection();
+        await connection.beginTransaction();
+
+        // (Etapa 1) - Insere os campos corretos
+        const [result] = await connection.query(
+            `INSERT INTO materiais (nome, descricao, localizacao, tipo_material, classificacao, quantidade, unidade, status) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, 'disponivel')`,
+            [nome, descricao, localizacao, tipo_material, classificacao, quantidade, unidade]
         );
-        const [novoMaterial] = await pool.query('SELECT *, id_material as id FROM materiais WHERE id_material = ?', [result.insertId]);
+        const novoMaterialId = result.insertId;
+
+        // (Tarefa 3) - Registra no Log
+        await registrarLogEstoque(
+            connection,
+            novoMaterialId,
+            0, // Qtd anterior
+            quantidade, // Qtd nova
+            quantidade, // Alteração
+            req.user.id, // ID do admin/tecnico
+            null // Sem agendamento
+        );
+
+        await connection.commit();
+        
+        const [novoMaterial] = await pool.query('SELECT *, id_material as id FROM materiais WHERE id_material = ?', [novoMaterialId]);
         res.status(201).json(novoMaterial[0]);
+
     } catch (err) {
+        if (connection) await connection.rollback();
         console.error('Erro ao criar material:', err);
         res.status(500).json({ error: err.message });
+    } finally {
+        if (connection) connection.release();
+    }
+});
+
+// [ADMIN/TECNICO] Desfazer última alteração de estoque (Tarefa 3)
+app.post('/api/estoque/undo', autenticarToken, async (req, res) => {
+    if (req.user.tipo_usuario !== 'admin' && req.user.tipo_usuario !== 'tecnico') {
+        return res.status(403).json({ error: 'Acesso negado.' });
+    }
+
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Encontra o último log
+        const [logs] = await connection.query(
+            'SELECT * FROM Log_Estoque ORDER BY id_log DESC LIMIT 1'
+        );
+
+        if (logs.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: 'Nenhuma alteração para desfazer.' });
+        }
+        
+        const ultimoLog = logs[0];
+        
+        // 2. Verifica se a quantidade no estoque ainda bate com o log
+        const [materiais] = await connection.query('SELECT quantidade FROM materiais WHERE id_material = ?', [ultimoLog.fk_material]);
+        
+        if (materiais.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: 'Material do log não existe mais.' });
+        }
+        
+        const estoqueAtual = materiais[0].quantidade;
+        
+        // Se o estoque atual não for igual ao que o log registrou, alguém mexeu
+        if (estoqueAtual != ultimoLog.quantidade_nova) {
+             await connection.rollback();
+             return res.status(409).json({ error: `Não é possível desfazer. O estoque de "${ultimoLog.fk_material}" mudou. Log: ${ultimoLog.quantidade_nova}, Atual: ${estoqueAtual}.` });
+        }
+
+        // 3. Reverte a quantidade no estoque
+        await connection.query(
+            'UPDATE materiais SET quantidade = ? WHERE id_material = ?',
+            [ultimoLog.quantidade_anterior, ultimoLog.fk_material]
+        );
+        
+        // 4. Deleta o log que acabou de ser revertido
+        await connection.query('DELETE FROM Log_Estoque WHERE id_log = ?', [ultimoLog.id_log]);
+
+        await connection.commit();
+        res.json({ success: true, message: `Alteração desfeita. Estoque do material ${ultimoLog.fk_material} revertido para ${ultimoLog.quantidade_anterior}.` });
+
+    } catch (err) {
+        if (connection) await connection.rollback();
+        console.error('Erro ao desfazer estoque:', err);
+        res.status(500).json({ error: 'Erro interno do servidor.' });
+    } finally {
+        if (connection) connection.release();
     }
 });
 
 // [ADMIN] Obter todos os agendamentos (para visão geral)
+// CORRIGIDO: Esta rota agora busca os materiais de cada agendamento (Bug 4)
 app.get('/api/admin/agendamentos', autenticarToken, async (req, res) => {
     if (req.user.tipo_usuario !== 'admin') {
         return res.status(403).json({ error: 'Acesso negado.' });
     }
+    
+    let connection;
     try {
-        // CORRIGIDO: Query atualizada para o novo schema SQL
-        const [rows] = await pool.query(
+        connection = await pool.getConnection();
+        const [agendamentos] = await connection.query(
           `SELECT 
              a.*, 
              l.nome_laboratorio, 
@@ -522,50 +783,68 @@ app.get('/api/admin/agendamentos', autenticarToken, async (req, res) => {
            LEFT JOIN usuarios u ON a.fk_usuario = u.id_usuario
            ORDER BY a.data_hora_inicio DESC`
         );
-        res.json(rows);
+        
+        // (Bug 4) Loop para buscar materiais de cada agendamento
+        for (const agendamento of agendamentos) {
+          agendamento.materiais = await getMateriaisAgendamento(
+            connection, 
+            agendamento.id_agendamento, 
+            agendamento.fk_kit
+          );
+        }
+        
+        res.json(agendamentos);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
+    } finally {
+        if (connection) connection.release();
     }
 });
 
 
 // --- ROTAS DO TÉCNICO ---
-// (Requerem autenticação E que o usuário seja 'tecnico')
+// (Requerem autenticação E que o usuário seja 'tecnico' ou 'admin')
 
 // [TECNICO] Obter agendamentos pendentes
+// CORRIGIDO: Esta rota agora busca materiais do Kit e Ad-hoc (Bug 3)
 app.get('/api/tecnico/agendamentos/pendentes', autenticarToken, async (req, res) => {
   if (req.user.tipo_usuario !== 'tecnico' && req.user.tipo_usuario !== 'admin') {
     return res.status(403).json({ error: 'Acesso negado.' });
   }
+  
+  let connection;
   try {
-    const [agendamentos] = await pool.query(
+    connection = await pool.getConnection();
+    const [agendamentos] = await connection.query(
       `SELECT 
          a.*, 
          l.nome_laboratorio, 
+         k.nome_kit,
          u.nome as nome_professor
        FROM agendamentos a
        LEFT JOIN laboratorios l ON a.fk_laboratorio = l.id_laboratorio
+       LEFT JOIN kits k ON a.fk_kit = k.id_kit
        LEFT JOIN usuarios u ON a.fk_usuario = u.id_usuario
        WHERE a.status_agendamento = 'pendente'
        ORDER BY a.data_hora_inicio ASC`
     );
 
+    // (Bug 3) Loop para buscar materiais (agora usa o helper)
     for (const agendamento of agendamentos) {
-      const [materiais] = await pool.query(
-        `SELECT m.nome, am.quantidade_solicitada, m.unidade
-         FROM agendamento_materiais am
-         JOIN materiais m ON am.fk_material = m.id_material
-         WHERE am.fk_agendamento = ?`,
-        [agendamento.id_agendamento]
+      agendamento.materiais = await getMateriaisAgendamento(
+        connection, 
+        agendamento.id_agendamento, 
+        agendamento.fk_kit
       );
-      agendamento.materiais = materiais;
     }
 
     res.json(agendamentos);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
+  } finally {
+    if (connection) connection.release();
   }
 });
 
@@ -575,7 +854,8 @@ app.put('/api/tecnico/agendamentos/:id/status', autenticarToken, async (req, res
         return res.status(403).json({ error: 'Acesso negado.' });
     }
     const { id } = req.params;
-    const { status } = req.body; // 'confirmado' ou 'cancelado'
+    // (Tarefa 4) Recebe o status E os pesos das soluções
+    const { status, pesos_solucao } = req.body; 
 
     if (!status || (status !== 'confirmado' && status !== 'cancelado')) {
         return res.status(400).json({ error: "Status inválido." });
@@ -594,33 +874,124 @@ app.put('/api/tecnico/agendamentos/:id/status', autenticarToken, async (req, res
 
         // Lógica de dedução de estoque
         if (status === 'confirmado' && agendamento.status_agendamento === 'pendente') {
-            const [materiais] = await connection.query(`
-                SELECT am.quantidade_solicitada, m.id_material, m.unidade, m.quantidade as estoque_atual
-                FROM agendamento_materiais am
-                JOIN materiais m ON am.fk_material = m.id_material
-                WHERE am.fk_agendamento = ?`, [id]);
+            
+            // (Bug 3) Puxa os materiais usando o helper
+            const materiais = await getMateriaisAgendamento(
+                connection, 
+                agendamento.id_agendamento, 
+                agendamento.fk_kit
+            );
+            
+            // Busca o estoque atual para cada material
+            for (const material of materiais) {
+                 const [estoque] = await connection.query('SELECT quantidade FROM materiais WHERE id_material = ?', [material.id_material]);
+                 material.estoque_atual = estoque[0].quantidade;
+                 // Puxa a classificação do material base
+                 const [infoBase] = await connection.query('SELECT classificacao FROM materiais WHERE id_material = ?', [material.id_material]);
+                 material.classificacao = infoBase[0].classificacao;
+            }
 
             for (const material of materiais) {
-                if (material.unidade === 'g' || material.unidade === 'ml') {
-                    if (material.estoque_atual < material.quantidade_solicitada) {
-                        await connection.rollback();
-                        return res.status(400).json({ error: `Estoque insuficiente para o material ID ${material.id_material}.` });
+                // (Tarefa 2) - SÓ deduz se for 'consumivel'
+                if (material.classificacao === 'consumivel') {
+                    
+                    let quantidadeADeduzir = material.quantidade; // 'quantidade' já está padronizada pelo helper
+                    
+                    // (Tarefa 4) - Lógica de Sólido/Solução
+                    if (material.formato === 'solucao') {
+                        // Se for solução, a 'quantidade_solicitada' é 0 (ou 1 "solução")
+                        // O que deduzimos é o 'peso' informado pelo técnico
+                        
+                        // O 'id' do pesoInfo deve ser o id do *material*, não do 'agendamento_material'
+                        // pois materiais de kit não têm 'id_agendamento_material'
+                        const pesoInfo = pesos_solucao.find(p => p.id_material == material.id_material);
+                        
+                        if (!pesoInfo || !pesoInfo.peso || pesoInfo.peso <= 0) {
+                            await connection.rollback();
+                            return res.status(400).json({ error: `Peso de preparo para "${material.nome}" (Solução) não foi informado ou é inválido.` });
+                        }
+                        
+                        quantidadeADeduzir = parseFloat(pesoInfo.peso);
+                        
+                        // Salva o peso no banco SOMENTE se for um material ad-hoc
+                        if (material.id_agendamento_material) {
+                            await connection.query(
+                                'UPDATE agendamento_materiais SET peso_preparo_g = ? WHERE id_agendamento_material = ?',
+                                [quantidadeADeduzir, material.id_agendamento_material]
+                            );
+                        }
                     }
-                    await connection.query('UPDATE materiais SET quantidade = quantidade - ? WHERE id_material = ?', [material.quantidade_solicitada, material.id_material]);
+
+                    if (material.estoque_atual < quantidadeADeduzir) {
+                        await connection.rollback();
+                        return res.status(400).json({ error: `Estoque insuficiente para "${material.nome}". Necessário: ${quantidadeADeduzir}, Disponível: ${material.estoque_atual}.` });
+                    }
+                    
+                    // Deduz do estoque
+                    await connection.query('UPDATE materiais SET quantidade = quantidade - ? WHERE id_material = ?', [quantidadeADeduzir, material.id_material]);
+                    
+                    // (Tarefa 3) - Registra no Log
+                    await registrarLogEstoque(
+                        connection,
+                        material.id_material,
+                        material.estoque_atual,
+                        material.estoque_atual - quantidadeADeduzir,
+                        -quantidadeADeduzir,
+                        req.user.id,
+                        id // ID do agendamento
+                    );
                 }
             }
         }
         // Lógica de devolução de estoque
         else if (status === 'cancelado' && agendamento.status_agendamento === 'confirmado') {
-             const [materiais] = await connection.query(`
-                SELECT am.quantidade_solicitada, m.id_material, m.unidade
-                FROM agendamento_materiais am
-                JOIN materiais m ON am.fk_material = m.id_material
-                WHERE am.fk_agendamento = ?`, [id]);
+             
+             // (Bug 3) Puxa os materiais usando o helper
+            const materiais = await getMateriaisAgendamento(
+                connection, 
+                agendamento.id_agendamento, 
+                agendamento.fk_kit
+            );
+            
+            // Busca o estoque atual para cada material
+            for (const material of materiais) {
+                 const [estoque] = await connection.query('SELECT quantidade FROM materiais WHERE id_material = ?', [material.id_material]);
+                 material.estoque_atual = estoque[0].quantidade;
+                 // Puxa a classificação do material base
+                 const [infoBase] = await connection.query('SELECT classificacao FROM materiais WHERE id_material = ?', [material.id_material]);
+                 material.classificacao = infoBase[0].classificacao;
+            }
 
             for (const material of materiais) {
-                if (material.unidade === 'g' || material.unidade === 'ml') {
-                    await connection.query('UPDATE materiais SET quantidade = quantidade + ? WHERE id_material = ?', [material.quantidade_solicitada, material.id_material]);
+                // (Tarefa 2) - SÓ devolve se for 'consumivel'
+                if (material.classificacao === 'consumivel') {
+                
+                    // (Tarefa 4) - Verifica se foi uma solução e devolve o peso
+                    let quantidadeADevolver = material.formato === 'solucao' ? 
+                                              material.peso_preparo_g : // Se foi ad-hoc e solução
+                                              material.quantidade; // Se foi de kit ou ad-hoc sólido
+
+                    // Caso especial: material de kit que foi solução (não temos o peso salvo)
+                    // Não podemos devolver o estoque, pois o 'peso_preparo_g' não foi salvo
+                    // Esta é uma limitação do schema atual (não salva peso de kit)
+                    if (material.formato === 'solucao' && !material.id_agendamento_material) {
+                        quantidadeADevolver = 0; // Não devolve
+                    }
+
+                    if (quantidadeADevolver > 0) {
+                        await connection.query('UPDATE materiais SET quantidade = quantidade + ? WHERE id_material = ?', [quantidadeADevolver, material.id_material]);
+                        
+                        // (Tarefa 3) - Registra no Log
+                        await registrarLogEstoque(
+                            connection,
+                            material.id_material,
+                            material.estoque_atual,
+                            material.estoque_atual + parseFloat(quantidadeADevolver),
+                            parseFloat(quantidadeADevolver),
+                            req.user.id,
+                            id // ID do agendamento
+                        );
+                    }
                 }
             }
         }
@@ -644,27 +1015,44 @@ app.put('/api/tecnico/agendamentos/:id/status', autenticarToken, async (req, res
 
 
 // [TECNICO/ADMIN] Obter histórico de agendamentos (Todos que não estão pendentes)
+// CORRIGIDO: Esta rota agora busca os materiais de cada agendamento (Bug 4)
 app.get('/api/agendamentos/historico', autenticarToken, async (req, res) => {
     if (req.user.tipo_usuario !== 'tecnico' && req.user.tipo_usuario !== 'admin') {
         return res.status(403).json({ error: 'Acesso negado.' });
     }
+    
+    let connection;
     try {
-        // CORRIGIDO: Query atualizada para o novo schema SQL
-        const [rows] = await pool.query(
+        connection = await pool.getConnection();
+        const [agendamentos] = await connection.query(
           `SELECT 
              a.*, 
              l.nome_laboratorio, 
+             k.nome_kit,
              u.nome as nome_professor
            FROM agendamentos a
            LEFT JOIN laboratorios l ON a.fk_laboratorio = l.id_laboratorio
+           LEFT JOIN kits k ON a.fk_kit = k.id_kit
            LEFT JOIN usuarios u ON a.fk_usuario = u.id_usuario
            WHERE a.status_agendamento != 'pendente'
            ORDER BY a.data_hora_inicio DESC`
         );
-        res.json(rows);
+        
+        // (Bug 4) Loop para buscar materiais de cada agendamento
+        for (const agendamento of agendamentos) {
+          agendamento.materiais = await getMateriaisAgendamento(
+            connection, 
+            agendamento.id_agendamento, 
+            agendamento.fk_kit
+          );
+        }
+        
+        res.json(agendamentos);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: err.message });
+    } finally {
+        if (connection) connection.release();
     }
 });
 
@@ -674,3 +1062,27 @@ app.listen(port, () => {
   console.log(`Backend rodando em http://localhost:${port}`);
 });
 
+
+/**
+ * (Tarefa 3) Helper para registrar movimentações de estoque no Log
+ */
+async function registrarLogEstoque(connection, materialId, qtdAnterior, qtdNova, alteracao, usuarioId, agendamentoId) {
+  if (alteracao === 0) {
+    return; // Não loga se nada mudou
+  }
+  
+  const logQuery = `
+    INSERT INTO Log_Estoque 
+      (fk_material, quantidade_anterior, quantidade_nova, alteracao, fk_usuario_acao, fk_agendamento_acao)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `;
+  
+  await connection.query(logQuery, [
+    materialId,
+    qtdAnterior,
+    qtdNova,
+    alteracao,
+    usuarioId,
+    agendamentoId || null
+  ]);
+}
