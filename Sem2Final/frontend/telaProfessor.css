@@ -416,6 +416,16 @@ h6,
 .status-disponivel { color: #28a745; }
 .status-ocupado { color: #fd7e14; }
 
+/* MODIFICADO: Estilo base para lista de materiais */
+.materiais-list-container {
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 5px;
+    background-color: #fff; /* Fundo padrão */
+}
+/* FIM DA MODIFICAÇÃO */
+
+
 /* Meus Kits */
 .cards-kits {
     background-color: #fff;
@@ -694,16 +704,30 @@ body.dark-mode {
 .dark-mode .laboratorios-card-conteudo {
     background: #495057;
     border-color: #6c757d;
+
 }
+
+.dark-mode .laboratorios-card-conteudo strong{
+    color: #f8f9fa;
+}
+
+.dark-mode .laboratorios-card-conteudo small{
+    color: #dee2e6;
+}
+
 .dark-mode .laboratorios-card-input:checked+.laboratorios-card-conteudo {
     border-color: #C41E3A;
 }
 .dark-mode .cards-kits {
      background-color: #343a40;
      border-color: #495057;
+     color: #adb5bd;
+
 }
 .dark-mode .cards-kits .cabecalho {
     border-bottom-color: #495057;
+    color: #adb5bd;
+
 }
 .dark-mode .cards-kits .cabecalho .quantidade,
 .dark-mode .cards-kits .data-utilizado {
@@ -714,7 +738,32 @@ body.dark-mode {
 }
 .dark-mode .cards-kits .acoes {
      background-color: #3a4148;
+    color: #adb5bd;
 }
+
+/* ADICIONADO: Modo escuro para listas de materiais */
+.dark-mode .materiais-list-container {
+    border-color: #6c757d;
+    background-color: #495057; /* Fundo do container */
+}
+
+.dark-mode .materiais-list-container .list-group-item {
+    background-color: #495057; /* Fundo do item */
+    border-color: #6c757d;
+    color: #dee2e6;
+}
+
+.dark-mode .materiais-list-container .list-group-item-action:hover,
+.dark-mode .materiais-list-container .list-group-item-action:focus {
+    background-color: #5a6268;
+    color: #ffffff;
+}
+
+.dark-mode .materiais-list-container .text-muted {
+    color: #adb5bd !important; /* Corrige placeholder */
+}
+/* FIM DA MODIFICAÇÃO */
+
 
 /* Tabela Histórico modo escuro */
 .dark-mode .table {
@@ -913,4 +962,3 @@ body.tritanopia { filter: grayscale(0.3) sepia(0.1) hue-rotate(20deg); }
 
     /* (CSS removido pois 'item-historico' não existe mais, usamos tabela) */
 }
-

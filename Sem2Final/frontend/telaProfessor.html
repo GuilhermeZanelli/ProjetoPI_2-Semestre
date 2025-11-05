@@ -254,7 +254,8 @@
                                 <div class="col-md-6">
                                     <label for="filtroMateriaisAgendamento" class="form-label">Buscar Materiais Disponíveis</label>
                                     <input type="text" id="filtroMateriaisAgendamento" class="form-control mb-2" placeholder="Buscar por nome, tipo...">
-                                    <div class="list-group" id="listaMateriaisDisponiveisAgendamento" style="max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px;">
+                                    <!-- MODIFICADO: Removido estilo inline de borda/padding -->
+                                    <div class="list-group materiais-list-container" id="listaMateriaisDisponiveisAgendamento" style="max-height: 250px; overflow-y: auto;">
                                         <!-- JS vai popular isso -->
                                         <p class="text-center text-muted small p-3">Carregando materiais...</p>
                                     </div>
@@ -262,7 +263,8 @@
                                 <!-- Coluna da Direita: Selecionados -->
                                 <div class="col-md-6">
                                     <label class="form-label">Materiais Selecionados para esta Aula</label>
-                                    <div class="list-group" id="listaMateriaisSelecionadosAgendamento" style="min-height: 250px; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px; max-height: 250px; overflow-y: auto;">
+                                    <!-- MODIFICADO: Removido estilo inline de borda/padding -->
+                                    <div class="list-group materiais-list-container" id="listaMateriaisSelecionadosAgendamento" style="min-height: 250px; max-height: 250px; overflow-y: auto;">
                                         <!-- JS vai popular isso -->
                                         <p class="text-center text-muted small p-3" id="placeholderSelecionadosAgendamento">Adicione materiais da lista à esquerda.</p>
                                     </div>
@@ -410,13 +412,15 @@
                             <div class="col-md-6">
                                 <label for="filtroMateriaisKit" class="form-label">Buscar Materiais Disponíveis</label>
                                 <input type="text" id="filtroMateriaisKit" class="form-control mb-2" placeholder="Buscar por nome, tipo...">
-                                <div class="list-group" id="listaMateriaisDisponiveisKit" style="max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px;">
+                                <!-- MODIFICADO: Removido estilo inline de borda/padding -->
+                                <div class="list-group materiais-list-container" id="listaMateriaisDisponiveisKit" style="max-height: 250px; overflow-y: auto;">
                                     <!-- JS vai popular -->
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Materiais Selecionados</label>
-                                <div class="list-group" id="listaMateriaisSelecionadosKit" style="min-height: 250px; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px; max-height: 250px; overflow-y: auto;">
+                                <!-- MODIFICADO: Removido estilo inline de borda/padding -->
+                                <div class="list-group materiais-list-container" id="listaMateriaisSelecionadosKit" style="min-height: 250px; max-height: 250px; overflow-y: auto;">
                                     <!-- JS vai popular -->
                                     <p class="text-center text-muted small p-3" id="placeholderSelecionadosKit">Adicione materiais da lista à esquerda.</p>
                                 </div>
@@ -548,13 +552,15 @@
                             <div class="col-md-6">
                                 <label for="filtroMateriaisEditKit" class="form-label">Buscar Materiais Disponíveis</label>
                                 <input type="text" id="filtroMateriaisEditKit" class="form-control mb-2" placeholder="Buscar por nome, tipo...">
-                                <div class="list-group" id="listaMateriaisDisponiveisEditKit" style="max-height: 250px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px;">
+                                <!-- MODIFICADO: Removido estilo inline de borda/padding -->
+                                <div class="list-group materiais-list-container" id="listaMateriaisDisponiveisEditKit" style="max-height: 250px; overflow-y: auto;">
                                     <!-- JS vai popular -->
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label">Materiais Selecionados</label>
-                                <div class="list-group" id="listaMateriaisSelecionadosEditKit" style="min-height: 250px; border: 1px solid #dee2e6; border-radius: 4px; padding: 5px; max-height: 250px; overflow-y: auto;">
+                                <!-- MODIFICADO: Removido estilo inline de borda/padding -->
+                                <div class="list-group materiais-list-container" id="listaMateriaisSelecionadosEditKit" style="min-height: 250px; max-height: 250px; overflow-y: auto;">
                                     <!-- JS vai popular -->
                                 </div>
                             </div>
@@ -599,7 +605,7 @@
             </div>
         </div>
     </div>
-
+    
 </body>
 
 </html>
