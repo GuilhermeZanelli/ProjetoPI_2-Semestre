@@ -70,7 +70,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 showAlert(error.message, "Erro de Conexão", "error");
             }
             document.getElementById('lista-agendamentos-tbody').innerHTML = `<tr><td colspan="6" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
-            document.getElementById('lista-estoque-tbody').innerHTML = `<tr><td colspan="5" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
+            // ATUALIZADO: Colspan
+            document.getElementById('lista-estoque-tbody').innerHTML = `<tr><td colspan="6" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
             document.getElementById('lista-historico-tbody').innerHTML = `<tr><td colspan="4" data-label="Erro" class="text-center text-danger">Erro ao carregar dados.</td></tr>`;
         }
     }
@@ -96,15 +97,13 @@ document.addEventListener("DOMContentLoaded", function () {
         `).join('');
     }
 
-    // ATUALIZADO (Tarefa 1): Função agora filtra com base no input
+    // ATUALIZADO: Adicionado botão de excluir
     function renderEstoque() {
         const tbody = document.getElementById('lista-estoque-tbody');
         
-        // (Tarefa 1) Pega o valor do filtro
         const filtroInput = document.getElementById('filtroEstoque');
         const filtroTexto = filtroInput ? filtroInput.value.toLowerCase() : '';
 
-        // (Tarefa 1) Filtra a lista de materiais do estado
         const materiaisFiltrados = appState.materiais.filter(item => {
             return item.nome.toLowerCase().includes(filtroTexto) ||
                    (item.descricao && item.descricao.toLowerCase().includes(filtroTexto)) ||
@@ -112,15 +111,16 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         if (materiaisFiltrados.length === 0) {
+             // ATUALIZADO: Colspan
              if (filtroTexto) {
-                tbody.innerHTML = `<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum item encontrado para "${filtroTexto}".</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" data-label="Aviso" class="text-center">Nenhum item encontrado para "${filtroTexto}".</td></tr>`;
             } else {
-                tbody.innerHTML = `<tr><td colspan="5" data-label="Aviso" class="text-center">Nenhum item no estoque.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" data-label="Aviso" class="text-center">Nenhum item no estoque.</td></tr>`;
             }
             return;
         }
         
-        // (Tarefa 2) Renderiza apenas os itens filtrados, mostrando tipo e classificação
+        // ATUALIZADO: Adicionado <td> de Ações com botão excluir
         tbody.innerHTML = materiaisFiltrados.map(item => `
             <tr data-id="${item.id}">
                 <td data-label="Item">${item.nome}</td>
@@ -128,6 +128,11 @@ document.addEventListener("DOMContentLoaded", function () {
                 <td data-label="Tipo">${item.tipo_material} (${item.classificacao})</td>
                 <td data-label="Quantidade" class="text-center mobile-center">${item.quantidade} ${item.unidade}</td>
                 <td data-label="Localização">${item.localizacao || 'N/A'}</td>
+                <td data-label="Ações" class="text-center acoes-cell">
+                    <button class="btn btn-sm btn-outline-danger btn-excluir-item" data-id="${item.id}" title="Excluir item">
+                        <i class="bi bi-trash-fill"></i>
+                    </button>
+                </td>
             </tr>
         `).join('');
     }
@@ -206,9 +211,12 @@ document.addEventListener("DOMContentLoaded", function () {
         colorModeLinks.forEach(link => {
             link.addEventListener('click', (e) => { e.preventDefault(); const mode = link.getAttribute('data-mode'); body.classList.remove('protanopia', 'deuteranopia', 'tritanopia'); if (mode !== 'normal') body.classList.add(mode); });
         });
+        
+        // ADICIONADO DE VOLTA: Centralizando a inicialização do VLibras aqui.
         if (window.VLibras) {
             new window.VLibras.Widget('https://vlibras.gov.br/app');
         }
+        
 
         // --- Modal Saída ---
         const modalConfirmarSaida = document.getElementById("modalConfirmarSaida");
@@ -246,7 +254,6 @@ document.addEventListener("DOMContentLoaded", function () {
             formItem.addEventListener("submit", async function (e) {
                 e.preventDefault();
                 
-                // (Etapa 1 / Tarefa 2) Captura os dados dos novos campos
                 const novoItem = {
                     nome: document.getElementById("itemNome").value,
                     descricao: document.getElementById("itemDesc").value,
@@ -260,15 +267,13 @@ document.addEventListener("DOMContentLoaded", function () {
                 try {
                     const data = await window.apiService.createMaterial(novoItem);
                     showAlert(`Item "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
-                    location.reload();
+                    location.reload(); // Recarrega para pegar o item novo e o log
                 } catch (error) {
                     console.error("Erro ao cadastrar item:", error);
                     showAlert(error.message, "Erro", "error");
                 }
             });
         }
-        
-        // REMOVIDO: Listener do 'itemTipoUnidade'
 
         // --- Modal Analisar Agendamento (ATUALIZADO - Tarefa 4) ---
         const analisarModal = document.getElementById("analisarModal");
@@ -279,25 +284,20 @@ document.addEventListener("DOMContentLoaded", function () {
         if (btnFecharAnalisar) btnFecharAnalisar.addEventListener("click", fecharModalAnalisar);
         adicionarCliqueFora(analisarModal, fecharModalAnalisar);
         
-        // (Tarefa 4) Listeners atualizados para chamar handleAnalise
         if (btnConfirmarAnalise) btnConfirmarAnalise.addEventListener('click', () => handleAnalise(btnConfirmarAnalise.dataset.id, 'confirmado'));
         if (btnCancelarAnalise) btnCancelarAnalise.addEventListener('click', () => handleAnalise(btnCancelarAnalise.dataset.id, 'cancelado'));
         
-        // (Tarefa 4) NOVA Função handleAnalise
         async function handleAnalise(id, status) {
-            let pesos_solucao = []; // Array para coletar os pesos
+            let pesos_solucao = [];
             
-            // Se for 'confirmado', valida e coleta os pesos
             if (status === 'confirmado') {
                 const formPreparo = document.getElementById('formPreparoSolucoes');
-                // Valida o formulário (inputs de peso required)
                 if (!formPreparo.checkValidity()) {
                     showAlert('Por favor, preencha o peso(g) de todos os reagentes em solução.', 'Erro', 'error');
-                    formPreparo.reportValidity(); // Mostra qual campo falhou
+                    formPreparo.reportValidity();
                     return;
                 }
                 
-                // Coleta os pesos
                 const inputsPeso = formPreparo.querySelectorAll('input[data-item-id]');
                 inputsPeso.forEach(input => {
                     pesos_solucao.push({
@@ -308,7 +308,6 @@ document.addEventListener("DOMContentLoaded", function () {
             }
 
             try {
-                // Envia os pesos (ou um array vazio se for 'cancelado')
                 await window.apiService.updateStatusAgendamento(id, status, pesos_solucao);
                 showAlert(`Agendamento ${status} com sucesso!`, 'Sucesso', 'success');
                 location.reload();
@@ -317,7 +316,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
 
-        // ADICIONADO (Tarefa 1): Listener do filtro de estoque
+        // ADICIONADO: Listener do filtro de estoque
         const filtroEstoqueInput = document.getElementById('filtroEstoque');
         if (filtroEstoqueInput) {
             filtroEstoqueInput.addEventListener('input', () => {
@@ -325,7 +324,7 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
 
-        // ADICIONADO (Tarefa 3): Listener do botão Desfazer
+        // ADICIONADO: Listener do botão Desfazer
         const btnDesfazer = document.getElementById('btnDesfazerEstoque');
         if (btnDesfazer) {
             btnDesfazer.addEventListener('click', async () => {
@@ -356,10 +355,37 @@ document.addEventListener("DOMContentLoaded", function () {
                 abrirModalAnalisar(id);
             }
         });
+        
+        // ADICIONADO: Listener para exclusão de item do estoque
+        document.getElementById('lista-estoque-tbody').addEventListener('click', (e) => {
+            const target = e.target.closest('button');
+            if (target && target.classList.contains('btn-excluir-item')) {
+                const id = target.dataset.id;
+                abrirModalConfirmarExclusao(id); // Chama o novo modal
+            }
+        });
+        
+        // ADICIONADO: Listeners para o novo modal de exclusão
+        const modalExcluir = document.getElementById("modalConfirmarExclusaoItem");
+        const btnFecharModalExcluir = document.getElementById("fecharModalExcluirItemBtn");
+        const btnCancelarModalExcluir = document.getElementById("cancelarExcluirItemBtn");
+        const btnConfirmarModalExcluir = document.getElementById("confirmarExcluirItemBtn");
+
+        function fecharModalExcluir() { if (modalExcluir) modalExcluir.classList.remove("visivel"); }
+        
+        if(btnFecharModalExcluir) btnFecharModalExcluir.addEventListener("click", fecharModalExcluir);
+        if(btnCancelarModalExcluir) btnCancelarModalExcluir.addEventListener("click", fecharModalExcluir);
+        adicionarCliqueFora(modalExcluir, fecharModalExcluir);
+        
+        if (btnConfirmarModalExcluir) {
+            btnConfirmarModalExcluir.addEventListener('click', async () => {
+                const id = btnConfirmarModalExcluir.dataset.id;
+                await handleExcluirItem(id);
+            });
+        }
 
     } // Fim de iniciarListeners()
     
-    // ATUALIZADO (Tarefa 4): Função agora constrói HTML com inputs
     function abrirModalAnalisar(id) {
         const aula = appState.agendamentosPendentes.find(a => a.id_agendamento == id);
         if (!aula) return;
@@ -372,12 +398,10 @@ document.addEventListener("DOMContentLoaded", function () {
         const listaMateriais = document.getElementById('lista-materiais-solicitados');
         if (aula.materiais && aula.materiais.length > 0) {
             listaMateriais.innerHTML = aula.materiais.map(m => {
-                // (Tarefa 4) Capitaliza o 'formato'
                 const formatoTexto = m.formato.charAt(0).toUpperCase() + m.formato.slice(1);
                 const nome = `${m.nome} (${formatoTexto})`;
                 const solicitado = `Solicitado: ${m.quantidade_solicitada} ${m.unidade}`;
                 
-                // (Tarefa 4) Se for 'solucao', adiciona o input de peso
                 if (m.formato === 'solucao') {
                     return `
                     <li class="list-group-item d-flex justify-content-between align-items-center flex-wrap">
@@ -391,7 +415,6 @@ document.addEventListener("DOMContentLoaded", function () {
                         </div>
                     </li>`;
                 } else {
-                    // Se for 'solido' ou ferramenta, apenas lista
                     return `
                     <li class="list-group-item">
                         ${nome}
@@ -403,11 +426,60 @@ document.addEventListener("DOMContentLoaded", function () {
             listaMateriais.innerHTML = '<li class="list-group-item">Nenhum material solicitado.</li>';
         }
 
-        // Seta os IDs nos botões para o handleAnalise
         document.getElementById('btnConfirmarAnalise').dataset.id = id;
         document.getElementById('btnCancelarAnalise').dataset.id = id;
         
         document.getElementById('analisarModal').classList.add('visivel');
+    }
+
+    // ADICIONADO: Função para abrir modal de confirmação de exclusão
+    function abrirModalConfirmarExclusao(id) {
+        const item = appState.materiais.find(m => m.id == id);
+        const modal = document.getElementById("modalConfirmarExclusaoItem");
+        if (!item || !modal) return;
+        
+        // Injeta o nome do item no modal para confirmação
+        const modalBody = modal.querySelector('.modal-body p');
+        if (modalBody) {
+             modalBody.innerHTML = `Tem certeza que deseja excluir o item "<strong>${item.nome}</strong>"? <br/><br/><strong>Atenção:</strong> Esta ação não pode ser desfeita e pode falhar se o item estiver em uso.`;
+        }
+        
+        // Passa o ID para o botão de confirmação
+        document.getElementById("confirmarExcluirItemBtn").dataset.id = id;
+        
+        modal.classList.add("visivel");
+    }
+    
+    // ADICIONADO: Função para processar a exclusão do item
+    async function handleExcluirItem(id) {
+        const btnConfirmar = document.getElementById("confirmarExcluirItemBtn");
+        const originalText = btnConfirmar.innerHTML;
+        
+        btnConfirmar.disabled = true;
+        btnConfirmar.innerHTML = '<i class="bi bi-hourglass-split me-2"></i>Excluindo...';
+
+        try {
+            // Assume que apiService.js terá esta função
+            await window.apiService.deleteMaterial(id); 
+            
+            showAlert("Item excluído com sucesso!", "Sucesso", "success");
+            
+            // Remove o item do estado local
+            appState.materiais = appState.materiais.filter(m => m.id != id);
+            
+            // Re-renderiza a tabela
+            renderEstoque();
+            
+            // Fecha o modal
+            document.getElementById("modalConfirmarExclusaoItem").classList.remove("visivel");
+
+        } catch (error) {
+            console.error("Erro ao excluir item:", error);
+            showAlert(error.message, "Erro", "error");
+        } finally {
+            btnConfirmar.disabled = false;
+            btnConfirmar.innerHTML = 'Confirmar Exclusão'; // Restaura texto original
+        }
     }
 
 
@@ -421,8 +493,6 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         }
     }
-    
-    // REMOVIDO: atualizarInputValor(tipo)
 
     function showAlert(message, title = "Notificação", type = "info") {
         if (!globalToast) {

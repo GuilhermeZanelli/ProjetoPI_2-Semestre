@@ -475,12 +475,8 @@ body.tritanopia {
 }
 
 /* --- CORREÇÃO RESPONSIVA CABEÇALHO --- */
-/* * Sobrescreve o 'position: absolute' problemático do CSS herdado
- * para evitar sobreposição em telas pequenas E TABLETS.
- */
-@media (max-width: 991.98px) { /* ATUALIZADO DE 767.98px para 991.98px */
+@media (max-width: 991.98px) {
   .cabecalho-inicial {
-      /* Adiciona flex-wrap para quebrar a linha */
       flex-wrap: wrap;
       justify-content: center !important;
       padding-bottom: 1rem !important;
@@ -491,27 +487,23 @@ body.tritanopia {
       transform: none;
       left: auto;
       text-align: center;
-      flex-basis: 100%; /* Ocupa 100% da largura na quebra */
-      order: 3; /* Joga para baixo */
+      flex-basis: 100%;
+      order: 3;
       margin-top: 0.5rem;
   }
   
   .container-logo {
       order: 1;
-      /* Ajuste opcional para centralizar logo se a quebra ficar estranha */
-      /* flex-basis: 100%; */
-      /* justify-content: center; */
   }
 
   .container-usuario {
       order: 2;
-      margin-left: 0; /* Remove o margin-left auto em telas pequenas */
+      margin-left: 0;
   }
 
-  /* ADICIONADO: Correção do dropdown de acessibilidade em telas menores */
   .dropdown-content {
-      left: 0; /* Alinha pela esquerda em vez da direita */
-      right: auto; /* Remove o alinhamento da direita */
+      left: 0;
+      right: auto;
   }
 }
 /* --- FIM DA CORREÇÃO --- */
@@ -629,5 +621,3 @@ body.tritanopia {
     white-space: pre-wrap;
     min-height: 150px;
 }
-
-
