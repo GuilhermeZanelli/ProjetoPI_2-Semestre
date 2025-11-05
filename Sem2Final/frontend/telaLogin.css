@@ -6,10 +6,10 @@
 
 :root {
     /* CORRIGIDO: Cores atualizadas para a identidade visual do CPS/ETEC */
-    --bg-1: #a40000; /* Vermelho principal (usado no admin) */
-    --bg-2: #8c0000; /* Tom mais escuro para gradiente */
-    --accent-1: #C41E3A; /* Vermelho mais vibrante para botões */
-    --accent-2: #B21B35; /* Sombra/hover do botão */
+    --bg-1: #B20000; /* Vermelho principal (usado no admin) */
+    --bg-2: #7E0000; /* Tom mais escuro para gradiente */
+    --accent-1: #D32719; /* Vermelho mais vibrante para botões */
+    --accent-2: #F95B4D; /* Sombra/hover do botão */
     --text: #ffffff;
     --muted: rgba(255,255,255,0.75);
     --radius: 20px;
@@ -36,18 +36,22 @@ body {
 .brand-image {
     display: block;
     margin: 0 auto 16px auto;
-    max-width: 180px;
+    max-width: 170px;
     width: 100%;
     height: auto;
 }
 
 .brand-images-top .brand-image {
     margin: 0;
-    height: 200px;
+    /* ATUALIZADO: Aumentando altura para melhor visualização */
+    height: 60px;
     width: auto;
     object-fit: contain;
 }
 
+.brand-images-top .brand-image[alt="Centro Paula Souza"] {
+    /* Esta regra não é mais necessária, a altura já controla o balanceamento */
+}
 
 .brand-images-top {
     display: flex;
@@ -56,7 +60,7 @@ body {
     /* ATUALIZADO: Aumentando o espaço entre os logos */
     gap: 25px;
     margin-bottom: 16px;
-    height: 100px; /* Ajustado para nova altura */
+    height: 70px; /* Ajustado para nova altura */
 }
 
 .brand-image.bottom {
@@ -79,7 +83,7 @@ body {
 
 
 .title-main {
-    font-size: 18px;
+    font-size: 22px;
     font-weight: 800;
     color: #000000;
 }
@@ -385,3 +389,21 @@ option:hover {
     font-weight: 500;
 }
 
+/* Ajustes para a barra do governo */
+.govsp-topo {
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+}
+
+body {
+    padding-top: 70px; /* Ajuste este valor conforme necessário */
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-top: 60px;
+    }
+}

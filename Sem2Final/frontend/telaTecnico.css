@@ -621,3 +621,13 @@ body.tritanopia {
     white-space: pre-wrap;
     min-height: 150px;
 }
+
+#btnDesfazerEstoque {
+  color: black;
+  border-color: #43545c;
+}
+
+#btnDesfazerEstoque:hover {
+  background-color: #43545c;
+  color: whitesmoke;
+}

@@ -309,17 +309,35 @@ document.addEventListener('DOMContentLoaded', function () {
         const fecharEstoqueModalBtn = document.getElementById('fecharModalEstoqueBtn');
         const cancelarEstoqueModalBtn = document.getElementById('cancelarModalEstoqueBtn');
         const estoqueForm = document.getElementById('formEstoque');
-        // (Tarefa 1) Pega o valor do filtro
-        const filtroInput = document.getElementById('filtroEstoque');
+        const filtroInput = document.getElementById('filtroEstoque'); // (Tarefa 1) Pega o valor do filtro
 
-        // (Tarefa 1) Filtra a lista de materiais do estado
+        // (INÍCIO DA CORREÇÃO 1: Listeners do modal de estoque)
+        // Definindo as funções para abrir/fechar o modal de estoque
+        const abrirEstoqueModal = () => { if (estoqueModal) estoqueModal.classList.add('visivel'); }
+        const fecharEstoqueModal = () => { 
+            if (estoqueModal) estoqueModal.classList.remove('visivel'); 
+            if (estoqueForm) estoqueForm.reset(); // Limpa o formulário ao fechar
+        }
+
+        // Adicionando os listeners que faltavam
+        if (abrirEstoqueModalBtn) abrirEstoqueModalBtn.addEventListener('click', abrirEstoqueModal);
+        if (fecharEstoqueModalBtn) fecharEstoqueModalBtn.addEventListener('click', fecharEstoqueModal);
         if (cancelarEstoqueModalBtn) cancelarEstoqueModalBtn.addEventListener('click', fecharEstoqueModal);
         adicionarCliqueFora(estoqueModal, fecharEstoqueModal);
+        // (FIM DA CORREÇÃO 1)
+
 
         // ATUALIZADO (Etapa 1 / Tarefa 2): Formulário de estoque
         if (estoqueForm) {
+            // (INÍCIO DA CORREÇÃO 2: Resposta do formulário)
             estoqueForm.addEventListener('submit', async (event) => {
                 event.preventDefault();
+
+                // (ATUALIZADO) Feedback de carregamento no botão
+                const submitButton = estoqueForm.querySelector('button[type="submit"]');
+                const originalButtonText = submitButton.innerHTML;
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Salvando...';
                 
                 // Captura os dados dos novos campos
                 const novoItem = {
@@ -334,13 +352,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 try {
                     const data = await window.apiService.createMaterial(novoItem);
+                    
                     showAlert(`Item "${data.nome}" cadastrado com sucesso!`, "Sucesso", "success");
-                    location.reload(); 
+                    
+                    // (ATUALIZADO) Fecha o modal
+                    fecharEstoqueModal();
+
+                    // (ATUALIZADO) Recarrega após um atraso para o usuário ver o toast
+                    setTimeout(() => {
+                        location.reload(); 
+                    }, 1500); // 1.5 segundos de atraso
+                    
                 } catch (error) {
                     console.error("Erro ao cadastrar item:", error);
                     showAlert(error.message, "Erro", "error");
+
+                    // (ATUALIZADO) Restaura o botão em caso de erro
+                    submitButton.disabled = false;
+                    submitButton.innerHTML = originalButtonText;
                 }
             });
+            // (FIM DA CORREÇÃO 2)
         }
 
         // REMOVIDO: Listener do 'itemTipoUnidade'
