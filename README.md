@@ -37,4 +37,12 @@ O sistema foi projetado pensando na inclusão:
 
 ## ⚙️ Como Rodar o Projeto
 
-* clone o repositório e utilize o comando npm init ou install
+* Clone o repositório e utilize o comando npm init ou install
+
+### 👥 Autores
+* Guilherme Alves Soares
+* Guilherme Gois Cruz Coelho
+* Guilherme Zanelli de Novaes
+* Lucas Bassi da Silva
+* Patrick Araujo dos Santos
+* Rodrigo Ribeiro Persolli
